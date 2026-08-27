@@ -239,16 +239,7 @@ class UpdaterGUI:
         self.tree.heading("github", text=self.t("col_github"))
         self.tree.heading("state", text=self.t("col_state"))
 
-        # The deploy filter's own values are translated labels, so
-        # switching language must rebuild them and re-point filter_var at
-        # the equivalent translated label for whatever key was selected
-        # before (falling back to the real default if none was set yet).
-        previous_key = self._filter_by_label.get(self.filter_var.get(), _default_deploy_filter()) \
-            if getattr(self, "_filter_by_label", None) else _default_deploy_filter()
-        deploy_labels = [self._deploy_label(key) for key in DEPLOY_ORDER]
-        self._filter_by_label = {self._deploy_label(key): key for key in DEPLOY_ORDER}
-        self.filter_box.config(values=deploy_labels)
-        self.filter_var.set(self._deploy_label(previous_key))
+        self._refresh_deploy_filter()
 
         self.lang_box.config(values=[label for _code, label in i18n.LANGUAGES])
         own_label = next((label for code, label in i18n.LANGUAGES if code == lang), lang)
@@ -267,6 +258,22 @@ class UpdaterGUI:
             # staying blank until the first language switch or selection.
             self._on_select()
 
+    def _refresh_deploy_filter(self) -> None:
+        """Rebuilds the deploy filter's labels/values from the current
+        self.locals_ - the "all" label embeds a live project count
+        (_deploy_label), so this must re-run whenever self.locals_
+        changes, not just on a language switch. Real bug found via live
+        testing: the combobox showed "All 0 projects" from __init__'s
+        pre-data call and stayed wrong through both the offline and
+        online refresh passes, only correcting itself the next time a
+        language switch happened to also call this rebuild."""
+        previous_key = self._filter_by_label.get(self.filter_var.get(), _default_deploy_filter()) \
+            if getattr(self, "_filter_by_label", None) else _default_deploy_filter()
+        deploy_labels = [self._deploy_label(key) for key in DEPLOY_ORDER]
+        self._filter_by_label = {self._deploy_label(key): key for key in DEPLOY_ORDER}
+        self.filter_box.config(values=deploy_labels)
+        self.filter_var.set(self._deploy_label(previous_key))
+
     # -- Data / refresh --------------------------------------------------
     def _refresh(self, *, offline: bool) -> None:
         if self._busy:
@@ -275,6 +282,7 @@ class UpdaterGUI:
         local_discovery = discover_workspace(self.workspace_root)
         self.locals_ = list(local_discovery.projects)
         self.remotes = {}
+        self._refresh_deploy_filter()
         self._render_rows()
 
         if offline:
@@ -480,6 +488,7 @@ class UpdaterGUI:
                     self.remotes = remotes
                     if errors:
                         self.status_var.set("; ".join(str(error) for error in errors[:2]))
+                    self._refresh_deploy_filter()
                     self._render_rows()
                     self._set_busy(False, self.t("status_ready"))
                 elif kind == "install_done":

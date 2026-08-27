@@ -11,6 +11,10 @@ bumped manually only. See `bump_version.py`.
 - **Real bug fixed in `tests/test_registry.py`**: a manifest fixture built inside a non-raw Python triple-quoted string double-escaped its embedded regex (`\\d+`, `\\.`), producing invalid JSON (`\d` is not a valid JSON escape) at runtime and making the test fail with `ManifestValidationError` instead of exercising what it was meant to test. Fixed by making the string literal raw (`r'''...'''`) so only JSON's own escaping applies.
 - Verified real: `pytest tests/ -q` -> 17/17 (previously 16 passed, 1 failed). A real local-discovery harness against the actual `C:\Users\juane\Documents\GitHub` checkout confirmed the fix - `HYDRA-UMC-SERVER` now shows 6 real children (was 2), top-level rows dropped from 28 (broken) to the expected 16, all 47 real local manifests still accounted for, and Treeview selection still survives a real language switch.
 
+## [0.1.7]
+
+- **Real bug found and fixed via live testing**: the deploy filter's "All N projects" combobox entry showed "All 0 projects" from app startup until the user happened to switch languages. `_deploy_label("all")` embeds `len(self.locals_)`, but that count was only ever recomputed inside `_apply_language()` - called once at `__init__` time (before `self.locals_` had any real projects loaded into it) and again only on a manual language switch. Neither `_refresh()`'s offline pass nor the online GitHub-check worker (both of which really do update `self.locals_`) ever triggered a recount, so the combobox stayed stuck at the stale value from whichever `_apply_language()` call last ran. Fixed by extracting the label/value rebuild into `_refresh_deploy_filter()` and calling it from both real places `self.locals_` changes, not just from a language switch. Verified live: a real `UpdaterGUI` instantiated against the actual `C:\Users\juane\Documents\GitHub` checkout now shows "All 47 projects" immediately after construction (previously "All 0 projects"), and switching languages still updates the label correctly with no regression.
+
 ## [0.1.6]
 
 - Build version synchronized with `hydra-umc.project.json` and the repository-native version source.
