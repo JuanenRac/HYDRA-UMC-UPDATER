@@ -5,12 +5,13 @@
 # GPL-3.0 - see LICENSE
 #
 # Deliberately does NOT reimplement per-stack build logic (npm/cargo/go/
-# gradlew/flutter/pip, 7 different toolchains across 44 projects) - every
-# project in this ecosystem already carries its own real, working
-# build.sh/.bat (or a differently-named equivalent - build_firmware.sh for
-# the 2 multi-component firmware repos, build_exe.sh for the 4 PyInstaller
-# ones, build-android.sh for HYDRA-UMC-ANDROID-CONTROL specifically - see
-# BUILD_SCRIPT_CANDIDATES below) that already knows its own real
+# gradlew/flutter/pip, 7 different toolchains across the ecosystem). Every
+# project carries the common non-versioning build-test.sh/.bat entry point.
+# It delegates to its own stack-aware check without incrementing a manifest or
+# CHANGELOG, so fleet maintenance cannot manufacture a release merely by
+# refreshing a checkout. Versioned build scripts remain an explicit human
+# release action and are never selected here. The shared build-test entry point
+# already knows its own real
 # dependencies, venv/toolchain setup, and quirks (HYDRA-UMC-TELEMETRY-
 # COLLECTOR/HYDRA-UMC-TOOL-CLI's module root being src/, not the repo
 # root, for instance). Reimplementing that here would mean two places that
@@ -30,12 +31,8 @@ from .registry import ProjectEntry, github_repo_url
 # one actually run. Covers every real name used across the 44 projects
 # (see this module's own header comment) without needing a per-project
 # override in registry.py for something this mechanical.
-BUILD_SCRIPT_CANDIDATES_POSIX = [
-    "build.sh", "build_firmware.sh", "build_exe.sh", "build-android.sh",
-]
-BUILD_SCRIPT_CANDIDATES_WINDOWS = [
-    "build.bat", "build_firmware.bat", "build_exe.bat", "build-android.bat",
-]
+BUILD_TEST_SCRIPT_POSIX = "build-test.sh"
+BUILD_TEST_SCRIPT_WINDOWS = "build-test.bat"
 
 
 @dataclass
@@ -71,25 +68,22 @@ def clone_or_pull(entry: ProjectEntry, workspace_root: Path) -> InstallResult:
     return InstallResult(True, f"Pulled latest into {path}")
 
 
-def find_build_script(path: Path) -> Path | None:
+def find_build_test_script(path: Path) -> Path | None:
     import os
-    candidates = BUILD_SCRIPT_CANDIDATES_WINDOWS if os.name == "nt" else BUILD_SCRIPT_CANDIDATES_POSIX
-    for name in candidates:
-        candidate = path / name
-        if candidate.is_file():
-            return candidate
-    return None
+    name = BUILD_TEST_SCRIPT_WINDOWS if os.name == "nt" else BUILD_TEST_SCRIPT_POSIX
+    candidate = path / name
+    return candidate if candidate.is_file() else None
 
 
 def run_build_script(entry: ProjectEntry, workspace_root: Path) -> InstallResult:
     path = workspace_root / entry.name
-    script = find_build_script(path)
+    script = find_build_test_script(path)
     if script is None:
-        return InstallResult(False, f"No build.sh/.bat (or a known equivalent) found in {path} - see this project's own README for how to build it manually.")
+        return InstallResult(False, f"No non-versioning build-test.sh/.bat found in {path} - upgrade this checkout or verify it manually before deployment.")
 
     import os
     if os.name == "nt":
-        cmd = [str(script)]
+        cmd = ["cmd", "/c", str(script)]
     else:
         cmd = ["bash", str(script)]
 
