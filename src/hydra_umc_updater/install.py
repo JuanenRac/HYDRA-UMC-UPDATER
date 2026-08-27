@@ -22,8 +22,10 @@
 from __future__ import annotations
 
 import subprocess
+from shutil import rmtree
 from dataclasses import dataclass
 from pathlib import Path
+from uuid import uuid4
 
 from .registry import ProjectEntry, github_repo_url
 
@@ -54,9 +56,19 @@ def clone_or_pull(entry: ProjectEntry, workspace_root: Path) -> InstallResult:
     discarded."""
     path = workspace_root / entry.name
     if not path.exists():
-        result = _run(["git", "clone", github_repo_url(entry), str(path)], cwd=workspace_root)
+        # Clone to a sibling staging path first.  A failed network transfer or
+        # malformed remote must not leave a partial directory that the next
+        # operator run mistakes for a real installation.  rename() is atomic
+        # inside workspace_root and we never remove a path we did not create.
+        staging_path = workspace_root / f".{entry.name}.clone-{uuid4().hex}"
+        result = _run(["git", "clone", github_repo_url(entry), str(staging_path)], cwd=workspace_root)
         if result.returncode != 0:
+            rmtree(staging_path, ignore_errors=True)
             return InstallResult(False, f"git clone failed (exit {result.returncode})")
+        if path.exists():
+            rmtree(staging_path, ignore_errors=True)
+            return InstallResult(False, f"{path} appeared while cloning - not replacing it")
+        staging_path.replace(path)
         return InstallResult(True, f"Cloned into {path}")
 
     if not (path / ".git").is_dir():
