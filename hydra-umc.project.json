@@ -1,0 +1,24 @@
+{
+  "schema_version": "1.0",
+  "ecosystem": "HYDRA-UMC",
+  "name": "HYDRA-UMC-UPDATER",
+  "version": "0.1.6",
+  "role": "tool",
+  "stack": "python",
+  "technologies": [
+    "Python 3.10+",
+    "Tkinter",
+    "Git",
+    "GitHub raw content"
+  ],
+  "deployment_target": "user-pc",
+  "maturity": "functional",
+  "family": "Ecosystem Operations",
+  "parent": null,
+  "native_version": {
+    "file": "pyproject.toml",
+    "pattern": "^version\\s*=\\s*\"(\\d+)\\.(\\d+)\\.(\\d+)\""
+  },
+  "build": "Detects local projects, compares their manifests with GitHub and performs explicit install or update actions.",
+  "notes": "Administrative tooling for the ecosystem catalog. It has its own manifest but is intentionally excluded from the 46-product public dashboard count."
+}

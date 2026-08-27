@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "hydra-umc-updater"
+version = "0.1.6"
+description = "Detects, installs, and manually updates the HYDRA-UMC/URTC ecosystem's 46 projects on the machine it runs on (the real CM5, or a dev machine with the same checkout layout)."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { file = "LICENSE.md" }
+authors = [
+    { name = "JuanenRac (Electro Hobby 3D)", email = "electrohobby3d@gmail.com" },
+]
+keywords = ["hydra-umc", "urtc", "updater", "installer", "fleet-management"]
+# stdlib only, on purpose - see github_client.py's own header comment. A
+# tool responsible for keeping the OTHER 44 projects' dependencies sane
+# staying dependency-free itself is deliberate, not an oversight.
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+
+[project.urls]
+Homepage = "https://github.com/JuanenRac/HYDRA-UMC-UPDATER"
+
+[project.scripts]
+hydra-umc-updater = "hydra_umc_updater.main:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]

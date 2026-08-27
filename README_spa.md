@@ -1,0 +1,279 @@
+<p align="center">
+  <img src="images/HYDRA_UMC_BANNER.svg" alt="HYDRA-UMC-UPDATER banner" width="100%">
+</p>
+
+# 🛠️ HYDRA-UMC-UPDATER
+
+<p align="center"><a href="README.md">🇺🇸 English</a> | 🇪🇸 <b>Español</b> | <a href="README_fra.md">🇫🇷 Français</a> | <a href="README_ita.md">🇮🇹 Italiano</a> | <a href="README_deu.md">🇩🇪 Deutsch</a> | <a href="README_zho.md">🇨🇳 简体中文</a> | <a href="README_jpn.md">🇯🇵 日本語</a></p>
+
+### 📦 Detecta, instala y actualiza a mano todo el ecosistema HYDRA-UMC/URTC
+
+<p align="left">
+  <img src="https://img.shields.io/badge/Licencia-GPL%203.0-blue.svg" alt="GPL 3.0">
+  <img src="https://img.shields.io/badge/Language-Python%203.10%2B-blue.svg" alt="Python">
+  <img src="https://img.shields.io/badge/Dependencies-stdlib%20only-brightgreen.svg" alt="stdlib only">
+</p>
+
+---
+
+## 1. 🛠️ VISIÓN TÉCNICA
+
+HYDRA-UMC-UPDATER es una pequeña herramienta - GUI con ventana por
+defecto, CLI completa con `--cli` - pensada para ejecutarse tanto en la
+CM5 real como en la propia máquina Windows/Linux/macOS de un
+desarrollador (cualquier workspace con el mismo tipo de checkout) que
+responde a tres preguntas sobre cada uno de los otros 44 proyectos del
+ecosistema:
+
+1. **¿Qué hay instalado aquí de verdad, y en qué versión?**
+2. **¿Cuál es la última versión publicada en GitHub?**
+3. **Si GitHub tiene una versión más nueva, déjame actualizar ESE proyecto, a mano.**
+
+Ese último punto es deliberado y no negociable: esta herramienta nunca
+actualiza más de un proyecto por comando, y nunca por iniciativa propia.
+Una célula de control de robots no es algo que uno quiera que se
+actualice solo por la noche - cada actualización real es un comando (o un
+clic en un botón, sobre una fila seleccionada en la tabla de la GUI) que
+una persona provocó, para un proyecto con nombre, cuyo resultado puede
+ver antes de tocar el siguiente.
+
+Tampoco los 44 proyectos pertenecen a la CM5 en sí - la mayoría de los
+repos con prefijo URTC y algunos de HYDRA-UMC son herramientas que un
+desarrollador ejecuta desde su propio PC (el firmware se compila y se
+flashea DESDE un puesto de trabajo, no se compila EN la célula), o apps
+que se instalan en un móvil/reloj. El propio campo `deploy` de
+`registry.py` registra cuál es cuál (ver sección 3), y la tabla de
+proyectos de la GUI filtra por él - por defecto muestra "solo CM5" cuando
+detecta que se ejecuta en Linux (el propio SO de la CM5 real), y "mostrar
+todo" en Windows/macOS.
+
+```
+$ hydra-umc-updater --cli status
+Workspace root: /home/pi/HYDRA-UMC
+Checking GitHub... 44/44
+PROJECT                        STACK       LOCAL     GITHUB    STATE
+--------------------------------------------------------------------
+HYDRA-UMC                      firmware-c  0.0.7     0.0.7     up to date
+HYDRA-UMC-SERVER               node        0.0.5     0.0.9     OUTDATED
+HYDRA-UMC-STUDIO               node        0.0.8     0.1.3     OUTDATED
+...
+44/44 installed, 2 outdated
+
+$ hydra-umc-updater --cli update HYDRA-UMC-SERVER
+Updating HYDRA-UMC-SERVER into /home/pi/HYDRA-UMC ...
+OK  Pulled latest into /home/pi/HYDRA-UMC/HYDRA-UMC-SERVER
+OK  build.sh completed successfully.
+```
+
+Ejecutar `hydra-umc-updater` sin argumentos (o hacer doble clic) abre la
+misma información en una ventana - una tabla de proyectos, un filtro por
+destino de despliegue, y botones de Instalar/Actualizar para la fila
+seleccionada.
+
+## 2. 🔄 CÓMO FUNCIONA REALMENTE UNA COMPROBACIÓN/ACTUALIZACIÓN
+
+- **Origen de la versión**: la convención "cuentakilómetros" de
+  auto-incremento de este ecosistema (cada build real incrementa un
+  número de versión que vive DENTRO de un archivo fuente -
+  `pyproject.toml`, `Cargo.toml`, `version.go`, `package.json`,
+  `version.properties`, `pubspec.yaml`, o un `#define` de firmware, según
+  el stack del proyecto) nunca ha creado un tag de git ni un GitHub
+  Release para ese incremento. Por eso esta herramienta lee el MISMO
+  archivo que el propio `bump_version.py`/script de build de cada
+  proyecto ya escribe, directamente desde la rama por defecto del repo
+  vía el servidor de contenido raw de GitHub - no la API de Releases, que
+  reportaría que todos los proyectos no tienen ningún release.
+- **Detección local**: para cada uno de los 44 proyectos conocidos,
+  comprueba si existe un directorio con ese nombre exacto bajo la raíz
+  del workspace (la disposición estándar del ecosistema - cada proyecto
+  como directorio hermano, lo mismo que ya asumen build-frontend.sh y el
+  propio descubrimiento de HYDRA-UMC-SUITE), y si existe, lee su propia
+  copia local de ese mismo archivo de versión.
+- **Una sola implementación de parseo** (`version_parse.py`) se comparte
+  entre la lectura local y la descarga de GitHub, así que un checkout
+  local y una descarga de GitHub nunca se interpretan con dos regex que
+  puedan desincronizarse de forma independiente.
+- **Instalar/actualizar**: `git clone` (instalar) o `git pull --ff-only`
+  (actualizar - nunca un reset forzado, así que los cambios locales
+  reales fallan de forma visible en vez de descartarse), y luego ejecuta
+  el `build.sh`/`build.bat` propio de ese proyecto (o un equivalente
+  conocido - ver sección 3). Esta herramienta nunca reimplementa los
+  pasos de build propios de un proyecto - ver sección 3 para el porqué.
+
+## 3. 🧱 ARQUITECTURA Y DECISIONES DE DISEÑO
+
+- **GUI con ventana por defecto, `--cli` para modo headless.**
+  Tkinter/ttk (librería estándar, sin dependencia nueva) - el mismo kit de
+  GUI y el mismo patrón de doble punto de entrada que ya usan
+  `URTC-FLASHER`/`URTC-TESTER` en este ecosistema: `main.py` comprueba
+  `sys.argv` en busca de `--cli` **antes** de importar `tkinter`, así que
+  el modo `--cli` funciona en una CM5 genuinamente headless sin
+  `python3-tk` instalado ni pantalla, mientras que la invocación sin
+  argumentos obtiene la experiencia con ventana en todos los demás casos
+  (incluida una CM5 con sesión de escritorio local/VNC, y el propio PC de
+  un desarrollador).
+- **`deploy` es una clasificación, no una restricción.** Tratar los 44
+  proyectos como "cosas que pertenecen a la CM5" era un error - los repos
+  de firmware se compilan y se flashean DESDE un PC (la CM5 solo necesita
+  el binario resultante vía CAN-OTA, nunca el código fuente de este repo),
+  y varias herramientas (URTC-FLASHER, HYDRA-UMC-SUITE,
+  HYDRA-UMC-TOOL-CLI, ...) están pensadas para correr en el propio puesto
+  de trabajo de un operador, no dentro de la célula misma. El campo
+  `deploy` de `registry.py` ("cm5" / "user-pc" / "mobile" / "wearable")
+  registra eso, y el filtro de la GUI lo usa como punto de partida
+  razonable - nunca como una restricción dura, ya que esta misma
+  herramienta también está pensada para correr en el PC de un
+  desarrollador, donde los 44 son igual de válidos de inspeccionar.
+- **Sin lógica de build por stack en esta herramienta.** El ecosistema
+  abarca 7 toolchains (Python, Rust, Go, Node/TS, Android/Kotlin,
+  Flutter, firmware ARM). Reimplementar `npm install && npm run build` /
+  `cargo build --release` / `./gradlew assembleDebug` / etc. AQUÍ
+  crearía un segundo sitio que dice saber cómo compilar cada proyecto,
+  garantizado a desincronizarse del `build.sh`/`.bat` real (y ya
+  correcto) de ese proyecto. `install.py` en cambio busca un nombre de
+  script de build conocido (`build.sh`, `build_firmware.sh`,
+  `build_exe.sh`, `build-android.sh`, y sus equivalentes `.bat` - los
+  nombres reales usados en los 44 proyectos) y ejecuta el que exista.
+- **Contenido raw de GitHub, no la API de Releases.** Ver sección 2 - la
+  convención de versionado de este ecosistema nunca crea un tag/release,
+  así que la API de Releases sería activamente incorrecta aquí, no solo
+  menos conveniente.
+- **`install`/`update` siempre reciben el nombre de un proyecto
+  explícito.** No existe un subcomando "actualizar todo", y es una
+  decisión de diseño, no una funcionalidad que falte - una flota de
+  robots reales no es algo que se deje actualizando solo sin supervisión.
+  `status` muestra qué está desactualizado; una persona elige cuál tocar
+  de verdad.
+- **Solo librería estándar.** `urllib` para las descargas de GitHub
+  (`github_client.py`), `subprocess` para las llamadas a git/scripts de
+  build (`install.py`), nada más - que una herramienta responsable de
+  mantener sanas las dependencias de TODOS los demás proyectos se quede
+  sin dependencias propias es deliberado.
+- **Simplificación conocida**: HYDRA-UMC y URTC son repos de firmware
+  multi-componente reales (6 y 4 binarios versionados de forma
+  independiente cada uno - ver su propio `VERSION_CHECKLIST.txt`/
+  `build_firmware.sh`) sin un único número de versión. `registry.py`
+  sigue UN componente representativo por repo - suficiente para
+  responder "¿este repo está más o menos al día?", no un sustituto del
+  propio `firmware_manifest.json` de `build_firmware.sh` para un flasheo
+  real.
+
+## 📂 ESTRUCTURA DE DIRECTORIOS
+
+```
+HYDRA-UMC-UPDATER/
+├── src/hydra_umc_updater/
+│   ├── registry.py        # Los 44 proyectos: repo, stack, archivo de versión, patrón, destino de despliegue
+│   ├── version_parse.py   # UNA implementación de extracción por regex, local+GitHub
+│   ├── detect.py          # Escanea una raíz de workspace para ver qué está instalado
+│   ├── github_client.py   # Descarga concurrente del contenido raw con la última versión
+│   ├── install.py         # git clone/pull + delega en el script de build propio
+│   ├── gui.py              # GUI con ventana (Tkinter/ttk) - punto de entrada por defecto
+│   └── main.py             # Despacho: GUI por defecto, --cli para status/install/update
+├── build.sh / build.bat    # venv + instalación editable + compile-check
+├── run.sh / run.bat        # Ejecuta la herramienta (reenvía todos los argumentos - ver USO abajo)
+└── bump_version.py         # Incremento "cuentakilómetros" del ecosistema (pyproject.toml + __init__.py)
+```
+
+## ⚙️ COMPILACIÓN Y EJECUCIÓN
+
+```bash
+chmod +x build.sh   # una sola vez
+./build.sh          # crea .venv, pip install -e ., compile-check de todo
+./run.sh                                # GUI con ventana (por defecto)
+./run.sh --cli status                   # qué está instalado, versión local vs. GitHub
+./run.sh --cli status --offline         # lo mismo, sin comprobar GitHub
+./run.sh --cli install <NOMBRE-PROYECTO> # clona + compila un proyecto aún no instalado
+./run.sh --cli update  <NOMBRE-PROYECTO> # actualiza + recompila un proyecto ya instalado
+```
+
+En Windows: `build.bat`, y luego `run.bat` (GUI) / `run.bat --cli status`
+/ `run.bat --cli install <nombre>` / `run.bat --cli update <nombre>`.
+
+La GUI necesita `python3-tk` en un Python de Linux compilado aparte
+(Debian/Raspberry Pi OS: `sudo apt install python3-tk`) - ya incluido en
+los instaladores de python.org para Windows/macOS. Sin él, la invocación
+sin argumentos muestra un aviso breve y cae al texto de ayuda del propio
+`--cli` en vez de fallar.
+
+**Solución de problemas**
+
+- `status` muestra `?` en la versión local o de GitHub de un proyecto: su
+  archivo de versión existe pero la convención de ese proyecto cambió
+  desde la última actualización de `registry.py` - revisa la entrada de
+  ese proyecto en `registry.py` contra su archivo de versión real actual.
+- `status` muestra `-` en GitHub sin ningún error: ejecuta `status` (sin
+  `--offline`) - `-` solo aparece cuando la comprobación de GitHub se
+  omitió por completo.
+- `install`/`update` falla con "No build.sh/.bat found": ese proyecto usa
+  un nombre de script de build que esta herramienta aún no reconoce -
+  revisa su propio README para ver el real, y considera añadirlo a las
+  listas `BUILD_SCRIPT_CANDIDATES_*` propias de `install.py`.
+- `git pull --ff-only` falla: el checkout local tiene cambios sin
+  commitear o el historial ha divergido - resuélvelo a mano (`git
+  status` dentro del propio directorio del proyecto) antes de reintentar
+  `update`. Esta herramienta nunca fuerza un reset de un checkout.
+
+## 🚀 HOJA DE RUTA
+
+- Un ejecutable de GUI independiente empaquetado (PyInstaller, siguiendo
+  la propia convención `build_exe.bat`/`.sh` de HYDRA-UMC-SUITE) para una
+  instalación con doble clic sin ningún paso de `pip`/venv - hoy la GUI
+  todavía necesita `./build.sh` primero, igual que la CLI.
+- Comprobación previa opcional de dependencias por proyecto (avisar de
+  toolchains faltantes - sin Rust/Go/SDK de Android/Flutter instalado -
+  antes de que un `install` falle a mitad de camino).
+- Un modo de salida `--json` para `status`, para poder scriptearlo.
+- Seguimiento por componente para el firmware multi-binario propio de
+  HYDRA-UMC/URTC (ver la "simplificación conocida" de la sección 3), en
+  cuanto haya una necesidad real más allá del único componente
+  representativo que se sigue hoy.
+
+## 🔗 PROYECTOS RELACIONADOS
+
+El propósito entero de esta herramienta es gestionar cada uno de los
+demás proyectos del ecosistema - en vez de listar los 44 aquí (ver
+`registry.py` para la lista exacta y autorizada), los dos más cercanos
+en su papel:
+
+- **[HYDRA-UMC](https://github.com/JuanenRac/HYDRA-UMC)** - el
+  controlador de célula multi-robot insignia que esta herramienta está
+  pensada para mantener instalado y al día en el hardware CM5 real.
+- **[HYDRA-UMC-SUITE](https://github.com/JuanenRac/HYDRA-UMC-SUITE)** -
+  otra herramienta Python independiente pensada para correr junto al
+  controlador de la célula, el hermano más cercano en su papel (una
+  utilidad enfocada del lado de la CM5, no parte del propio camino de
+  control de robots).
+
+**Resto del ecosistema** (cada proyecto que esta herramienta puede
+detectar/instalar/actualizar): los 12 proyectos originales (firmware,
+servidores, apps móviles/de escritorio), los nodos de IA de
+Visión/Cognitivos, los servicios de orquestación/simulación en Rust, las
+herramientas de infraestructura/CLI en Go, las pasarelas industriales en
+Node, y el firmware/herramientas de PC del cabezal de herramienta URTC -
+ver la propia agrupación de `registry.py` (que coincide con los
+comentarios de estructura de directorios de este mismo README) para la
+lista completa y actual.
+
+## 👤 AUTOR
+
+**JuanenRac (Electro Hobby 3D)**
+Email: electrohobby3d@gmail.com
+YouTube: [youtube.com/@electrohobby3d](https://youtube.com/@electrohobby3d)
+
+## 📜 LICENCIA
+
+GPL-3.0 (software) / CC BY-SA 4.0 (documentación) - ver [LICENSE.md](LICENSE.md).
+
+## Proyectos relacionados
+
+> Canonical public ecosystem relationship map.
+
+**Direct integrations:**
+[HYDRA-UMC-OS](https://github.com/JuanenRac/HYDRA-UMC-OS) · [HYDRA-UMC-SDK](https://github.com/JuanenRac/HYDRA-UMC-SDK) · [HYDRA-UMC-SERVER](https://github.com/JuanenRac/HYDRA-UMC-SERVER) · [URTC](https://github.com/JuanenRac/URTC) · [HYDRA-UMC-ORCHESTRATOR](https://github.com/JuanenRac/HYDRA-UMC-ORCHESTRATOR) · [HYDRA-UMC-JOB-DISPATCHER](https://github.com/JuanenRac/HYDRA-UMC-JOB-DISPATCHER) · [HYDRA-UMC-SWARM-SYNC](https://github.com/JuanenRac/HYDRA-UMC-SWARM-SYNC) · [HYDRA-UMC-NODE-HEALING](https://github.com/JuanenRac/HYDRA-UMC-NODE-HEALING)
+
+**Platform and contracts:**
+[HYDRA-UMC-OS](https://github.com/JuanenRac/HYDRA-UMC-OS) · [HYDRA-UMC-SDK](https://github.com/JuanenRac/HYDRA-UMC-SDK)
+
+**Rest of the ecosystem:**
+All remaining public repositories are grouped by the seven ecosystem layers in the [JuanenRac ecosystem dashboard](https://juanenrac.github.io/JuanenRac/).

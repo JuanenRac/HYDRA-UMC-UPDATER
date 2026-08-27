@@ -1,0 +1,527 @@
+# =============================================================================
+# HYDRA-UMC-UPDATER - GUI translations: i18n.py
+# Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
+# GPL-3.0 - see LICENSE
+#
+# Real, complete translations (not machine-generated placeholders) for the
+# windowed GUI's own UI chrome and closed vocabulary (maturity/role/deploy
+# labels, install-state labels), in the same 7 languages this ecosystem's
+# own READMEs and JuanenRac/scripts/generate_dashboard.py's own dashboard
+# already ship. Deliberately does NOT translate project names, family
+# names, or the free-text `notes`/`tech` content that comes straight from
+# registry.py - same reasoning as the dashboard's own TRANSLATIONS module
+# docstring: that content is real engineering documentation with
+# registry.py as its single source of truth, and maintaining 7 parallel
+# copies of it would stop it being that.
+#
+# `--cli` mode (main.py) is intentionally NOT translated - it's meant to
+# be scripted/piped, where a stable, English, greppable output matters
+# more than localization; only the windowed GUI (the default way this
+# tool runs) gets real language support.
+# =============================================================================
+from __future__ import annotations
+
+import json
+import locale
+import os
+from pathlib import Path
+
+#: (code, native display name with flag) - same order shown in the
+#: language combobox, same 7 codes the dashboard and every README already
+#: use across this ecosystem.
+LANGUAGES: list[tuple[str, str]] = [
+    ("en", "🇺🇸 English"),
+    ("es", "🇪🇸 Español"),
+    ("fr", "🇫🇷 Français"),
+    ("it", "🇮🇹 Italiano"),
+    ("de", "🇩🇪 Deutsch"),
+    ("zh", "🇨🇳 简体中文"),
+    ("ja", "🇯🇵 日本語"),
+]
+
+_LANG_CODES = {code for code, _ in LANGUAGES}
+
+#: One JSON file in the user's own home directory - the real, simple
+#: equivalent of the dashboard's own localStorage for a desktop app that
+#: has no browser storage to reuse. Only ever holds `{"lang": "<code>"}`.
+_CONFIG_PATH = Path.home() / ".hydra_umc_updater_lang.json"
+
+
+def resolve_initial_lang() -> str:
+    """Real preference resolution, same precedence order as the
+    dashboard's own resolveInitialLang(): a previously saved choice on
+    this machine, then the OS's own configured locale, then English."""
+    saved = _load_saved_lang()
+    if saved:
+        return saved
+
+    try:
+        # locale.getlocale() (not the deprecated getdefaultlocale()) -
+        # returns e.g. ("es_ES", "UTF-8") or (None, None) if unset/unknown.
+        detected, _encoding = locale.getlocale()
+    except (ValueError, TypeError):
+        detected = None
+
+    if detected:
+        short = detected[:2].lower()
+        if short in _LANG_CODES:
+            return short
+
+    return "en"
+
+
+def save_lang_preference(lang: str) -> None:
+    """Best-effort persistence - a real write to a real file in the
+    user's home directory, same non-fatal-on-failure spirit as the
+    dashboard's own try/except around localStorage.setItem (a read-only
+    home directory, a permissions issue, etc. must never crash the GUI
+    over a saved preference)."""
+    try:
+        _CONFIG_PATH.write_text(json.dumps({"lang": lang}), encoding="utf-8")
+    except OSError:
+        pass
+
+
+def _load_saved_lang() -> str | None:
+    try:
+        raw = _CONFIG_PATH.read_text(encoding="utf-8")
+        data = json.loads(raw)
+        lang = data.get("lang")
+        return lang if lang in _LANG_CODES else None
+    except (OSError, json.JSONDecodeError, AttributeError):
+        return None
+
+
+# =============================================================================
+# Translations
+# =============================================================================
+
+TRANSLATIONS: dict[str, dict[str, str]] = {
+    "en": {
+        "workspace_label": "Workspace: {path}",
+        "show_label": "Show:",
+        "lang_label": "Language:",
+        "offline_checkbox": "Offline (skip GitHub check)",
+        "refresh_button": "Refresh",
+        "col_project": "Project",
+        "col_maturity": "Maturity",
+        "col_role": "Role",
+        "col_stack": "Stack",
+        "col_deploy": "Deploy target",
+        "col_local": "Local",
+        "col_github": "GitHub",
+        "col_state": "State",
+        "note_default": "Select a project to see its own notes here.",
+        "note_child_of": "child of {parent}",
+        "note_tech": "Tech: {tech}",
+        "note_build": "Build: {build}",
+        "notes_empty": "(no notes recorded for this project yet)",
+        "build_empty": "(no build note for this project)",
+        "install_button": "Install selected",
+        "update_button": "Update selected",
+        "skip_build_checkbox": "Skip build step (clone/pull only)",
+        "status_ready": "Ready.",
+        "status_scanning": "Scanning local workspace...",
+        "status_ready_offline": "Ready (offline - GitHub not checked).",
+        "status_checking_github": "Checking GitHub...",
+        "status_checking_progress": "Checking GitHub... {done}/{total}",
+        "status_action_progress": "{verb} {name} - see the terminal this app was launched from for live output...",
+        "action_installing": "Installing",
+        "action_updating": "Updating",
+        "msg_select_project_first": "Select a project in the table first.",
+        "msg_already_installed": "{name} is already installed at\n{path}\n\nUse 'Update selected' instead.",
+        "msg_not_installed_yet": "{name} isn't installed yet.\n\nUse 'Install selected' instead.",
+        "msg_confirm_action": "{verb} {name} into\n{workspace}\n\nThis runs `git` and this project's own build script - real output goes to this app's own console/terminal, if it has one. Continue?",
+        "state_not_installed": "not installed",
+        "state_unknown_local": "unknown (local)",
+        "state_installed_not_checked": "installed (not checked)",
+        "state_installed_github_unknown": "installed, GitHub unknown",
+        "state_outdated": "OUTDATED",
+        "state_ahead": "ahead of GitHub",
+        "state_up_to_date": "up to date",
+        "deploy_all": "All {count} projects",
+        "deploy_cm5": "CM5 (compute module)",
+        "deploy_user-pc": "User's own PC",
+        "deploy_mobile": "Mobile app",
+        "deploy_wearable": "Wearable",
+        "maturity_production": "Production",
+        "maturity_established": "Established",
+        "maturity_functional": "Functional",
+        "maturity_scaffolding": "Scaffolding",
+        "role_api": "API",
+        "role_ui": "UI",
+        "role_cli": "CLI",
+        "role_firmware": "Firmware",
+        "role_library": "Library",
+        "role_service": "Service",
+        "role_tool": "Tool",
+    },
+    "es": {
+        "workspace_label": "Workspace: {path}",
+        "show_label": "Mostrar:",
+        "lang_label": "Idioma:",
+        "offline_checkbox": "Sin conexión (omitir comprobación de GitHub)",
+        "refresh_button": "Actualizar",
+        "col_project": "Proyecto",
+        "col_maturity": "Madurez",
+        "col_role": "Rol",
+        "col_stack": "Stack",
+        "col_deploy": "Destino de despliegue",
+        "col_local": "Local",
+        "col_github": "GitHub",
+        "col_state": "Estado",
+        "note_default": "Selecciona un proyecto para ver aquí sus notas.",
+        "note_child_of": "hijo de {parent}",
+        "note_tech": "Tecnología: {tech}",
+        "note_build": "Build: {build}",
+        "notes_empty": "(todavía no hay notas registradas para este proyecto)",
+        "build_empty": "(no hay nota de build para este proyecto)",
+        "install_button": "Instalar seleccionado",
+        "update_button": "Actualizar seleccionado",
+        "skip_build_checkbox": "Omitir el paso de build (solo clone/pull)",
+        "status_ready": "Listo.",
+        "status_scanning": "Escaneando el workspace local...",
+        "status_ready_offline": "Listo (sin conexión - GitHub no comprobado).",
+        "status_checking_github": "Comprobando GitHub...",
+        "status_checking_progress": "Comprobando GitHub... {done}/{total}",
+        "status_action_progress": "{verb} {name} - mira la terminal desde la que se lanzó esta app para ver la salida en vivo...",
+        "action_installing": "Instalando",
+        "action_updating": "Actualizando",
+        "msg_select_project_first": "Selecciona primero un proyecto en la tabla.",
+        "msg_already_installed": "{name} ya está instalado en\n{path}\n\nUsa 'Actualizar seleccionado' en su lugar.",
+        "msg_not_installed_yet": "{name} todavía no está instalado.\n\nUsa 'Instalar seleccionado' en su lugar.",
+        "msg_confirm_action": "{verb} {name} en\n{workspace}\n\nEsto ejecuta `git` y el propio script de build del proyecto - la salida real va a la consola/terminal de esta app, si tiene una. ¿Continuar?",
+        "state_not_installed": "no instalado",
+        "state_unknown_local": "desconocido (local)",
+        "state_installed_not_checked": "instalado (sin comprobar)",
+        "state_installed_github_unknown": "instalado, GitHub desconocido",
+        "state_outdated": "DESACTUALIZADO",
+        "state_ahead": "por delante de GitHub",
+        "state_up_to_date": "al día",
+        "deploy_all": "Los {count} proyectos",
+        "deploy_cm5": "CM5 (módulo de cómputo)",
+        "deploy_user-pc": "PC propio del usuario",
+        "deploy_mobile": "App móvil",
+        "deploy_wearable": "Wearable",
+        "maturity_production": "Producción",
+        "maturity_established": "Establecido",
+        "maturity_functional": "Funcional",
+        "maturity_scaffolding": "Andamiaje",
+        "role_api": "API",
+        "role_ui": "UI",
+        "role_cli": "CLI",
+        "role_firmware": "Firmware",
+        "role_library": "Librería",
+        "role_service": "Servicio",
+        "role_tool": "Herramienta",
+    },
+    "fr": {
+        "workspace_label": "Workspace : {path}",
+        "show_label": "Afficher :",
+        "lang_label": "Langue :",
+        "offline_checkbox": "Hors ligne (ignorer la vérification GitHub)",
+        "refresh_button": "Actualiser",
+        "col_project": "Projet",
+        "col_maturity": "Maturité",
+        "col_role": "Rôle",
+        "col_stack": "Stack",
+        "col_deploy": "Cible de déploiement",
+        "col_local": "Local",
+        "col_github": "GitHub",
+        "col_state": "État",
+        "note_default": "Sélectionnez un projet pour voir ses notes ici.",
+        "note_child_of": "enfant de {parent}",
+        "note_tech": "Techno : {tech}",
+        "note_build": "Build : {build}",
+        "notes_empty": "(aucune note enregistrée pour ce projet pour l'instant)",
+        "build_empty": "(aucune note de build pour ce projet)",
+        "install_button": "Installer la sélection",
+        "update_button": "Mettre à jour la sélection",
+        "skip_build_checkbox": "Ignorer l'étape de build (clone/pull uniquement)",
+        "status_ready": "Prêt.",
+        "status_scanning": "Analyse du workspace local...",
+        "status_ready_offline": "Prêt (hors ligne - GitHub non vérifié).",
+        "status_checking_github": "Vérification de GitHub...",
+        "status_checking_progress": "Vérification de GitHub... {done}/{total}",
+        "status_action_progress": "{verb} {name} - voir le terminal depuis lequel cette appli a été lancée pour la sortie en direct...",
+        "action_installing": "Installation de",
+        "action_updating": "Mise à jour de",
+        "msg_select_project_first": "Sélectionnez d'abord un projet dans le tableau.",
+        "msg_already_installed": "{name} est déjà installé dans\n{path}\n\nUtilisez plutôt « Mettre à jour la sélection ».",
+        "msg_not_installed_yet": "{name} n'est pas encore installé.\n\nUtilisez plutôt « Installer la sélection ».",
+        "msg_confirm_action": "{verb} {name} dans\n{workspace}\n\nCeci exécute `git` et le propre script de build de ce projet - la vraie sortie va vers la console/le terminal de cette appli, s'il en existe un. Continuer ?",
+        "state_not_installed": "non installé",
+        "state_unknown_local": "inconnu (local)",
+        "state_installed_not_checked": "installé (non vérifié)",
+        "state_installed_github_unknown": "installé, GitHub inconnu",
+        "state_outdated": "OBSOLÈTE",
+        "state_ahead": "en avance sur GitHub",
+        "state_up_to_date": "à jour",
+        "deploy_all": "Les {count} projets",
+        "deploy_cm5": "CM5 (module de calcul)",
+        "deploy_user-pc": "PC propre de l'utilisateur",
+        "deploy_mobile": "Appli mobile",
+        "deploy_wearable": "Wearable",
+        "maturity_production": "Production",
+        "maturity_established": "Établi",
+        "maturity_functional": "Fonctionnel",
+        "maturity_scaffolding": "Ébauche",
+        "role_api": "API",
+        "role_ui": "UI",
+        "role_cli": "CLI",
+        "role_firmware": "Firmware",
+        "role_library": "Bibliothèque",
+        "role_service": "Service",
+        "role_tool": "Outil",
+    },
+    "it": {
+        "workspace_label": "Workspace: {path}",
+        "show_label": "Mostra:",
+        "lang_label": "Lingua:",
+        "offline_checkbox": "Offline (salta il controllo GitHub)",
+        "refresh_button": "Aggiorna",
+        "col_project": "Progetto",
+        "col_maturity": "Maturità",
+        "col_role": "Ruolo",
+        "col_stack": "Stack",
+        "col_deploy": "Target di deployment",
+        "col_local": "Locale",
+        "col_github": "GitHub",
+        "col_state": "Stato",
+        "note_default": "Seleziona un progetto per vedere qui le sue note.",
+        "note_child_of": "figlio di {parent}",
+        "note_tech": "Tecnologia: {tech}",
+        "note_build": "Build: {build}",
+        "notes_empty": "(nessuna nota registrata ancora per questo progetto)",
+        "build_empty": "(nessuna nota di build per questo progetto)",
+        "install_button": "Installa selezionato",
+        "update_button": "Aggiorna selezionato",
+        "skip_build_checkbox": "Salta il passaggio di build (solo clone/pull)",
+        "status_ready": "Pronto.",
+        "status_scanning": "Scansione del workspace locale...",
+        "status_ready_offline": "Pronto (offline - GitHub non controllato).",
+        "status_checking_github": "Controllo GitHub...",
+        "status_checking_progress": "Controllo GitHub... {done}/{total}",
+        "status_action_progress": "{verb} {name} - guarda il terminale da cui è stata avviata questa app per l'output in tempo reale...",
+        "action_installing": "Installazione di",
+        "action_updating": "Aggiornamento di",
+        "msg_select_project_first": "Seleziona prima un progetto nella tabella.",
+        "msg_already_installed": "{name} è già installato in\n{path}\n\nUsa invece 'Aggiorna selezionato'.",
+        "msg_not_installed_yet": "{name} non è ancora installato.\n\nUsa invece 'Installa selezionato'.",
+        "msg_confirm_action": "{verb} {name} in\n{workspace}\n\nQuesto esegue `git` e lo script di build proprio di questo progetto - l'output reale va nella console/terminale di questa app, se ne ha una. Continuare?",
+        "state_not_installed": "non installato",
+        "state_unknown_local": "sconosciuto (locale)",
+        "state_installed_not_checked": "installato (non controllato)",
+        "state_installed_github_unknown": "installato, GitHub sconosciuto",
+        "state_outdated": "NON AGGIORNATO",
+        "state_ahead": "avanti rispetto a GitHub",
+        "state_up_to_date": "aggiornato",
+        "deploy_all": "Tutti i {count} progetti",
+        "deploy_cm5": "CM5 (modulo di calcolo)",
+        "deploy_user-pc": "PC proprio dell'utente",
+        "deploy_mobile": "App mobile",
+        "deploy_wearable": "Wearable",
+        "maturity_production": "Produzione",
+        "maturity_established": "Consolidato",
+        "maturity_functional": "Funzionale",
+        "maturity_scaffolding": "Impalcatura",
+        "role_api": "API",
+        "role_ui": "UI",
+        "role_cli": "CLI",
+        "role_firmware": "Firmware",
+        "role_library": "Libreria",
+        "role_service": "Servizio",
+        "role_tool": "Strumento",
+    },
+    "de": {
+        "workspace_label": "Workspace: {path}",
+        "show_label": "Anzeigen:",
+        "lang_label": "Sprache:",
+        "offline_checkbox": "Offline (GitHub-Prüfung überspringen)",
+        "refresh_button": "Aktualisieren",
+        "col_project": "Projekt",
+        "col_maturity": "Reifegrad",
+        "col_role": "Rolle",
+        "col_stack": "Stack",
+        "col_deploy": "Deploy-Ziel",
+        "col_local": "Lokal",
+        "col_github": "GitHub",
+        "col_state": "Status",
+        "note_default": "Wähle ein Projekt aus, um hier seine Notizen zu sehen.",
+        "note_child_of": "Kind von {parent}",
+        "note_tech": "Technik: {tech}",
+        "note_build": "Build: {build}",
+        "notes_empty": "(für dieses Projekt sind noch keine Notizen erfasst)",
+        "build_empty": "(keine Build-Notiz für dieses Projekt)",
+        "install_button": "Auswahl installieren",
+        "update_button": "Auswahl aktualisieren",
+        "skip_build_checkbox": "Build-Schritt überspringen (nur clone/pull)",
+        "status_ready": "Bereit.",
+        "status_scanning": "Lokaler Workspace wird gescannt...",
+        "status_ready_offline": "Bereit (offline - GitHub nicht geprüft).",
+        "status_checking_github": "GitHub wird geprüft...",
+        "status_checking_progress": "GitHub wird geprüft... {done}/{total}",
+        "status_action_progress": "{verb} {name} - siehe das Terminal, aus dem diese App gestartet wurde, für Live-Ausgaben...",
+        "action_installing": "Installiere",
+        "action_updating": "Aktualisiere",
+        "msg_select_project_first": "Wähle zuerst ein Projekt in der Tabelle aus.",
+        "msg_already_installed": "{name} ist bereits installiert unter\n{path}\n\nVerwende stattdessen 'Auswahl aktualisieren'.",
+        "msg_not_installed_yet": "{name} ist noch nicht installiert.\n\nVerwende stattdessen 'Auswahl installieren'.",
+        "msg_confirm_action": "{verb} {name} nach\n{workspace}\n\nDies führt `git` und das eigene Build-Skript dieses Projekts aus - die echte Ausgabe geht an die eigene Konsole/das Terminal dieser App, falls vorhanden. Fortfahren?",
+        "state_not_installed": "nicht installiert",
+        "state_unknown_local": "unbekannt (lokal)",
+        "state_installed_not_checked": "installiert (nicht geprüft)",
+        "state_installed_github_unknown": "installiert, GitHub unbekannt",
+        "state_outdated": "VERALTET",
+        "state_ahead": "vor GitHub",
+        "state_up_to_date": "aktuell",
+        "deploy_all": "Alle {count} Projekte",
+        "deploy_cm5": "CM5 (Compute-Modul)",
+        "deploy_user-pc": "Eigener PC des Nutzers",
+        "deploy_mobile": "Mobile App",
+        "deploy_wearable": "Wearable",
+        "maturity_production": "Produktion",
+        "maturity_established": "Etabliert",
+        "maturity_functional": "Funktional",
+        "maturity_scaffolding": "Grundgerüst",
+        "role_api": "API",
+        "role_ui": "UI",
+        "role_cli": "CLI",
+        "role_firmware": "Firmware",
+        "role_library": "Bibliothek",
+        "role_service": "Dienst",
+        "role_tool": "Werkzeug",
+    },
+    "zh": {
+        "workspace_label": "工作区：{path}",
+        "show_label": "显示：",
+        "lang_label": "语言：",
+        "offline_checkbox": "离线（跳过 GitHub 检查）",
+        "refresh_button": "刷新",
+        "col_project": "项目",
+        "col_maturity": "成熟度",
+        "col_role": "角色",
+        "col_stack": "技术栈",
+        "col_deploy": "部署目标",
+        "col_local": "本地",
+        "col_github": "GitHub",
+        "col_state": "状态",
+        "note_default": "选择一个项目以在此查看其说明。",
+        "note_child_of": "{parent} 的子项目",
+        "note_tech": "技术：{tech}",
+        "note_build": "构建：{build}",
+        "notes_empty": "（该项目目前还没有记录说明）",
+        "build_empty": "（该项目没有构建说明）",
+        "install_button": "安装所选项",
+        "update_button": "更新所选项",
+        "skip_build_checkbox": "跳过构建步骤（仅 clone/pull）",
+        "status_ready": "就绪。",
+        "status_scanning": "正在扫描本地工作区……",
+        "status_ready_offline": "就绪（离线——未检查 GitHub）。",
+        "status_checking_github": "正在检查 GitHub……",
+        "status_checking_progress": "正在检查 GitHub…… {done}/{total}",
+        "status_action_progress": "{verb} {name} —— 查看启动本应用的终端以获取实时输出……",
+        "action_installing": "正在安装",
+        "action_updating": "正在更新",
+        "msg_select_project_first": "请先在表格中选择一个项目。",
+        "msg_already_installed": "{name} 已安装于\n{path}\n\n请改用“更新所选项”。",
+        "msg_not_installed_yet": "{name} 尚未安装。\n\n请改用“安装所选项”。",
+        "msg_confirm_action": "将在\n{workspace}\n中{verb} {name}\n\n这会执行 `git` 以及该项目自身的构建脚本——如果本应用有自己的控制台/终端，真实输出会显示在那里。是否继续？",
+        "state_not_installed": "未安装",
+        "state_unknown_local": "未知（本地）",
+        "state_installed_not_checked": "已安装（未检查）",
+        "state_installed_github_unknown": "已安装，GitHub 未知",
+        "state_outdated": "已过期",
+        "state_ahead": "领先于 GitHub",
+        "state_up_to_date": "已是最新",
+        "deploy_all": "全部 {count} 个项目",
+        "deploy_cm5": "CM5（计算模块）",
+        "deploy_user-pc": "用户自己的电脑",
+        "deploy_mobile": "移动应用",
+        "deploy_wearable": "可穿戴设备",
+        "maturity_production": "生产",
+        "maturity_established": "成熟",
+        "maturity_functional": "功能完备",
+        "maturity_scaffolding": "脚手架",
+        "role_api": "API",
+        "role_ui": "UI",
+        "role_cli": "CLI",
+        "role_firmware": "固件",
+        "role_library": "库",
+        "role_service": "服务",
+        "role_tool": "工具",
+    },
+    "ja": {
+        "workspace_label": "ワークスペース：{path}",
+        "show_label": "表示：",
+        "lang_label": "言語：",
+        "offline_checkbox": "オフライン（GitHub チェックを省略）",
+        "refresh_button": "更新",
+        "col_project": "プロジェクト",
+        "col_maturity": "成熟度",
+        "col_role": "役割",
+        "col_stack": "スタック",
+        "col_deploy": "デプロイ対象",
+        "col_local": "ローカル",
+        "col_github": "GitHub",
+        "col_state": "状態",
+        "note_default": "プロジェクトを選択すると、ここに注記が表示されます。",
+        "note_child_of": "{parent} の子",
+        "note_tech": "技術：{tech}",
+        "note_build": "ビルド：{build}",
+        "notes_empty": "（このプロジェクトにはまだ注記が記録されていません）",
+        "build_empty": "（このプロジェクトにはビルドに関する注記がありません）",
+        "install_button": "選択項目をインストール",
+        "update_button": "選択項目を更新",
+        "skip_build_checkbox": "ビルド手順をスキップ（clone/pull のみ）",
+        "status_ready": "準備完了。",
+        "status_scanning": "ローカルワークスペースをスキャン中...",
+        "status_ready_offline": "準備完了（オフライン - GitHub は未確認）。",
+        "status_checking_github": "GitHub を確認中...",
+        "status_checking_progress": "GitHub を確認中... {done}/{total}",
+        "status_action_progress": "{verb} {name} - リアルタイムの出力は、このアプリを起動したターミナルを確認してください...",
+        "action_installing": "インストール中",
+        "action_updating": "更新中",
+        "msg_select_project_first": "まずテーブルでプロジェクトを選択してください。",
+        "msg_already_installed": "{name} はすでに\n{path}\nにインストールされています。\n\n代わりに「選択項目を更新」を使用してください。",
+        "msg_not_installed_yet": "{name} はまだインストールされていません。\n\n代わりに「選択項目をインストール」を使用してください。",
+        "msg_confirm_action": "{name} を\n{workspace}\nに{verb}します。\n\nこれは `git` とこのプロジェクト自身のビルドスクリプトを実行します——実際の出力は、このアプリ自身のコンソール/ターミナル（存在する場合）に表示されます。続行しますか？",
+        "state_not_installed": "未インストール",
+        "state_unknown_local": "不明（ローカル）",
+        "state_installed_not_checked": "インストール済み（未確認）",
+        "state_installed_github_unknown": "インストール済み、GitHub 不明",
+        "state_outdated": "更新が必要",
+        "state_ahead": "GitHub より進んでいる",
+        "state_up_to_date": "最新",
+        "deploy_all": "全 {count} プロジェクト",
+        "deploy_cm5": "CM5（コンピュートモジュール）",
+        "deploy_user-pc": "ユーザー自身のPC",
+        "deploy_mobile": "モバイルアプリ",
+        "deploy_wearable": "ウェアラブル",
+        "maturity_production": "本番",
+        "maturity_established": "定着済み",
+        "maturity_functional": "機能実装済み",
+        "maturity_scaffolding": "骨組み",
+        "role_api": "API",
+        "role_ui": "UI",
+        "role_cli": "CLI",
+        "role_firmware": "ファームウェア",
+        "role_library": "ライブラリ",
+        "role_service": "サービス",
+        "role_tool": "ツール",
+    },
+}
+
+
+def t(lang: str, key: str, **kwargs: object) -> str:
+    """Real translation lookup with real `{placeholder}` substitution
+    (str.format, not a template engine) - falls back to English on an
+    unknown language, and to the key itself (never a crash) on an
+    unknown key, the same defensive spirit as the dashboard's own
+    `dict[key] !== undefined` checks."""
+    table = TRANSLATIONS.get(lang, TRANSLATIONS["en"])
+    template = table.get(key, TRANSLATIONS["en"].get(key, key))
+    try:
+        return template.format(**kwargs)
+    except (KeyError, IndexError):
+        return template
