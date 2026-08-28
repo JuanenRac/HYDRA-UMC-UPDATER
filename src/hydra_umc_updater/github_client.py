@@ -40,6 +40,7 @@ from __future__ import annotations
 import json
 import os
 import socket
+import time
 import urllib.error
 import urllib.request
 from concurrent.futures import (
@@ -77,6 +78,58 @@ REQUEST_TIMEOUT_S = 10
 MAX_CONCURRENT_REQUESTS = 8
 
 USER_AGENT = "HYDRA-UMC-UPDATER"
+
+# Real hosts by default; module-level so tests can point them at a local
+# HTTP server instead of mocking urllib itself - real request/response
+# round-trips against real fixture servers, same spirit as this
+# ecosystem's Go projects using net/http/httptest.
+GITHUB_API_BASE = "https://api.github.com"
+GITHUB_RAW_BASE = "https://raw.githubusercontent.com"
+
+# Real, bounded retry for genuinely transient network failures only - a
+# connection that never got a response (DNS, refused, reset, timeout).
+# A definitive HTTP response, even an error one (404/403/500), is never
+# retried: GitHub already answered, and retrying would not change that
+# answer, only spend more of the rate limit.
+RETRY_MAX_ATTEMPTS = 3
+RETRY_BACKOFF_BASE_S = 0.5
+
+
+def _urlopen_with_retries(
+    request: urllib.request.Request,
+    *,
+    timeout: float,
+    max_attempts: int | None = None,
+    backoff_base_s: float | None = None,
+    opener=urllib.request.urlopen,
+    sleep=time.sleep,
+) -> bytes:
+    """Open `request`, retrying up to `max_attempts` times on a transient
+    network failure (URLError/TimeoutError/socket.timeout/OSError - never
+    on HTTPError, a real response GitHub already gave us). Waits
+    `backoff_base_s * 2**attempt` between attempts. `opener`/`sleep` are
+    injectable so tests can exercise the real retry/backoff logic without
+    real network flakiness or real wall-clock delay. `max_attempts`/
+    `backoff_base_s` default to the module-level constants, read here
+    (not as literal defaults) so tests can also monkeypatch those
+    constants directly for callers - like every real caller in this
+    module - that never override them explicitly."""
+    if max_attempts is None:
+        max_attempts = RETRY_MAX_ATTEMPTS
+    if backoff_base_s is None:
+        backoff_base_s = RETRY_BACKOFF_BASE_S
+    attempt = 0
+    while True:
+        attempt += 1
+        try:
+            with opener(request, timeout=timeout) as response:
+                return response.read()
+        except urllib.error.HTTPError:
+            raise
+        except (urllib.error.URLError, TimeoutError, socket.timeout, OSError):
+            if attempt >= max_attempts:
+                raise
+            sleep(backoff_base_s * (2 ** (attempt - 1)))
 
 
 # ---------------------------------------------------------------------------
@@ -125,15 +178,14 @@ class RemoteDiscovery:
 
 def _fetch_discovered_manifest(owner: str, name: str, branch: str) -> RemoteStatus | None:
     """Return a project only when its own manifest opts into HYDRA-UMC."""
-    url = f"https://raw.githubusercontent.com/{owner}/{name}/{branch}/{MANIFEST_FILE}"
+    url = f"{GITHUB_RAW_BASE}/{owner}/{name}/{branch}/{MANIFEST_FILE}"
     request = urllib.request.Request(
         url,
         headers={"User-Agent": USER_AGENT, "Accept": "application/json"},
         method="GET",
     )
     try:
-        with urllib.request.urlopen(request, timeout=REQUEST_TIMEOUT_S) as response:
-            text = response.read().decode("utf-8", errors="replace")
+        text = _urlopen_with_retries(request, timeout=REQUEST_TIMEOUT_S).decode("utf-8", errors="replace")
     except urllib.error.HTTPError as exc:
         if exc.code == 404:
             return None
@@ -184,11 +236,10 @@ def discover_remote_projects(
     candidates: list[tuple[str, str]] = []
     page = 1
     while True:
-        url = f"https://api.github.com/users/{owner}/repos?type=owner&per_page=100&page={page}"
+        url = f"{GITHUB_API_BASE}/users/{owner}/repos?type=owner&per_page=100&page={page}"
         request = urllib.request.Request(url, headers=headers, method="GET")
         try:
-            with urllib.request.urlopen(request, timeout=REQUEST_TIMEOUT_S) as response:
-                payload = json.loads(response.read().decode("utf-8", errors="replace"))
+            payload = json.loads(_urlopen_with_retries(request, timeout=REQUEST_TIMEOUT_S).decode("utf-8", errors="replace"))
         except (urllib.error.URLError, urllib.error.HTTPError, TimeoutError, socket.timeout, OSError, json.JSONDecodeError) as exc:
             raise RuntimeError(f"unable to list GitHub repositories for {owner}: {exc}") from exc
         if not isinstance(payload, list):
@@ -246,17 +297,8 @@ def _fetch_one(
     )
 
     try:
-        with urllib.request.urlopen(
-            request,
-            timeout=REQUEST_TIMEOUT_S,
-        ) as response:
-
-            raw = response.read()
-
-            text = raw.decode(
-                "utf-8",
-                errors="replace",
-            )
+        raw = _urlopen_with_retries(request, timeout=REQUEST_TIMEOUT_S)
+        text = raw.decode("utf-8", errors="replace")
 
     except urllib.error.HTTPError as exc:
         if exc.code == 404:
@@ -270,8 +312,7 @@ def _fetch_one(
                 method="GET",
             )
             try:
-                with urllib.request.urlopen(native_request, timeout=REQUEST_TIMEOUT_S) as response:
-                    native_text = response.read().decode("utf-8", errors="replace")
+                native_text = _urlopen_with_retries(native_request, timeout=REQUEST_TIMEOUT_S).decode("utf-8", errors="replace")
                 native_version = parse_version(native_text, entry.pattern)
                 if native_version is not None:
                     return RemoteStatus(

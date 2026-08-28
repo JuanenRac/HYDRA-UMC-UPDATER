@@ -140,6 +140,24 @@ für die ausgewählte Zeile.
   die Versionierungskonvention dieses Ökosystems erzeugt nie ein
   Tag/Release, daher wäre die Releases-API hier aktiv falsch, nicht nur
   weniger bequem.
+- **Ein vorübergehender Netzwerkfehler bekommt einen echten
+  Wiederholungsversuch; eine definitive Antwort nie.** Jede echte
+  GitHub-Anfrage (`_urlopen_with_retries` in `github_client.py`)
+  wiederholt bis zu 3-mal mit Backoff, aber nur, wenn die Verbindung
+  überhaupt keine Antwort erhalten hat (DNS/Timeout/Reset). Ein echter
+  HTTP-Status, den GitHub tatsächlich zurückgegeben hat - 404, 403, 500 -
+  wird nie wiederholt: GitHub hat bereits geantwortet, und ein erneuter
+  Versuch würde nur mehr Rate-Limit für dasselbe Ergebnis verbrauchen.
+- **Ein fehlerhafter entfernter Katalog schlägt laut fehl; ein
+  fehlerhaftes Projekt nicht.** Wenn die GitHub-Repository-Liste selbst
+  nicht erreichbar oder nicht parsbar ist, löst `discover_remote_projects()`
+  eine Ausnahme aus - sowohl `gui.py` als auch `main.py` fangen sie
+  bereits ab und fallen auf die lokal entdeckte Projektliste zurück,
+  statt einen defekten oder leeren Scan anzuzeigen. Das fehlerhafte
+  Manifest eines einzelnen Repositorys wird dagegen in die eigene
+  `errors`-Liste dieses Scans isoliert und bricht die Entdeckung des
+  restlichen Katalogs nie ab - ein echter Test mit Fixture-Server
+  (`tests/test_github_client.py`) belegt beide Pfade.
 - **`install`/`update` erwarten immer einen expliziten Projektnamen.**
   Es gibt keinen "alles aktualisieren"-Unterbefehl, und das ist eine
   Design-Entscheidung, kein fehlendes Feature - eine Flotte echter
@@ -168,7 +186,7 @@ HYDRA-UMC-UPDATER/
 │   ├── registry.py        # Die 44 Projekte: Repo, Stack, Versionsdatei, Muster, Deployment-Ziel
 │   ├── version_parse.py   # EINE Regex-Extraktions-Implementierung, lokal+GitHub
 │   ├── detect.py          # Scannt eine Workspace-Wurzel nach Installiertem
-│   ├── github_client.py   # Nebenläufiger Abruf des Rohinhalts mit der neuesten Version
+│   ├── github_client.py   # Nebenläufiger Abruf des Rohinhalts + echter Wiederholungsversuch/Backoff bei vorübergehenden Netzwerkfehlern
 │   ├── install.py         # git clone/pull + delegiert an das eigene Build-Skript
 │   ├── gui.py              # Fenster-GUI (Tkinter/ttk) - der standardmäßige Einstiegspunkt
 │   └── main.py             # Dispatch: GUI standardmäßig, --cli für status/install/update

@@ -138,6 +138,23 @@ ligne sélectionnée.
   la convention de versionnage de cet écosystème ne crée jamais de
   tag/release, donc l'API des Releases serait activement fausse ici, pas
   seulement moins pratique.
+- **Un échec réseau transitoire reçoit un vrai réessai ; une réponse
+  définitive jamais.** Chaque requête GitHub réelle (`_urlopen_with_retries`
+  de `github_client.py`) réessaie jusqu'à 3 fois avec un backoff, mais
+  uniquement quand la connexion n'a jamais obtenu de réponse du tout
+  (DNS/timeout/reset). Un statut HTTP réel que GitHub a effectivement
+  renvoyé - 404, 403, 500 - n'est jamais réessayé : GitHub a déjà
+  répondu, et insister ne ferait que consommer davantage de quota pour le
+  même résultat.
+- **Un catalogue distant malformé échoue bruyamment ; un seul projet
+  malformé non.** Si le listing des dépôts GitHub lui-même est
+  injoignable ou illisible, `discover_remote_projects()` lève une
+  exception - `gui.py` et `main.py` la capturent déjà tous les deux et
+  retombent sur la liste de projets découverts localement plutôt que
+  d'afficher un scan cassé ou vide. Le manifeste malformé d'un seul dépôt,
+  en revanche, est isolé dans la liste `errors` de ce scan et n'interrompt
+  jamais la découverte du reste - un vrai test avec serveur de fixtures
+  (`tests/test_github_client.py`) prouve les deux chemins.
 - **`install`/`update` prennent toujours un nom de projet explicite.**
   Il n'existe pas de sous-commande "tout mettre à jour", et c'est une
   décision de conception, pas une fonctionnalité manquante - une flotte
@@ -165,7 +182,7 @@ HYDRA-UMC-UPDATER/
 │   ├── registry.py        # Les 44 projets : dépôt, stack, fichier de version, motif, cible de déploiement
 │   ├── version_parse.py   # UNE implémentation d'extraction regex, local+GitHub
 │   ├── detect.py          # Scanne une racine de workspace pour ce qui est installé
-│   ├── github_client.py   # Récupération concurrente du contenu brut de la dernière version
+│   ├── github_client.py   # Récupération concurrente du contenu brut + réessai/backoff réel pour les erreurs réseau transitoires
 │   ├── install.py         # git clone/pull + délègue au script de build propre
 │   ├── gui.py              # GUI avec fenêtre (Tkinter/ttk) - point d'entrée par défaut
 │   └── main.py             # Répartition : GUI par défaut, --cli pour status/install/update

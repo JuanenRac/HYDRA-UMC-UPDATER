@@ -131,6 +131,8 @@ row is selected.
   this ecosystem's versioning convention never creates a tag/release, so
   the Releases API would be actively wrong here, not just less
   convenient.
+- **A transient network failure gets a real retry; a definitive answer never does.** Every real GitHub request (`github_client.py`'s `_urlopen_with_retries`) retries up to 3 times with backoff, but only for a connection that never got a response at all (DNS/timeout/reset). A real HTTP status GitHub actually returned - 404, 403, 500 - is never retried: GitHub already answered, and hammering it again would only spend more of the rate limit for the same result.
+- **A malformed remote catalog fails loudly; one malformed project doesn't.** If GitHub's repository listing itself is unreachable or unparseable, `discover_remote_projects()` raises - both `gui.py` and `main.py` already catch that and fall back to a locally-discovered project list rather than showing a broken/empty scan. One single repository's malformed manifest, by contrast, is isolated into that scan's own `errors` list and never aborts discovery of the rest - a real fixture-server test (`tests/test_github_client.py`) proves both paths.
 - **`install`/`update` always take one explicit project name.** There is
   no "update everything" subcommand, and this is a design decision, not
   a missing feature - a fleet of real robots is not something to leave
@@ -156,7 +158,7 @@ HYDRA-UMC-UPDATER/
 │   ├── registry.py        # The 44 projects: repo, stack, version file, pattern, deploy target
 │   ├── version_parse.py   # ONE regex-extraction implementation, local+GitHub
 │   ├── detect.py          # Scans a workspace root for what's installed
-│   ├── github_client.py   # Concurrent raw-content fetch of GitHub's latest version
+│   ├── github_client.py   # Concurrent raw-content fetch + real retry/backoff for transient network errors
 │   ├── install.py         # git clone/pull + delegate to the project's own build script
 │   ├── gui.py              # Windowed GUI (Tkinter/ttk) - the default entry point
 │   └── main.py             # Dispatch: GUI by default, --cli for status/install/update
