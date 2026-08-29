@@ -51,6 +51,14 @@ class ProjectManifest:
     native_version_pattern: str | dict[str, str]
     build: str
     notes: str
+    # Real, optional live-status probe target - present only for a repo that
+    # actually runs as a local network service (an "api"/"service" role
+    # listening on a real port), absent for a library/CLI/firmware/UI that
+    # never does. `service_port` alone (no `service_health_path`) means "do
+    # a real TCP connect check"; `service_health_path` additionally means
+    # "do a real HTTP GET against that path and expect a 2xx" instead.
+    service_port: int | None = None
+    service_health_path: str | None = None
 
 
 def _require_string(data: dict[str, Any], field: str) -> str:
@@ -74,7 +82,12 @@ def parse_manifest(text: str, *, expected_name: str | None = None) -> ProjectMan
         "schema_version", "ecosystem", "name", "version", "role", "stack", "technologies",
         "deployment_target", "maturity", "family", "parent", "native_version", "build", "notes",
     }
-    unknown = sorted(set(data) - expected_fields)
+    # Recognized but genuinely optional - a repo that never runs as a
+    # network service has no reason to declare one. Still an explicit,
+    # spelled-out set (not "anything goes") so a typo'd key is still
+    # caught below, same reasoning as expected_fields itself.
+    optional_fields = {"service"}
+    unknown = sorted(set(data) - expected_fields - optional_fields)
     missing = sorted(expected_fields - set(data))
     if missing:
         raise ManifestValidationError("missing field(s): " + ", ".join(missing))
@@ -156,6 +169,8 @@ def parse_manifest(text: str, *, expected_name: str | None = None) -> ProjectMan
     if not isinstance(build, str):
         raise ManifestValidationError("build must be a string")
 
+    service_port, service_health_path = _parse_service(data.get("service"))
+
     return ProjectManifest(
         schema_version=schema_version,
         ecosystem=ecosystem,
@@ -172,4 +187,38 @@ def parse_manifest(text: str, *, expected_name: str | None = None) -> ProjectMan
         native_version_pattern=native_version_pattern,
         build=build,
         notes=_require_string(data, "notes"),
+        service_port=service_port,
+        service_health_path=service_health_path,
     )
+
+
+def _parse_service(raw_service: Any) -> tuple[int | None, str | None]:
+    """Validate the optional `service` object (real live-status probe target).
+
+    Absent entirely (the common case - a library/CLI/firmware/UI never runs
+    as a network service): returns (None, None). Present: requires a real
+    `port` (1-65535) and accepts an optional `health_path` (an HTTP path
+    starting with "/") for an HTTP-level check instead of a bare TCP
+    connect.
+    """
+    if raw_service is None:
+        return None, None
+    if not isinstance(raw_service, dict):
+        raise ManifestValidationError("service must be an object when present")
+
+    allowed = {"port", "health_path"}
+    unknown = sorted(set(raw_service) - allowed)
+    if unknown:
+        raise ManifestValidationError("unknown field(s) in service: " + ", ".join(unknown))
+
+    port = raw_service.get("port")
+    if isinstance(port, bool) or not isinstance(port, int) or not (1 <= port <= 65535):
+        raise ManifestValidationError("service.port must be an integer between 1 and 65535")
+
+    health_path: str | None = None
+    if "health_path" in raw_service:
+        health_path = raw_service["health_path"]
+        if not isinstance(health_path, str) or not health_path.startswith("/"):
+            raise ManifestValidationError("service.health_path must be a string starting with '/'")
+
+    return port, health_path

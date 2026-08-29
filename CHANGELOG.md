@@ -15,6 +15,29 @@ bumped manually only. See `bump_version.py`.
 - **Real bug fixed in `tests/test_registry.py`**: a manifest fixture built inside a non-raw Python triple-quoted string double-escaped its embedded regex (`\\d+`, `\\.`), producing invalid JSON (`\d` is not a valid JSON escape) at runtime and making the test fail with `ManifestValidationError` instead of exercising what it was meant to test. Fixed by making the string literal raw (`r'''...'''`) so only JSON's own escaping applies.
 - Verified real: `pytest tests/ -q` -> 17/17 (previously 16 passed, 1 failed). A real local-discovery harness against the actual `C:\Users\juane\Documents\GitHub` checkout confirmed the fix - `HYDRA-UMC-SERVER` now shows 6 real children (was 2), top-level rows dropped from 28 (broken) to the expected 16, all 47 real local manifests still accounted for, and Treeview selection still survives a real language switch.
 
+## [0.1.9] - Real, optional service-liveness manifest field
+
+- **`hydra-umc.project.json`'s own schema gains a real, optional `service`
+  object** (`project_manifest.py`) - `{ "port": 1-65535, "health_path"?:
+  "/some/path" }`. Absent for the common case (a library/CLI/firmware/UI
+  that never runs as a network service); present only for a repo that
+  actually does, so HYDRA-UMC-SERVER's ecosystem status endpoint (and any
+  future dashboard) can do a real liveness probe against each declared
+  sibling service instead of only reading static manifest metadata. Kept
+  as a genuinely optional, explicitly-recognized field (not "anything
+  goes") - an unrecognized key still fails loudly, same reasoning as the
+  existing top-level unknown-field check. `registry.py`'s `ProjectEntry`/
+  `entry_from_manifest()` carry the new `service_port`/
+  `service_health_path` through to every existing consumer (local
+  discovery, GitHub-based catalog) unchanged otherwise.
+- 6 new tests in `tests/test_project_manifest.py` covering: absent by
+  default, a real port+health_path pair, port-only (TCP-level check),
+  an out-of-range port rejected, a health_path missing its leading `/`
+  rejected, and an unknown key inside `service` rejected. Full suite:
+  36/36 passing (was 30). Verified the change doesn't break real local
+  discovery against the actual ecosystem checkout on this machine
+  (`discover_workspace()` still lists every project cleanly).
+
 ## [0.1.8] - Real retries for transient network errors, real malformed-catalog fixtures
 
 - **Real bounded retry with backoff for transient network failures** (`github_client.py`'s `_urlopen_with_retries`): every real GitHub request this tool makes (repository listing, manifest fetch, native-version fallback) used to treat the very first network hiccup (a dropped connection, a DNS blip, a timeout) as a permanent failure. It now retries up to 3 times with exponential backoff (0.5s, 1s) before giving up - but only for genuine transport-level failures (`URLError`/`TimeoutError`/`socket.timeout`/`OSError`), never for a definitive HTTP response GitHub already gave (a 404/403/500 is real information, not noise to retry through).

@@ -57,3 +57,46 @@ def test_rejects_unknown_fields_to_prevent_silent_dashboard_drift():
     data["deployment"] = "cm5"
     with pytest.raises(ManifestValidationError, match="unknown field"):
         parse_manifest(json.dumps(data))
+
+
+def test_service_is_absent_by_default():
+    manifest = parse_manifest(json.dumps(valid_manifest()))
+    assert manifest.service_port is None
+    assert manifest.service_health_path is None
+
+
+def test_parses_a_real_service_port_and_health_path():
+    data = valid_manifest()
+    data["service"] = {"port": 3000, "health_path": "/api/system/metrics"}
+    manifest = parse_manifest(json.dumps(data))
+    assert manifest.service_port == 3000
+    assert manifest.service_health_path == "/api/system/metrics"
+
+
+def test_service_health_path_is_optional_tcp_only_check():
+    data = valid_manifest()
+    data["service"] = {"port": 1883}
+    manifest = parse_manifest(json.dumps(data))
+    assert manifest.service_port == 1883
+    assert manifest.service_health_path is None
+
+
+def test_rejects_a_service_port_out_of_range():
+    data = valid_manifest()
+    data["service"] = {"port": 70000}
+    with pytest.raises(ManifestValidationError, match="service.port"):
+        parse_manifest(json.dumps(data))
+
+
+def test_rejects_a_service_health_path_without_a_leading_slash():
+    data = valid_manifest()
+    data["service"] = {"port": 3000, "health_path": "api/system/metrics"}
+    with pytest.raises(ManifestValidationError, match="service.health_path"):
+        parse_manifest(json.dumps(data))
+
+
+def test_rejects_an_unknown_field_inside_service():
+    data = valid_manifest()
+    data["service"] = {"port": 3000, "protocol": "http"}
+    with pytest.raises(ManifestValidationError, match="unknown field.*service"):
+        parse_manifest(json.dumps(data))
