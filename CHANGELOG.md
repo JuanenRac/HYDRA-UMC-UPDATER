@@ -15,6 +15,22 @@ bumped manually only. See `bump_version.py`.
 - **Real bug fixed in `tests/test_registry.py`**: a manifest fixture built inside a non-raw Python triple-quoted string double-escaped its embedded regex (`\\d+`, `\\.`), producing invalid JSON (`\d` is not a valid JSON escape) at runtime and making the test fail with `ManifestValidationError` instead of exercising what it was meant to test. Fixed by making the string literal raw (`r'''...'''`) so only JSON's own escaping applies.
 - Verified real: `pytest tests/ -q` -> 17/17 (previously 16 passed, 1 failed). A real local-discovery harness against the actual `C:\Users\juane\Documents\GitHub` checkout confirmed the fix - `HYDRA-UMC-SERVER` now shows 6 real children (was 2), top-level rows dropped from 28 (broken) to the expected 16, all 47 real local manifests still accounted for, and Treeview selection still survives a real language switch.
 
+## [0.2.1] - Fixed a real version-mirror drift
+
+- **`src/hydra_umc_updater/__init__.py`**'s `__version__` had fallen one
+  real build behind `pyproject.toml`/the manifest, found live: running
+  `python main.py` after an earlier real version bump still showed the
+  OLD version in the GUI's own title bar and About dialog. Root cause:
+  `bump_manifest_version.py` (called bare, no `--sync`) only touches its
+  declared `native_version.file` (`pyproject.toml`) - it doesn't know
+  this repo also mirrors that version into `__init__.py`, which only
+  this repo's own separate `bump_version.py` keeps in sync (called
+  first, from `build.bat`/`.sh`). Fixed via the real, intended sequence
+  this time (`bump_version.py` then `bump_manifest_version.py --sync`).
+  The same underlying gap was found and fixed across every other
+  ecosystem repo with this same pyproject.toml/__init__.py mirror
+  pattern this same pass.
+
 ## [0.2.0] - Real Help > About window
 
 - **A real native menu bar** (`gui.py`) - `Help > About` opens a real,
