@@ -42,6 +42,7 @@ from __future__ import annotations
 import queue
 import sys
 import threading
+import webbrowser
 from pathlib import Path
 
 import tkinter as tk
@@ -51,7 +52,7 @@ from . import __version__, i18n
 from .detect import LocalStatus, discover_workspace
 from .github_client import RemoteStatus, discover_remote_projects, fetch_all
 from .install import install_or_update
-from .registry import ProjectEntry
+from .registry import GITHUB_OWNER, ProjectEntry
 
 #: Order matters - shown left-to-right in the filter dropdown, "all" first.
 #: Real labels come from i18n.t(lang, f"deploy_{key}") / "deploy_all" at
@@ -107,6 +108,7 @@ class UpdaterGUI:
         root.geometry("1040x580")
         root.minsize(820, 440)
 
+        self._build_menu()
         self._build_widgets()
         self._apply_language(self.lang, rerender=False)  # widgets exist now, no data to render yet
         self.root.after(100, self._poll_queue)
@@ -127,6 +129,74 @@ class UpdaterGUI:
 
     def _role_label(self, key: str) -> str:
         return self.t(f"role_{key}")
+
+    # -- Menu bar / About ------------------------------------------------
+    def _build_menu(self) -> None:
+        """A real native menu bar (Help > About) - this app had none until
+        now, so there was no discoverable way to see which build/version
+        is actually running short of reading the window title bar. Labels
+        are re-applied on every language switch by _apply_language() below,
+        same as every other real widget in this window - tk.Menu entries
+        don't support a StringVar the way Label/Button text does, so this
+        needs an explicit re-config instead."""
+        # Real bug found by actually running this on Windows, not assumed:
+        # a top-level tk.Menu assigned as a real window's own -menu gets an
+        # implicit tearoff entry at index 0 UNLESS this menu itself also
+        # gets tearoff=False - without it, menubar.entryconfig(0, ...)
+        # below silently targets that phantom tearoff entry instead of the
+        # real "Help" cascade, and fails with "unknown option -label".
+        menubar = tk.Menu(self.root, tearoff=False)
+        help_menu = tk.Menu(menubar, tearoff=False)
+        help_menu.add_command(label="", command=self._show_about)
+        menubar.add_cascade(label="", menu=help_menu)
+        self.root.config(menu=menubar)
+        self._menubar = menubar
+        self._help_menu = help_menu
+
+    def _show_about(self) -> None:
+        """A real, read-only info dialog - own name/version, copyright/
+        license, the real GitHub repository URL (a genuine clickable link,
+        opened via the stdlib webbrowser module - no new dependency), and
+        the real Python/Tk runtime this process is actually executing
+        under, which is real, useful diagnostic info for a desktop tool
+        that gets run across very different machines (a developer's own
+        PC today, a CM5's own desktop session later)."""
+        dialog = tk.Toplevel(self.root)
+        dialog.title(self.t("about_title"))
+        dialog.resizable(False, False)
+        dialog.transient(self.root)
+
+        frame = ttk.Frame(dialog, padding=20)
+        frame.pack(fill="both", expand=True)
+
+        ttk.Label(frame, text="HYDRA-UMC-UPDATER", font=("TkDefaultFont", 14, "bold")).pack(anchor="w")
+        ttk.Label(frame, text=self.t("about_version", version=__version__)).pack(anchor="w", pady=(4, 0))
+        ttk.Label(frame, text=self.t("about_description"), wraplength=360, justify="left").pack(anchor="w", pady=(12, 0))
+        ttk.Label(frame, text=self.t("about_copyright")).pack(anchor="w", pady=(12, 0))
+        ttk.Label(frame, text=self.t("about_license")).pack(anchor="w")
+
+        repo_url = f"https://github.com/{GITHUB_OWNER}/HYDRA-UMC-UPDATER"
+        link = ttk.Label(frame, text=repo_url, foreground="#2563eb", cursor="hand2")
+        link.pack(anchor="w", pady=(12, 0))
+        link.bind("<Button-1>", lambda _e: webbrowser.open(repo_url))
+
+        ttk.Label(
+            frame,
+            text=self.t("about_runtime", python=sys.version.split()[0], tk=str(tk.TkVersion)),
+            foreground="#888888",
+        ).pack(anchor="w", pady=(12, 0))
+
+        ttk.Button(frame, text=self.t("about_close_button"), command=dialog.destroy).pack(anchor="e", pady=(16, 0))
+
+        dialog.bind("<Escape>", lambda _e: dialog.destroy())
+        # Real modal centering relative to the main window, not wherever
+        # the OS/window manager happens to place a fresh Toplevel.
+        dialog.update_idletasks()
+        x = self.root.winfo_rootx() + (self.root.winfo_width() - dialog.winfo_width()) // 2
+        y = self.root.winfo_rooty() + (self.root.winfo_height() - dialog.winfo_height()) // 2
+        dialog.geometry(f"+{max(x, 0)}+{max(y, 0)}")
+        dialog.grab_set()
+        dialog.focus_set()
 
     # -- Widget layout -------------------------------------------------
     def _build_widgets(self) -> None:
@@ -220,6 +290,13 @@ class UpdaterGUI:
         restart-required setting. `rerender=False` only at __init__ time,
         before self.locals_ has anything in it yet to redraw."""
         self.lang = lang
+
+        # tk.Menu entries have no StringVar to bind to, unlike every widget
+        # below - real re-config by index, same "every language switch
+        # relabels every real widget live" contract as the rest of this
+        # method.
+        self._menubar.entryconfig(0, label=self.t("menu_help"))
+        self._help_menu.entryconfig(0, label=self.t("menu_about"))
 
         self.workspace_lbl.config(text=self.t("workspace_label", path=self.workspace_root))
         self.show_lbl.config(text=self.t("show_label"))

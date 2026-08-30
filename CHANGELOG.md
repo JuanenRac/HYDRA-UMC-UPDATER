@@ -15,6 +15,27 @@ bumped manually only. See `bump_version.py`.
 - **Real bug fixed in `tests/test_registry.py`**: a manifest fixture built inside a non-raw Python triple-quoted string double-escaped its embedded regex (`\\d+`, `\\.`), producing invalid JSON (`\d` is not a valid JSON escape) at runtime and making the test fail with `ManifestValidationError` instead of exercising what it was meant to test. Fixed by making the string literal raw (`r'''...'''`) so only JSON's own escaping applies.
 - Verified real: `pytest tests/ -q` -> 17/17 (previously 16 passed, 1 failed). A real local-discovery harness against the actual `C:\Users\juane\Documents\GitHub` checkout confirmed the fix - `HYDRA-UMC-SERVER` now shows 6 real children (was 2), top-level rows dropped from 28 (broken) to the expected 16, all 47 real local manifests still accounted for, and Treeview selection still survives a real language switch.
 
+## [0.2.0] - Real Help > About window
+
+- **A real native menu bar** (`gui.py`) - `Help > About` opens a real,
+  read-only dialog: app name, real running version (`__version__`),
+  copyright/license, a genuine clickable GitHub repository link (opened
+  via the stdlib `webbrowser` module, no new dependency), and the real
+  Python/Tk runtime this process is actually executing under - useful,
+  honest diagnostic info for a desktop tool that runs across very
+  different machines (a developer's own PC today, a CM5's own desktop
+  session later). Fully translated in all 7 existing languages, relabeled
+  live on a language switch like every other real widget in this window.
+- Real bug found and fixed by actually running this on Windows: a
+  top-level `tk.Menu` assigned as a window's own `-menu` silently gains
+  an implicit tearoff entry at index 0 unless it *also* gets
+  `tearoff=False` (not just its submenus) - without it,
+  `menubar.entryconfig(0, ...)` targeted that phantom entry instead of
+  the real "Help" cascade and failed with a real `TclError`. Verified via
+  a real headless-but-live `Tk()` smoke test: the About dialog opens, and
+  all 7 languages relabel the menu without error.
+- 36/36 tests still passing.
+
 ## [0.1.9] - Real, optional service-liveness manifest field
 
 - **`hydra-umc.project.json`'s own schema gains a real, optional `service`
