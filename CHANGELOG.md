@@ -15,6 +15,33 @@ bumped manually only. See `bump_version.py`.
 - **Real bug fixed in `tests/test_registry.py`**: a manifest fixture built inside a non-raw Python triple-quoted string double-escaped its embedded regex (`\\d+`, `\\.`), producing invalid JSON (`\d` is not a valid JSON escape) at runtime and making the test fail with `ManifestValidationError` instead of exercising what it was meant to test. Fixed by making the string literal raw (`r'''...'''`) so only JSON's own escaping applies.
 - Verified real: `pytest tests/ -q` -> 17/17 (previously 16 passed, 1 failed). A real local-discovery harness against the actual `C:\Users\juane\Documents\GitHub` checkout confirmed the fix - `HYDRA-UMC-SERVER` now shows 6 real children (was 2), top-level rows dropped from 28 (broken) to the expected 16, all 47 real local manifests still accounted for, and Treeview selection still survives a real language switch.
 
+## [0.2.2] - Real anti-rollback and manifest validation before an update
+
+- **`install.py`'s `clone_or_pull()`** no longer trusts "Git can fast-forward
+  it" as the definition of a safe update. Before touching the working tree it
+  now: fetches the remote candidate without modifying the checkout, reads and
+  validates both the installed and candidate revision's own repository-owned
+  `hydra-umc.project.json` (`git show <rev>:hydra-umc.project.json`, no
+  checkout mutation), and refuses the update outright if the candidate's own
+  declared version is lower than what's installed - a real anti-rollback
+  check, not just a fast-forward check. A cloned checkout that fails manifest
+  validation is discarded the same way a failed clone already was.
+- New `test_refuses_a_remote_manifest_version_lower_than_the_installed_version`
+  proves a real, otherwise fast-forwardable downgrade is rejected and `HEAD`
+  stays exactly where it was - the same "never silently replace a healthy
+  checkout" guarantee `test_diverged_pull_fails_without_resetting_local_checkout`
+  already proved for a diverged branch, now covering a second real failure
+  mode.
+- Fixed a real, self-inflicted accuracy bug found while reviewing this work:
+  `clone_or_pull()` now runs `git fetch` + `git merge --ff-only FETCH_HEAD`
+  instead of a plain `git pull --ff-only`, but its own docstring and error
+  message still named the old command - both corrected to match what
+  actually runs, and the one test asserting on that exact error string
+  updated with them.
+- `docs/CLI_REFERENCE.md` updated to describe the real manifest-based
+  preflight and the new downgrade-rejection test.
+- 37/37 tests passing (was 36).
+
 ## [0.2.1] - Fixed a real version-mirror drift
 
 - **`src/hydra_umc_updater/__init__.py`**'s `__version__` had fallen one

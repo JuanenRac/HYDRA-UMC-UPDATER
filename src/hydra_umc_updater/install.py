@@ -27,6 +27,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from uuid import uuid4
 
+from .project_manifest import ManifestValidationError, ProjectManifest, parse_manifest
 from .registry import ProjectEntry, github_repo_url
 
 # Checked in this order - the first one that exists in the checkout is the
@@ -47,12 +48,43 @@ def _run(cmd: list[str], cwd: Path) -> subprocess.CompletedProcess:
     return subprocess.run(cmd, cwd=str(cwd), check=False)
 
 
+def _validated_manifest_text(text: str, entry: ProjectEntry) -> ProjectManifest:
+    """Parse the repository-owned manifest used as an update precondition.
+
+    The updater never treats a Git revision as deployable merely because it
+    can be fetched. It must still identify itself as the project selected by
+    the operator and retain a valid public manifest.
+    """
+    return parse_manifest(text, expected_name=entry.name)
+
+
+def _version_tuple(manifest: ProjectManifest) -> tuple[int, int, int]:
+    return tuple(int(part) for part in manifest.version.split("."))  # type: ignore[return-value]
+
+
+def _manifest_from_revision(path: Path, revision: str, entry: ProjectEntry) -> ProjectManifest:
+    """Read a manifest from Git without modifying the working tree."""
+    result = subprocess.run(
+        ["git", "show", f"{revision}:hydra-umc.project.json"],
+        cwd=str(path),
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode != 0:
+        raise ManifestValidationError("candidate revision has no readable hydra-umc.project.json")
+    return _validated_manifest_text(result.stdout, entry)
+
+
 def clone_or_pull(entry: ProjectEntry, workspace_root: Path) -> InstallResult:
     """git clone if this project isn't checked out yet under
-    workspace_root, otherwise `git -C <path> pull --ff-only` - never a
-    force-push-style reset, so a real local edit a developer made (this
-    tool is meant to also run on a dev machine, not only the real CM5)
-    fails loudly with git's own error instead of being silently
+    workspace_root, otherwise `git -C <path> fetch` followed by a real
+    `git merge --ff-only FETCH_HEAD` - never a force-push-style reset.
+    Before that fast-forward, the updater validates the fetched revision's
+    repository-owned manifest and rejects a lower version, so an update
+    cannot silently become a rollback. A real local edit a developer made
+    (this tool is meant to also run on a dev machine, not only the real
+    CM5) fails loudly with git's own error instead of being silently
     discarded."""
     path = workspace_root / entry.name
     if not path.exists():
@@ -65,6 +97,11 @@ def clone_or_pull(entry: ProjectEntry, workspace_root: Path) -> InstallResult:
         if result.returncode != 0:
             rmtree(staging_path, ignore_errors=True)
             return InstallResult(False, f"git clone failed (exit {result.returncode})")
+        try:
+            _manifest_from_revision(staging_path, "HEAD", entry)
+        except ManifestValidationError as exc:
+            rmtree(staging_path, ignore_errors=True)
+            return InstallResult(False, f"cloned checkout failed manifest validation: {exc}")
         if path.exists():
             rmtree(staging_path, ignore_errors=True)
             return InstallResult(False, f"{path} appeared while cloning - not replacing it")
@@ -74,9 +111,30 @@ def clone_or_pull(entry: ProjectEntry, workspace_root: Path) -> InstallResult:
     if not (path / ".git").is_dir():
         return InstallResult(False, f"{path} exists but isn't a git checkout - not touching it")
 
-    result = _run(["git", "pull", "--ff-only"], cwd=path)
+    try:
+        installed = _manifest_from_revision(path, "HEAD", entry)
+    except ManifestValidationError as exc:
+        return InstallResult(False, f"installed checkout failed manifest validation: {exc}")
+
+    # Fetch first and inspect FETCH_HEAD before changing the operator's
+    # working tree. This prevents a malformed or older remote manifest from
+    # becoming an installed downgrade merely because Git can fast-forward it.
+    result = _run(["git", "fetch", "--quiet", "origin", "HEAD"], cwd=path)
     if result.returncode != 0:
-        return InstallResult(False, f"git pull --ff-only failed (exit {result.returncode}) - local changes or a diverged branch?")
+        return InstallResult(False, f"git fetch failed (exit {result.returncode}) - remote unavailable or authentication failed?")
+    try:
+        candidate = _manifest_from_revision(path, "FETCH_HEAD", entry)
+    except ManifestValidationError as exc:
+        return InstallResult(False, f"remote candidate failed manifest validation: {exc}")
+    if _version_tuple(candidate) < _version_tuple(installed):
+        return InstallResult(
+            False,
+            f"remote candidate v{candidate.version} is older than installed v{installed.version}; anti-rollback refused update",
+        )
+
+    result = _run(["git", "merge", "--ff-only", "FETCH_HEAD"], cwd=path)
+    if result.returncode != 0:
+        return InstallResult(False, f"git merge --ff-only failed (exit {result.returncode}) - local changes or a diverged branch?")
     return InstallResult(True, f"Pulled latest into {path}")
 
 

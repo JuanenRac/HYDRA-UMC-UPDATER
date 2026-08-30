@@ -5,6 +5,7 @@
 # =============================================================================
 from __future__ import annotations
 
+import json
 import os
 import subprocess
 from pathlib import Path
@@ -52,6 +53,30 @@ def git(*args: str, cwd: Path) -> None:
     subprocess.run(["git", *args], cwd=cwd, check=True, capture_output=True, text=True)
 
 
+def write_manifest(path: Path, version: str) -> None:
+    (path / "hydra-umc.project.json").write_text(
+        json.dumps(
+            {
+                "schema_version": "1.0",
+                "ecosystem": "HYDRA-UMC",
+                "name": entry().name,
+                "version": version,
+                "role": "service",
+                "stack": "python",
+                "technologies": ["Python"],
+                "deployment_target": "cm5",
+                "maturity": "functional",
+                "family": "Test",
+                "parent": None,
+                "native_version": {"file": "pyproject.toml", "pattern": "(\\d+)\\.(\\d+)\\.(\\d+)"},
+                "build": "python -m compileall src",
+                "notes": "Test manifest.",
+            }
+        ),
+        encoding="utf-8",
+    )
+
+
 def test_failed_clone_removes_only_its_staging_directory(tmp_path: Path, monkeypatch):
     missing_remote = tmp_path / "does-not-exist.git"
     monkeypatch.setattr(install, "github_repo_url", lambda _entry: str(missing_remote))
@@ -71,7 +96,8 @@ def test_diverged_pull_fails_without_resetting_local_checkout(tmp_path: Path):
     git("config", "user.email", "contract@example.invalid", cwd=seed)
     git("config", "user.name", "Contract", cwd=seed)
     (seed / "state.txt").write_text("base\n", encoding="utf-8")
-    git("add", "state.txt", cwd=seed)
+    write_manifest(seed, "1.0.0")
+    git("add", "state.txt", "hydra-umc.project.json", cwd=seed)
     git("commit", "-m", "base", cwd=seed)
     git("push", "origin", "HEAD", cwd=seed)
 
@@ -90,6 +116,34 @@ def test_diverged_pull_fails_without_resetting_local_checkout(tmp_path: Path):
     result = clone_or_pull(entry(), tmp_path)
 
     assert not result.ok
-    assert "pull --ff-only failed" in result.message
+    assert "merge --ff-only failed" in result.message
     assert subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=local, text=True).strip() == local_head
     assert (local / "state.txt").read_text(encoding="utf-8") == "local\n"
+
+
+def test_refuses_a_remote_manifest_version_lower_than_the_installed_version(tmp_path: Path):
+    remote = tmp_path / "remote.git"
+    git("init", "--bare", str(remote), cwd=tmp_path)
+    seed = tmp_path / "seed"
+    git("clone", str(remote), str(seed), cwd=tmp_path)
+    git("config", "user.email", "contract@example.invalid", cwd=seed)
+    git("config", "user.name", "Contract", cwd=seed)
+    write_manifest(seed, "2.0.0")
+    git("add", "hydra-umc.project.json", cwd=seed)
+    git("commit", "-m", "initial", cwd=seed)
+    git("push", "origin", "HEAD", cwd=seed)
+
+    local = tmp_path / entry().name
+    git("clone", str(remote), str(local), cwd=tmp_path)
+    local_head = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=local, text=True).strip()
+
+    write_manifest(seed, "1.9.9")
+    git("add", "hydra-umc.project.json", cwd=seed)
+    git("commit", "-m", "bad downgrade", cwd=seed)
+    git("push", "origin", "HEAD", cwd=seed)
+
+    result = clone_or_pull(entry(), tmp_path)
+
+    assert not result.ok
+    assert "anti-rollback refused update" in result.message
+    assert subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=local, text=True).strip() == local_head

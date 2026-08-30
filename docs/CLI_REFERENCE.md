@@ -127,8 +127,12 @@ options:
                         script.
 ```
 
-`git pull --ff-only` on an already-installed project's checkout, then
-runs its own build script unless `--no-build` is given. `--ff-only` is
+Fetches the remote candidate, validates its repository-owned
+`hydra-umc.project.json` before modifying the checkout, rejects a candidate
+whose semantic version is lower than the installed manifest, then performs a
+`git merge --ff-only` and runs its own build script unless `--no-build` is
+given. The preflight is deliberately manifest-based: a reachable Git commit is
+not automatically a safe ecosystem update. `--ff-only` is
 deliberate and load-bearing: **a healthy local checkout is never
 replaced**. A real local edit (this tool is meant to also run on a
 developer machine, not only the CM5) or a diverged branch makes the
@@ -146,8 +150,10 @@ a1b2c3d local work in progress   # unchanged
 
 (Exercised for real in `tests/test_install.py`'s
 `test_diverged_pull_fails_without_resetting_local_checkout`: a real
-diverged git history is built, `pull --ff-only` is proven to fail, and
-`HEAD`/file content are proven byte-for-byte unchanged afterward.)
+diverged git history is built, the fast-forward is proven to fail, and
+`HEAD`/file content are proven byte-for-byte unchanged afterward. The separate
+`test_refuses_a_remote_manifest_version_lower_than_the_installed_version`
+proves that an otherwise fast-forwardable downgrade leaves `HEAD` unchanged.)
 
 ## Exit codes
 
