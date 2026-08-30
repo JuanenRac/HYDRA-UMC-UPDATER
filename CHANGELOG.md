@@ -7,6 +7,11 @@ bumped manually only. See `bump_version.py`.
 
 ## [Unreleased] - Real family-tree bug fix (v4 manifest-discovery era)
 
+- **Runtime version-mirror regression**: `pyproject.toml` and the project
+  manifest correctly declared `0.2.2`, but the runtime `__version__` mirror
+  had remained at `0.2.1`. It is now synchronized, and a test reads both
+  source files on every test run so a future build cannot silently reintroduce
+  this mismatch.
 - **Clone staging and rollback coverage**: a clone now lands in a unique
   sibling staging directory and is renamed into place only after Git succeeds.
   Failed clones leave no partial installation; a real local Git divergence

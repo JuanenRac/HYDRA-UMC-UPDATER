@@ -6,10 +6,26 @@
 from __future__ import annotations
 
 import json
+import re
+from pathlib import Path
 
 import pytest
 
 from hydra_umc_updater.project_manifest import ManifestValidationError, parse_manifest
+
+
+def test_package_version_mirror_matches_pyproject_version():
+    """The runtime --version mirror must not drift from the package source."""
+    repository = Path(__file__).resolve().parents[1]
+    pyproject = (repository / "pyproject.toml").read_text(encoding="utf-8")
+    package_init = (repository / "src" / "hydra_umc_updater" / "__init__.py").read_text(encoding="utf-8")
+
+    package_version = re.search(r'^version\s*=\s*"([^"]+)"', pyproject, re.MULTILINE)
+    runtime_version = re.search(r'^__version__\s*=\s*"([^"]+)"', package_init, re.MULTILINE)
+
+    assert package_version is not None, "pyproject.toml must declare [project].version"
+    assert runtime_version is not None, "__init__.py must define __version__"
+    assert runtime_version.group(1) == package_version.group(1)
 
 
 def valid_manifest() -> dict[str, object]:
