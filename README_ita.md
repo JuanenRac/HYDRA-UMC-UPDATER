@@ -2,14 +2,6 @@
   <img src="images/HYDRA_UMC_BANNER.svg" alt="HYDRA-UMC-UPDATER banner" width="100%">
 </p>
 
-<p align="center">
-  <img src="images/HYDRA_UMC_UPDATER_INTERFACE_1.png" alt="Panoramica reale desktop di HYDRA-UMC-UPDATER" width="100%">
-</p>
-
-<p align="center">
-  <img src="images/HYDRA_UMC_UPDATER_INTERFACE_2.png" alt="Checkpoint reali di aggiornamento HYDRA-UMC-UPDATER" width="100%">
-</p>
-
 # 🛠️ HYDRA-UMC-UPDATER
 
 <p align="center"><a href="README.md">🇺🇸 English</a> | <a href="README_spa.md">🇪🇸 Español</a> | <a href="README_fra.md">🇫🇷 Français</a> | 🇮🇹 <b>Italiano</b> | <a href="README_deu.md">🇩🇪 Deutsch</a> | <a href="README_zho.md">🇨🇳 简体中文</a> | <a href="README_jpn.md">🇯🇵 日本語</a></p>
@@ -94,6 +86,10 @@ stessa informazione in una finestra - una tabella di progetti, un filtro
 per obiettivo di distribuzione, e pulsanti Installa/Aggiorna per la riga
 selezionata.
 
+<p align="center">
+  <img src="images/HYDRA_UMC_UPDATER_INTERFACE_1.png" alt="Panoramica reale desktop di HYDRA-UMC-UPDATER" width="100%">
+</p>
+
 ## 2. 🔄 COME FUNZIONA DAVVERO UN CONTROLLO/AGGIORNAMENTO
 
 - **Origine della versione**: la convenzione "contachilometri" di
@@ -123,6 +119,10 @@ selezionata.
   il `build.sh`/`build.bat` proprio di quel progetto (o un equivalente
   noto - vedi sezione 3). Questo strumento non reimplementa mai i passi
   di build propri di un progetto - vedi sezione 3 per il perché.
+
+<p align="center">
+  <img src="images/HYDRA_UMC_UPDATER_INTERFACE_2.png" alt="Checkpoint reali durante installazione o aggiornamento di HYDRA-UMC-UPDATER" width="100%">
+</p>
 
 ## 3. 🧱 ARCHITETTURA E DECISIONI DI DESIGN
 

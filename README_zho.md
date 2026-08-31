@@ -2,14 +2,6 @@
   <img src="images/HYDRA_UMC_BANNER.svg" alt="HYDRA-UMC-UPDATER banner" width="100%">
 </p>
 
-<p align="center">
-  <img src="images/HYDRA_UMC_UPDATER_INTERFACE_1.png" alt="HYDRA-UMC-UPDATER 真实桌面总览" width="100%">
-</p>
-
-<p align="center">
-  <img src="images/HYDRA_UMC_UPDATER_INTERFACE_2.png" alt="HYDRA-UMC-UPDATER 真实更新检查点" width="100%">
-</p>
-
 # 🛠️ HYDRA-UMC-UPDATER
 
 <p align="center"><a href="README.md">🇺🇸 English</a> | <a href="README_spa.md">🇪🇸 Español</a> | <a href="README_fra.md">🇫🇷 Français</a> | <a href="README_ita.md">🇮🇹 Italiano</a> | <a href="README_deu.md">🇩🇪 Deutsch</a> | 🇨🇳 <b>简体中文</b> | <a href="README_jpn.md">🇯🇵 日本語</a></p>
@@ -82,12 +74,20 @@ OK  build.sh completed successfully.
 的信息——一个可排序的项目表格、一个部署目标筛选器，以及针对当前所选行
 的安装/更新按钮。
 
+<p align="center">
+  <img src="images/HYDRA_UMC_UPDATER_INTERFACE_1.png" alt="HYDRA-UMC-UPDATER 真实桌面总览" width="100%">
+</p>
+
 ## 2. 🔄 检查/更新实际是如何工作的
 
 - **版本来源**：本生态系统自身的"里程表"式自动递增惯例（每次真实构建都会递增一个存在于源文件*内部*的版本号——根据项目所用技术栈的不同，可能是 `pyproject.toml`、`Cargo.toml`、`version.go`、`package.json`、`version.properties`、`pubspec.yaml`，或一个固件 `#define`）从未为该次递增创建过 git 标签或 GitHub Release。因此本工具直接通过 GitHub 的原始内容托管，读取每个项目自身的 `bump_version.py`/构建脚本已经在写入的那个*同一个*文件的仓库默认分支版本——而非 Releases API，后者会把每个项目都报告为"完全没有发布记录"。
 - **本地检测**：对于 44 个已知项目中的每一个，检查工作区根目录下是否存在一个与该项目名称完全一致的目录（标准的生态系统布局——每个项目作为同级目录，这正是 `build-frontend.sh`/HYDRA-UMC-SUITE 自身的发现逻辑已经假定的方式），如果存在，则读取该项目*自身*的本地版本文件副本。
 - **单一解析实现**（`version_parse.py`）在本地读取和 GitHub 抓取之间共享，因此本地检出和 GitHub 抓取绝不会被两个独立漂移的正则表达式分别解读。
 - **安装/更新**：`git clone`（安装）或 `git pull --ff-only`（更新——绝不使用强制重置，因此真实的本地修改会明确失败，而非被丢弃），然后运行该项目自身实际拥有的 `build.sh`/`build.bat`（或某个已知等效项——见第 3 节）中的任意一个。本工具从不重新实现某个项目自身的构建步骤——原因见第 3 节。
+
+<p align="center">
+  <img src="images/HYDRA_UMC_UPDATER_INTERFACE_2.png" alt="HYDRA-UMC-UPDATER 安装或更新期间的真实检查点" width="100%">
+</p>
 
 ## 3. 🧱 架构与设计决策
 

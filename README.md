@@ -2,14 +2,6 @@
   <img src="images/HYDRA_UMC_BANNER.svg" alt="HYDRA-UMC-UPDATER banner" width="100%">
 </p>
 
-<p align="center">
-  <img src="images/HYDRA_UMC_UPDATER_INTERFACE_1.png" alt="HYDRA-UMC-UPDATER real desktop overview" width="100%">
-</p>
-
-<p align="center">
-  <img src="images/HYDRA_UMC_UPDATER_INTERFACE_2.png" alt="HYDRA-UMC-UPDATER real update checkpoints" width="100%">
-</p>
-
 # 🛠️ HYDRA-UMC-UPDATER
 
 <p align="center">🇺🇸 <b>English</b> | <a href="README_spa.md">🇪🇸 Español</a> | <a href="README_fra.md">🇫🇷 Français</a> | <a href="README_ita.md">🇮🇹 Italiano</a> | <a href="README_deu.md">🇩🇪 Deutsch</a> | <a href="README_zho.md">🇨🇳 简体中文</a> | <a href="README_jpn.md">🇯🇵 日本語</a></p>
@@ -95,6 +87,10 @@ manifest discovery, one explicit project action, manual confirmation,
 optional build and an on-screen activity trail; full command evidence
 continues to be written to the launch terminal.
 
+<p align="center">
+  <img src="images/HYDRA_UMC_UPDATER_INTERFACE_1.png" alt="HYDRA-UMC-UPDATER real desktop overview" width="100%">
+</p>
+
 ## 2. 🔄 HOW A CHECK/UPDATE ACTUALLY WORKS
 
 - **Version source**: this ecosystem's own "odometer" auto-bump
@@ -122,6 +118,10 @@ continues to be written to the launch terminal.
   `build.sh`/`build.bat` (or a known equivalent - see section 3) it
   actually has. This tool never reimplements a project's own build
   steps - see section 3 for why.
+
+<p align="center">
+  <img src="images/HYDRA_UMC_UPDATER_INTERFACE_2.png" alt="HYDRA-UMC-UPDATER installation or update checkpoints in progress" width="100%">
+</p>
 
 ## 3. 🧱 ARCHITECTURE & DESIGN DECISIONS
 

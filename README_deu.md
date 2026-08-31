@@ -2,14 +2,6 @@
   <img src="images/HYDRA_UMC_BANNER.svg" alt="HYDRA-UMC-UPDATER banner" width="100%">
 </p>
 
-<p align="center">
-  <img src="images/HYDRA_UMC_UPDATER_INTERFACE_1.png" alt="Echte HYDRA-UMC-UPDATER Desktop-Ubersicht" width="100%">
-</p>
-
-<p align="center">
-  <img src="images/HYDRA_UMC_UPDATER_INTERFACE_2.png" alt="Echte HYDRA-UMC-UPDATER Update-Checkpoints" width="100%">
-</p>
-
 # 🛠️ HYDRA-UMC-UPDATER
 
 <p align="center"><a href="README.md">🇺🇸 English</a> | <a href="README_spa.md">🇪🇸 Español</a> | <a href="README_fra.md">🇫🇷 Français</a> | <a href="README_ita.md">🇮🇹 Italiano</a> | 🇩🇪 <b>Deutsch</b> | <a href="README_zho.md">🇨🇳 简体中文</a> | <a href="README_jpn.md">🇯🇵 日本語</a></p>
@@ -93,6 +85,10 @@ OK  build.sh completed successfully.
 Filter nach Deployment-Ziel, und Installieren/Aktualisieren-Schaltflächen
 für die ausgewählte Zeile.
 
+<p align="center">
+  <img src="images/HYDRA_UMC_UPDATER_INTERFACE_1.png" alt="Echte HYDRA-UMC-UPDATER Desktop-Ubersicht" width="100%">
+</p>
+
 ## 2. 🔄 WIE EINE PRÜFUNG/AKTUALISIERUNG WIRKLICH FUNKTIONIERT
 
 - **Versionsquelle**: Die "Kilometerzähler"-Auto-Inkrement-Konvention
@@ -123,6 +119,10 @@ für die ausgewählte Zeile.
   bekanntes Äquivalent - siehe Abschnitt 3) ausgeführt. Dieses Tool
   reimplementiert nie die eigenen Build-Schritte eines Projekts - siehe
   Abschnitt 3 für das Warum.
+
+<p align="center">
+  <img src="images/HYDRA_UMC_UPDATER_INTERFACE_2.png" alt="Echte HYDRA-UMC-UPDATER Checkpoints wahrend Installation oder Aktualisierung" width="100%">
+</p>
 
 ## 3. 🧱 ARCHITEKTUR UND DESIGN-ENTSCHEIDUNGEN
 

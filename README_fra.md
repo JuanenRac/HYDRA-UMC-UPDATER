@@ -2,14 +2,6 @@
   <img src="images/HYDRA_UMC_BANNER.svg" alt="HYDRA-UMC-UPDATER banner" width="100%">
 </p>
 
-<p align="center">
-  <img src="images/HYDRA_UMC_UPDATER_INTERFACE_1.png" alt="Vue generale reelle du bureau HYDRA-UMC-UPDATER" width="100%">
-</p>
-
-<p align="center">
-  <img src="images/HYDRA_UMC_UPDATER_INTERFACE_2.png" alt="Checkpoints reels de mise a jour HYDRA-UMC-UPDATER" width="100%">
-</p>
-
 # 🛠️ HYDRA-UMC-UPDATER
 
 <p align="center"><a href="README.md">🇺🇸 English</a> | <a href="README_spa.md">🇪🇸 Español</a> | 🇫🇷 <b>Français</b> | <a href="README_ita.md">🇮🇹 Italiano</a> | <a href="README_deu.md">🇩🇪 Deutsch</a> | <a href="README_zho.md">🇨🇳 简体中文</a> | <a href="README_jpn.md">🇯🇵 日本語</a></p>
@@ -94,6 +86,10 @@ la même information dans une fenêtre - un tableau de projets, un filtre
 par cible de déploiement, et des boutons Installer/Mettre à jour pour la
 ligne sélectionnée.
 
+<p align="center">
+  <img src="images/HYDRA_UMC_UPDATER_INTERFACE_1.png" alt="Vue generale reelle du bureau HYDRA-UMC-UPDATER" width="100%">
+</p>
+
 ## 2. 🔄 COMMENT FONCTIONNE VRAIMENT UNE VÉRIFICATION/MISE À JOUR
 
 - **Source de la version** : la convention "compteur kilométrique"
@@ -124,6 +120,10 @@ ligne sélectionnée.
   équivalent connu - voir section 3). Cet outil ne réimplémente jamais
   les étapes de build propres à un projet - voir section 3 pour le
   pourquoi.
+
+<p align="center">
+  <img src="images/HYDRA_UMC_UPDATER_INTERFACE_2.png" alt="Checkpoints reels pendant une installation ou mise a jour HYDRA-UMC-UPDATER" width="100%">
+</p>
 
 ## 3. 🧱 ARCHITECTURE ET DÉCISIONS DE CONCEPTION
 

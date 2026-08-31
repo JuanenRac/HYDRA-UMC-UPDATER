@@ -37,6 +37,9 @@ bumped manually only. See `bump_version.py`.
   with operator-captured `HYDRA_UMC_UPDATER_INTERFACE_1.png` (overview) and
   `HYDRA_UMC_UPDATER_INTERFACE_2.png` (completed checkpoints) in every public
   README language.
+- **Documentation image placement**: the overview capture now appears after
+  the desktop-interface explanation, while the checkpoint capture appears
+  directly after the documented install/update flow in every README language.
 - **Operator-confirmed batch maintenance**: the visual client now offers
   Install all missing and Update all outdated. Both calculate their target set
   from the live discovered local/remote state, require a separate confirmation,

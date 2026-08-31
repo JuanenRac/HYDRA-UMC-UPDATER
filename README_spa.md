@@ -2,14 +2,6 @@
   <img src="images/HYDRA_UMC_BANNER.svg" alt="HYDRA-UMC-UPDATER banner" width="100%">
 </p>
 
-<p align="center">
-  <img src="images/HYDRA_UMC_UPDATER_INTERFACE_1.png" alt="Vista general real del escritorio de HYDRA-UMC-UPDATER" width="100%">
-</p>
-
-<p align="center">
-  <img src="images/HYDRA_UMC_UPDATER_INTERFACE_2.png" alt="Checkpoints reales de actualizacion de HYDRA-UMC-UPDATER" width="100%">
-</p>
-
 # 🛠️ HYDRA-UMC-UPDATER
 
 <p align="center"><a href="README.md">🇺🇸 English</a> | 🇪🇸 <b>Español</b> | <a href="README_fra.md">🇫🇷 Français</a> | <a href="README_ita.md">🇮🇹 Italiano</a> | <a href="README_deu.md">🇩🇪 Deutsch</a> | <a href="README_zho.md">🇨🇳 简体中文</a> | <a href="README_jpn.md">🇯🇵 日本語</a></p>
@@ -95,6 +87,10 @@ misma información en una ventana - una tabla de proyectos, un filtro por
 destino de despliegue, y botones de Instalar/Actualizar para la fila
 seleccionada.
 
+<p align="center">
+  <img src="images/HYDRA_UMC_UPDATER_INTERFACE_1.png" alt="Vista general real del escritorio de HYDRA-UMC-UPDATER" width="100%">
+</p>
+
 ## 2. 🔄 CÓMO FUNCIONA REALMENTE UNA COMPROBACIÓN/ACTUALIZACIÓN
 
 - **Origen de la versión**: la convención "cuentakilómetros" de
@@ -124,6 +120,10 @@ seleccionada.
   el `build.sh`/`build.bat` propio de ese proyecto (o un equivalente
   conocido - ver sección 3). Esta herramienta nunca reimplementa los
   pasos de build propios de un proyecto - ver sección 3 para el porqué.
+
+<p align="center">
+  <img src="images/HYDRA_UMC_UPDATER_INTERFACE_2.png" alt="Checkpoints reales durante la instalación o actualización de HYDRA-UMC-UPDATER" width="100%">
+</p>
 
 ## 3. 🧱 ARQUITECTURA Y DECISIONES DE DISEÑO
 
