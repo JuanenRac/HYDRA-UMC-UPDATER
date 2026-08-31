@@ -46,7 +46,7 @@ import webbrowser
 from pathlib import Path
 
 import tkinter as tk
-from tkinter import messagebox, ttk
+from tkinter import filedialog, messagebox, ttk
 
 from . import __version__, i18n
 from .detect import LocalStatus, discover_workspace
@@ -105,8 +105,9 @@ class UpdaterGUI:
         self.lang = i18n.resolve_initial_lang()
 
         root.title(f"HYDRA-UMC-UPDATER {__version__}")
-        root.geometry("1040x580")
-        root.minsize(820, 440)
+        root.geometry("1440x840")
+        root.minsize(1080, 680)
+        self._configure_visual_theme()
 
         self._build_menu()
         self._build_widgets()
@@ -116,6 +117,59 @@ class UpdaterGUI:
 
     def t(self, key: str, **kwargs: object) -> str:
         return i18n.t(self.lang, key, **kwargs)
+
+    # -- Visual system ----------------------------------------------------
+    # The application deliberately stays on Tkinter/ttk (stdlib only), but
+    # uses an explicit palette instead of the host platform's default ttk
+    # theme.  This makes the real program match its documented updater
+    # preview: a calm dark control surface with readable state colours.
+    BG = "#08111F"
+    PANEL = "#101D30"
+    PANEL_ALT = "#13243A"
+    BORDER = "#27425E"
+    TEXT = "#E8F1FB"
+    MUTED = "#94A9BF"
+    ACCENT = "#34C5D8"
+    BLUE = "#367BF5"
+    SUCCESS = "#39C98A"
+    WARNING = "#F0B44D"
+    DANGER = "#F06478"
+
+    def _configure_visual_theme(self) -> None:
+        """Configure the one real visual vocabulary used by the whole UI."""
+        self.root.configure(bg=self.BG)
+        style = ttk.Style(self.root)
+        # 'clam' permits colours on Windows and Linux, unlike several
+        # native themes which intentionally ignore ttk background options.
+        try:
+            style.theme_use("clam")
+        except tk.TclError:
+            pass
+        style.configure("Updater.Treeview", background=self.PANEL, foreground=self.TEXT,
+                        fieldbackground=self.PANEL, rowheight=29, borderwidth=0)
+        style.map("Updater.Treeview", background=[("selected", "#1D5275")],
+                  foreground=[("selected", "#FFFFFF")])
+        style.configure("Updater.Treeview.Heading", background="#172B43", foreground=self.TEXT,
+                        relief="flat", font=("Segoe UI", 9, "bold"))
+        style.map("Updater.Treeview.Heading", background=[("active", "#203B59")])
+        style.configure("Updater.Horizontal.TProgressbar", troughcolor="#1A2A3D",
+                        background=self.ACCENT, bordercolor="#1A2A3D", lightcolor=self.ACCENT,
+                        darkcolor=self.ACCENT)
+
+    def _card(self, parent: tk.Misc) -> tk.Frame:
+        return tk.Frame(parent, bg=self.PANEL, highlightbackground=self.BORDER,
+                        highlightthickness=1, padx=16, pady=16)
+
+    def _card_title(self, parent: tk.Misc, text: str) -> tk.Label:
+        return tk.Label(parent, text=text, bg=self.PANEL, fg=self.TEXT,
+                        font=("Segoe UI", 12, "bold"), anchor="w")
+
+    def _button(self, parent: tk.Misc, *, command, accent: str | None = None) -> tk.Button:
+        color = accent or self.PANEL_ALT
+        return tk.Button(parent, command=command, bg=color, fg="#FFFFFF",
+                         activebackground="#2B6386" if accent else "#1C354E",
+                         activeforeground="#FFFFFF", relief="flat", bd=0,
+                         padx=12, pady=8, font=("Segoe UI", 9, "bold"), cursor="hand2")
 
     # -- Labels that depend on the current language, not hardcoded English --
 
@@ -200,49 +254,95 @@ class UpdaterGUI:
 
     # -- Widget layout -------------------------------------------------
     def _build_widgets(self) -> None:
-        top = ttk.Frame(self.root, padding=8)
-        top.pack(side="top", fill="x")
+        # Header: title and one-line purpose.  It is deliberately kept
+        # separate from the controls so the application still reads as an
+        # updater/control surface rather than a generic settings dialog.
+        header = tk.Frame(self.root, bg=self.BG, padx=24, pady=18)
+        header.pack(side="top", fill="x")
+        tk.Label(header, text="HYDRA-UMC", bg=self.BG, fg=self.ACCENT,
+                 font=("Segoe UI", 12, "bold")).pack(anchor="w")
+        tk.Label(header, text="Updater", bg=self.BG, fg=self.TEXT,
+                 font=("Segoe UI", 26, "bold")).pack(anchor="w")
+        self.subtitle_lbl = tk.Label(header, text="", bg=self.BG, fg=self.MUTED,
+                                     font=("Segoe UI", 10), anchor="w")
+        self.subtitle_lbl.pack(anchor="w", pady=(2, 0))
 
-        self.workspace_lbl = ttk.Label(top, text="")
-        self.workspace_lbl.pack(side="left")
-
-        self.show_lbl = ttk.Label(top, text="")
-        self.show_lbl.pack(side="left", padx=(16, 2))
+        toolbar = tk.Frame(self.root, bg=self.BG, padx=24, pady=0)
+        toolbar.pack(side="top", fill="x", pady=(0, 12))
+        self.show_lbl = tk.Label(toolbar, text="", bg=self.BG, fg=self.MUTED, font=("Segoe UI", 9))
+        self.show_lbl.pack(side="left", padx=(0, 6))
         self.filter_var = tk.StringVar()
-        filter_box = ttk.Combobox(top, textvariable=self.filter_var, state="readonly", width=22)
+        filter_box = ttk.Combobox(toolbar, textvariable=self.filter_var, state="readonly", width=24)
         filter_box.pack(side="left")
         filter_box.bind("<<ComboboxSelected>>", lambda _e: self._render_rows())
         self.filter_box = filter_box
 
         self.offline_var = tk.BooleanVar(value=False)
-        self.offline_chk = ttk.Checkbutton(top, text="", variable=self.offline_var)
+        self.offline_chk = tk.Checkbutton(toolbar, text="", variable=self.offline_var, bg=self.BG,
+                                          fg=self.MUTED, activebackground=self.BG,
+                                          activeforeground=self.TEXT, selectcolor=self.PANEL,
+                                          font=("Segoe UI", 9))
         self.offline_chk.pack(side="left", padx=(16, 0))
-
-        self.refresh_btn = ttk.Button(top, text="", command=lambda: self._refresh(offline=self.offline_var.get()))
+        self.refresh_btn = self._button(toolbar, command=lambda: self._refresh(offline=self.offline_var.get()), accent=self.BLUE)
         self.refresh_btn.pack(side="right")
 
-        self.lang_lbl = ttk.Label(top, text="")
+        self.lang_lbl = tk.Label(toolbar, text="", bg=self.BG, fg=self.MUTED, font=("Segoe UI", 9))
         self.lang_lbl.pack(side="right", padx=(0, 6))
         self.lang_var = tk.StringVar()
         self._lang_by_label = {label: code for code, label in i18n.LANGUAGES}
-        lang_box = ttk.Combobox(top, textvariable=self.lang_var, state="readonly",
+        lang_box = ttk.Combobox(toolbar, textvariable=self.lang_var, state="readonly",
                                  values=[label for _code, label in i18n.LANGUAGES], width=16)
         lang_box.pack(side="right", padx=(0, 12))
         lang_box.bind("<<ComboboxSelected>>", self._on_lang_selected)
         self.lang_box = lang_box
 
+        main = tk.Frame(self.root, bg=self.BG, padx=24, pady=0)
+        main.pack(side="top", fill="both", expand=True, pady=(0, 14))
+        main.grid_columnconfigure(0, weight=1, minsize=245)
+        main.grid_columnconfigure(1, weight=4, minsize=560)
+        main.grid_columnconfigure(2, weight=1, minsize=260)
+        main.grid_rowconfigure(0, weight=1)
+
+        # Left: real local workspace and live counts.
+        left = self._card(main)
+        left.grid(row=0, column=0, sticky="nsew", padx=(0, 12))
+        self.local_title_lbl = self._card_title(left, "")
+        self.local_title_lbl.pack(fill="x")
+        self.workspace_caption_lbl = tk.Label(left, text="", bg=self.PANEL, fg=self.MUTED,
+                                              font=("Segoe UI", 9), anchor="w")
+        self.workspace_caption_lbl.pack(fill="x", pady=(18, 3))
+        self.workspace_lbl = tk.Label(left, text="", bg=self.PANEL, fg=self.TEXT,
+                                      font=("Consolas", 8), anchor="w", justify="left", wraplength=210)
+        self.workspace_lbl.pack(fill="x")
+        self.browse_btn = self._button(left, command=self._choose_workspace)
+        self.browse_btn.pack(fill="x", pady=(12, 18))
+        self.metric_detected = self._metric(left, self.ACCENT)
+        self.metric_installed = self._metric(left, self.SUCCESS)
+        self.metric_updates = self._metric(left, self.WARNING)
+
+        # Centre: the real manifest-driven project tree, not static cards.
+        centre = self._card(main)
+        centre.grid(row=0, column=1, sticky="nsew", padx=(0, 12))
+        self.registry_title_lbl = self._card_title(centre, "")
+        self.registry_title_lbl.pack(fill="x")
+        self.registry_hint_lbl = tk.Label(centre, text="", bg=self.PANEL, fg=self.MUTED,
+                                          font=("Segoe UI", 9), anchor="w", justify="left", wraplength=600)
+        self.registry_hint_lbl.pack(fill="x", pady=(3, 12))
+        tree_frame = tk.Frame(centre, bg=self.PANEL)
+        tree_frame.pack(fill="both", expand=True)
         columns = ("maturity", "role", "stack", "deploy", "local", "github", "state")
-        self.tree = ttk.Treeview(self.root, columns=columns, show="tree headings", selectmode="browse")
-        self.tree.column("#0", width=250)
+        self.tree = ttk.Treeview(tree_frame, columns=columns, show="tree headings", selectmode="browse",
+                                 style="Updater.Treeview")
+        self.tree.column("#0", width=215)
         self.tree.column("maturity", width=90, anchor="center")
         self.tree.column("role", width=70, anchor="center")
-        self.tree.column("stack", width=80, anchor="center")
-        self.tree.column("deploy", width=130, anchor="center")
-        self.tree.column("local", width=80, anchor="center")
-        self.tree.column("github", width=80, anchor="center")
-        self.tree.column("state", width=170)
+        self.tree.column("stack", width=78, anchor="center")
+        self.tree.column("deploy", width=122, anchor="center")
+        self.tree.column("local", width=72, anchor="center")
+        self.tree.column("github", width=72, anchor="center")
+        self.tree.column("state", width=145)
         self.tree.tag_configure("outdated", foreground="#b03030")
-        self.tree.tag_configure("not_installed", foreground="#888888")
+        self.tree.tag_configure("not_installed", foreground=self.MUTED)
         # Maturity color-coding, same 4-level convention as the public
         # dashboard (generate_dashboard.py's own MATURITY_CLASSES) -
         # applied as a row tag alongside (not instead of) outdated/
@@ -251,28 +351,79 @@ class UpdaterGUI:
         self.tree.tag_configure("maturity_production", foreground="#0f766e")
         self.tree.tag_configure("maturity_established", foreground="#4338ca")
         self.tree.tag_configure("maturity_scaffolding", foreground="#b45309")
-        self.tree.pack(side="top", fill="both", expand=True, padx=8, pady=(0, 8))
-
-        bottom = ttk.Frame(self.root, padding=(8, 0, 8, 8))
-        bottom.pack(side="top", fill="x")
+        scroll = ttk.Scrollbar(tree_frame, orient="vertical", command=self.tree.yview)
+        self.tree.configure(yscrollcommand=scroll.set)
+        self.tree.pack(side="left", fill="both", expand=True)
+        scroll.pack(side="right", fill="y")
         self.note_var = tk.StringVar()
-        ttk.Label(bottom, textvariable=self.note_var, wraplength=760, justify="left").pack(side="top", fill="x")
+        self.note_lbl = tk.Label(centre, textvariable=self.note_var, bg=self.PANEL_ALT, fg=self.MUTED,
+                                 font=("Segoe UI", 8), justify="left", anchor="w", wraplength=610,
+                                 padx=10, pady=9)
+        self.note_lbl.pack(fill="x", pady=(12, 0))
         self.tree.bind("<<TreeviewSelect>>", self._on_select)
 
-        btns = ttk.Frame(self.root, padding=(8, 0, 8, 8))
-        btns.pack(side="top", fill="x")
-        self.install_btn = ttk.Button(btns, text="", command=self._install_selected)
-        self.install_btn.pack(side="left")
-        self.update_btn = ttk.Button(btns, text="", command=self._update_selected)
-        self.update_btn.pack(side="left", padx=(8, 0))
+        # Right: operations are still explicitly user-confirmed; the
+        # visual treatment makes those safety guarantees visible.
+        right = self._card(main)
+        right.grid(row=0, column=2, sticky="nsew")
+        self.safe_title_lbl = self._card_title(right, "")
+        self.safe_title_lbl.pack(fill="x")
+        self.safe_hint_lbl = tk.Label(right, text="", bg=self.PANEL, fg=self.MUTED,
+                                      font=("Segoe UI", 9), anchor="w", justify="left", wraplength=220)
+        self.safe_hint_lbl.pack(fill="x", pady=(3, 16))
+        self.selected_caption_lbl = tk.Label(right, text="", bg=self.PANEL, fg=self.MUTED,
+                                             font=("Segoe UI", 9), anchor="w")
+        self.selected_caption_lbl.pack(fill="x")
+        self.selected_project_lbl = tk.Label(right, text="", bg=self.PANEL_ALT, fg=self.TEXT,
+                                             font=("Segoe UI", 9, "bold"), anchor="w", justify="left",
+                                             wraplength=220, padx=10, pady=9)
+        self.selected_project_lbl.pack(fill="x", pady=(4, 12))
+        self.install_btn = self._button(right, command=self._install_selected, accent=self.BLUE)
+        self.install_btn.pack(fill="x")
+        self.update_btn = self._button(right, command=self._update_selected, accent=self.SUCCESS)
+        self.update_btn.pack(fill="x", pady=(8, 0))
         self.no_build_var = tk.BooleanVar(value=False)
-        self.skip_build_chk = ttk.Checkbutton(btns, text="", variable=self.no_build_var)
-        self.skip_build_chk.pack(side="left", padx=(16, 0))
+        self.skip_build_chk = tk.Checkbutton(right, text="", variable=self.no_build_var, bg=self.PANEL,
+                                             fg=self.MUTED, activebackground=self.PANEL,
+                                             activeforeground=self.TEXT, selectcolor=self.PANEL_ALT,
+                                             justify="left", anchor="w", wraplength=220, font=("Segoe UI", 8))
+        self.skip_build_chk.pack(fill="x", pady=(10, 10))
+        self.open_github_btn = self._button(right, command=self._open_selected_github)
+        self.open_github_btn.pack(fill="x", pady=(0, 16))
+        self.safety_title_lbl = tk.Label(right, text="", bg=self.PANEL, fg=self.TEXT,
+                                         font=("Segoe UI", 10, "bold"), anchor="w")
+        self.safety_title_lbl.pack(fill="x")
+        self.safety_lbl = tk.Label(right, text="", bg=self.PANEL_ALT, fg=self.MUTED,
+                                   font=("Segoe UI", 8), justify="left", anchor="w", wraplength=220,
+                                   padx=10, pady=9)
+        self.safety_lbl.pack(fill="x", pady=(5, 12))
+        self.log_title_lbl = tk.Label(right, text="", bg=self.PANEL, fg=self.TEXT,
+                                      font=("Segoe UI", 10, "bold"), anchor="w")
+        self.log_title_lbl.pack(fill="x")
+        self.activity_log = tk.Text(right, height=7, bg="#081522", fg="#9FD7DD", insertbackground=self.TEXT,
+                                    relief="flat", bd=0, padx=9, pady=8, font=("Consolas", 8), wrap="word",
+                                    state="disabled")
+        self.activity_log.pack(fill="both", expand=True, pady=(5, 0))
 
-        status = ttk.Frame(self.root, padding=(8, 0, 8, 6))
+        status = tk.Frame(self.root, bg="#07101B", padx=24, pady=9)
         status.pack(side="bottom", fill="x")
         self.status_var = tk.StringVar()
-        ttk.Label(status, textvariable=self.status_var).pack(side="left")
+        self.status_caption_lbl = tk.Label(status, text="", bg="#07101B", fg=self.ACCENT,
+                                           font=("Segoe UI", 9, "bold"))
+        self.status_caption_lbl.pack(side="left", padx=(0, 8))
+        tk.Label(status, textvariable=self.status_var, bg="#07101B", fg=self.MUTED,
+                 font=("Segoe UI", 9)).pack(side="left")
+        self.progress = ttk.Progressbar(status, style="Updater.Horizontal.TProgressbar", mode="indeterminate", length=160)
+        self.progress.pack(side="right")
+
+    def _metric(self, parent: tk.Misc, color: str) -> tuple[tk.Label, tk.Label]:
+        frame = tk.Frame(parent, bg=self.PANEL_ALT, padx=10, pady=8)
+        frame.pack(fill="x", pady=(0, 8))
+        number = tk.Label(frame, text="0", bg=self.PANEL_ALT, fg=color, font=("Segoe UI", 16, "bold"), anchor="w")
+        number.pack(side="left")
+        caption = tk.Label(frame, text="", bg=self.PANEL_ALT, fg=self.MUTED, font=("Segoe UI", 8), anchor="w", justify="left")
+        caption.pack(side="left", padx=(9, 0), fill="x", expand=True)
+        return number, caption
 
     # -- Language ----------------------------------------------------------
 
@@ -298,7 +449,24 @@ class UpdaterGUI:
         self._menubar.entryconfig(0, label=self.t("menu_help"))
         self._help_menu.entryconfig(0, label=self.t("menu_about"))
 
-        self.workspace_lbl.config(text=self.t("workspace_label", path=self.workspace_root))
+        self.subtitle_lbl.config(text=self.t("ui_subtitle"))
+        self.local_title_lbl.config(text=self.t("local_ecosystem_title"))
+        self.workspace_caption_lbl.config(text=self.t("workspace_caption"))
+        self.workspace_lbl.config(text=str(self.workspace_root))
+        self.browse_btn.config(text=self.t("browse_button"))
+        self.metric_detected[1].config(text=self.t("metric_detected"))
+        self.metric_installed[1].config(text=self.t("metric_installed"))
+        self.metric_updates[1].config(text=self.t("metric_updates"))
+        self.registry_title_lbl.config(text=self.t("registry_title"))
+        self.registry_hint_lbl.config(text=self.t("registry_hint"))
+        self.safe_title_lbl.config(text=self.t("safe_update_title"))
+        self.safe_hint_lbl.config(text=self.t("safe_update_hint"))
+        self.selected_caption_lbl.config(text=self.t("selected_project_caption"))
+        self.open_github_btn.config(text=self.t("open_github_button"))
+        self.safety_title_lbl.config(text=self.t("safety_title"))
+        self.safety_lbl.config(text=self.t("safety_summary"))
+        self.log_title_lbl.config(text=self.t("activity_log_title"))
+        self.status_caption_lbl.config(text=self.t("status_caption"))
         self.show_lbl.config(text=self.t("show_label"))
         self.offline_chk.config(text=self.t("offline_checkbox"))
         self.refresh_btn.config(text=self.t("refresh_button"))
@@ -335,6 +503,40 @@ class UpdaterGUI:
             # staying blank until the first language switch or selection.
             self._on_select()
 
+    def _choose_workspace(self) -> None:
+        """Choose a real workspace, then run the normal discovery flow."""
+        chosen = filedialog.askdirectory(parent=self.root, initialdir=str(self.workspace_root))
+        if not chosen:
+            return
+        self.workspace_root = Path(chosen)
+        self.workspace_lbl.config(text=str(self.workspace_root))
+        self._append_log(self.t("log_workspace_changed", path=self.workspace_root))
+        self._refresh(offline=self.offline_var.get())
+
+    def _open_selected_github(self) -> None:
+        ls = self._selected_local(show_message=False)
+        if ls is None:
+            return
+        webbrowser.open(f"https://github.com/{GITHUB_OWNER}/{ls.entry.name}")
+
+    def _append_log(self, message: str) -> None:
+        """Keep a compact on-screen operational trail; it complements, but
+        never replaces, the full real process output in the launch terminal."""
+        self.activity_log.config(state="normal")
+        self.activity_log.insert("end", f"• {message}\n")
+        self.activity_log.see("end")
+        self.activity_log.config(state="disabled")
+
+    def _update_summary(self) -> None:
+        installed = sum(1 for status in self.locals_ if status.installed)
+        outdated = sum(
+            1 for status in self.locals_
+            if _state_key(status, self.remotes.get(status.entry.name)) == "state_outdated"
+        )
+        self.metric_detected[0].config(text=str(len(self.locals_)))
+        self.metric_installed[0].config(text=str(installed))
+        self.metric_updates[0].config(text=str(outdated))
+
     def _refresh_deploy_filter(self) -> None:
         """Rebuilds the deploy filter's labels/values from the current
         self.locals_ - the "all" label embeds a live project count
@@ -356,17 +558,21 @@ class UpdaterGUI:
         if self._busy:
             return
         self._set_busy(True, self.t("status_scanning"))
+        self._append_log(self.t("log_local_scan"))
         local_discovery = discover_workspace(self.workspace_root)
         self.locals_ = list(local_discovery.projects)
         self.remotes = {}
         self._refresh_deploy_filter()
+        self._update_summary()
         self._render_rows()
 
         if offline:
             self._set_busy(False, self.t("status_ready_offline"))
+            self._append_log(self.t("log_offline_ready", projects=len(self.locals_)))
             return
 
         self.status_var.set(self.t("status_checking_github"))
+        self._append_log(self.t("log_github_check"))
 
         def worker():
             try:
@@ -489,22 +695,26 @@ class UpdaterGUI:
         sel = self.tree.selection()
         if not sel:
             self.note_var.set(self.t("note_default"))
+            self.selected_project_lbl.config(text=self.t("selected_project_none"))
             return
         entry = next((ls.entry for ls in self.locals_ if ls.entry.name == sel[0]), None)
         if entry is None:
             self.note_var.set(self.t("note_default"))
+            self.selected_project_lbl.config(text=self.t("selected_project_none"))
             return
         parent_suffix = f" · {self.t('note_child_of', parent=entry.parent)}" if entry.parent else ""
         tech_suffix = f" · {self.t('note_tech', tech=', '.join(entry.tech))}" if entry.tech else ""
         notes = entry.notes or self.t("notes_empty")
         build = entry.note or self.t("build_empty")
         self.note_var.set(f"[{entry.family}{parent_suffix}] {notes}{tech_suffix}\n{self.t('note_build', build=build)}")
+        self.selected_project_lbl.config(text=entry.name)
 
     # -- Install / update -------------------------------------------------
-    def _selected_local(self) -> LocalStatus | None:
+    def _selected_local(self, *, show_message: bool = True) -> LocalStatus | None:
         sel = self.tree.selection()
         if not sel:
-            messagebox.showinfo("HYDRA-UMC-UPDATER", self.t("msg_select_project_first"))
+            if show_message:
+                messagebox.showinfo("HYDRA-UMC-UPDATER", self.t("msg_select_project_first"))
             return None
         return next((ls for ls in self.locals_ if ls.entry.name == sel[0]), None)
 
@@ -536,6 +746,7 @@ class UpdaterGUI:
         ):
             return
         self._set_busy(True, self.t("status_action_progress", verb=verb, name=ls.entry.name))
+        self._append_log(self.t("log_action_started", verb=verb, name=ls.entry.name))
         build = not self.no_build_var.get()
 
         def worker():
@@ -551,6 +762,14 @@ class UpdaterGUI:
         self.refresh_btn.config(state=state)
         self.install_btn.config(state=state)
         self.update_btn.config(state=state)
+        self.browse_btn.config(state=state)
+        self.open_github_btn.config(state=state)
+        self.filter_box.config(state="disabled" if busy else "readonly")
+        self.lang_box.config(state="disabled" if busy else "readonly")
+        if busy:
+            self.progress.start(12)
+        else:
+            self.progress.stop()
         self.status_var.set(status)
 
     def _poll_queue(self) -> None:
@@ -566,13 +785,16 @@ class UpdaterGUI:
                     if errors:
                         self.status_var.set("; ".join(str(error) for error in errors[:2]))
                     self._refresh_deploy_filter()
+                    self._update_summary()
                     self._render_rows()
                     self._set_busy(False, self.t("status_ready"))
+                    self._append_log(self.t("log_github_ready", projects=len(self.locals_)))
                 elif kind == "install_done":
                     name, results = payload  # type: ignore[misc]
                     ok = all(r.ok for r in results)
                     lines = "\n".join(("OK  " if r.ok else "FAIL ") + r.message for r in results)
                     self._set_busy(False, self.t("status_ready"))
+                    self._append_log(self.t("log_action_finished", name=name, result=(self.t("log_result_ok") if ok else self.t("log_result_failed"))))
                     (messagebox.showinfo if ok else messagebox.showerror)(
                         "HYDRA-UMC-UPDATER", f"{name}:\n\n{lines}")
                     self._refresh(offline=self.offline_var.get())

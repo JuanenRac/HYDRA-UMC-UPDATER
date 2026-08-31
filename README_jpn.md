@@ -2,6 +2,14 @@
   <img src="images/HYDRA_UMC_BANNER.svg" alt="HYDRA-UMC-UPDATER banner" width="100%">
 </p>
 
+<p align="center">
+  <img src="images/HYDRA_UMC_UPDATER_INTERFACE_1.png" alt="HYDRA-UMC-UPDATER の実際のデスクトップ概要" width="100%">
+</p>
+
+<p align="center">
+  <img src="images/HYDRA_UMC_UPDATER_INTERFACE_2.png" alt="HYDRA-UMC-UPDATER の実際の更新チェックポイント" width="100%">
+</p>
+
 # 🛠️ HYDRA-UMC-UPDATER
 
 <p align="center"><a href="README.md">🇺🇸 English</a> | <a href="README_spa.md">🇪🇸 Español</a> | <a href="README_fra.md">🇫🇷 Français</a> | <a href="README_ita.md">🇮🇹 Italiano</a> | <a href="README_deu.md">🇩🇪 Deutsch</a> | <a href="README_zho.md">🇨🇳 简体中文</a> | 🇯🇵 <b>日本語</b></p>
@@ -11,8 +19,23 @@
 <p align="left">
   <img src="https://img.shields.io/badge/Licencia-GPL%203.0-blue.svg" alt="GPL 3.0">
   <img src="https://img.shields.io/badge/Language-Python%203.10%2B-blue.svg" alt="Python">
-  <img src="https://img.shields.io/badge/Dependencies-stdlib%20only-brightgreen.svg" alt="stdlib only">
+  <img src="https://img.shields.io/badge/Core-stdlib%20only-brightgreen.svg" alt="stdlib-only CLI core">
+  <img src="https://img.shields.io/badge/Desktop-PySide6%20%7C%20Qt%20Quick-367BF5.svg" alt="PySide6 Qt Quick desktop GUI">
 </p>
+
+> **ビジュアルデスクトップモード：** 既定のデスクトップ画面は、任意の
+> `PySide6` GUI ランタイムを通じて **Qt Quick / QML** を使用します。更新コアと
+> `--cli` はヘッドレス CM5 向けに標準ライブラリのみを維持します。
+>
+> **Windows 起動と証跡：** `run-gui.vbs` をダブルクリックするか、引数なしの
+> `run.bat` を実行するとコンソールなしの GUI が起動します。更新パネルには、
+> 実際の事前確認、ソース更新、マニフェスト検証、ビルドテスト、完了のチェックポイントと
+> 取得した証跡を表示します。`run.bat --cli ...` は診断用ターミナルを維持します。
+> インストールはチェックアウトがない場合だけ、更新は GitHub が新しい場合だけ有効です。
+> 承認済み操作中はチェックポイントがプロジェクト操作を置き換え、別のプロジェクトを
+> 選ぶと操作を復元します。
+> **不足分をすべてインストール**と**古い項目をすべて更新**は、同じ実際の状態と
+> 安全経路に基づく、別途確認される順次一括アクションです。
 
 ---
 
@@ -79,7 +102,10 @@ OK  build.sh completed successfully.
 
 ## 3. 🧱 アーキテクチャと設計上の決定
 
-- **デフォルトはウィンドウ付き GUI、ヘッドレス用に `--cli`。** Tkinter/ttk（標準ライブラリ、新しい依存関係なし）——このエコシステムで `URTC-FLASHER`/`URTC-TESTER` が既に使用しているのと同じ GUI ツールキットとデュアルエントリポイントパターンです：`main.py` は `tkinter` を*一度でも*インポートする前に `sys.argv` の `--cli` をチェックするため、`--cli` モードは `python3-tk` がインストールされておらずディスプレイもない、本当にヘッドレスな CM5 上でも動作し、一方で引数なしの呼び出しは、それ以外のあらゆる場所（ローカルデスクトップ/VNC セッションを持つ CM5、開発者自身の PC を含む）でより親しみやすいウィンドウ付き体験を提供します。
+- **標準は Qt Quick GUI、ヘッドレス向けは `--cli`。** `main.py` は任意の PySide6
+  ランタイムを読み込む前に `--cli` を確認します。CLI は画面やデスクトップ依存のない
+  CM5 で動作し、引数なしでは利用可能な場合に QML を起動します。Tkinter は一時的な
+  互換フォールバックとしてのみ残ります。
 - **`deploy` は制限ではなく分類です。** 44 のプロジェクトすべてを「CM5 に属するもの」として扱うのは誤りでした——ファームウェアリポジトリは PC からコンパイル・書き込みされます（CM5 は CAN-OTA 経由で最終的なバイナリだけを必要とし、このリポジトリ自身のソースコードを必要とすることは決してありません）。また、いくつかのツール（URTC-FLASHER、HYDRA-UMC-SUITE、HYDRA-UMC-TOOL-CLI……）は、セル自体の内部ではなく、オペレーター自身のワークステーションで実行されることを意図しています。`registry.py` の `deploy` フィールド（"cm5" / "user-pc" / "mobile" / "wearable"）がそれを記録しており、GUI のフィルターはそれを妥当な出発点として使用します——厳格な制限ではありません。なぜなら、この同じツールは開発者自身の PC 上でも実行されることを意図しており、その場合は 44 のすべてが検査対象になり得るからです。
 - **本ツールには技術スタックごとのビルドロジックがありません。** このエコシステムは 7 つのツールチェーン（Python、Rust、Go、Node/TS、Android/Kotlin、Flutter、ARM ファームウェア）にまたがっています。`npm install && npm run build` / `cargo build --release` / `./gradlew assembleDebug` などを*ここで*再実装すると、各プロジェクトのビルド方法を知っていると主張する 2 つ目の場所ができてしまい、そのプロジェクト自身の実際の（そして既に正しい）`build.sh`/`.bat` から必ず食い違っていきます。代わりに `install.py` は、既知のビルドスクリプト名（`build.sh`、`build_firmware.sh`、`build_exe.sh`、`build-android.sh`、およびそれらの `.bat` 相当版——44 のプロジェクト全体で実際に使用されている名前）を探し、実際に存在するものを実行します。
 - **Releases API ではなく GitHub の生コンテンツを使用。** 上記の第 2 節を参照——このエコシステムのバージョン管理慣例はタグ/リリースを一切作成しないため、ここで Releases API を使うことは、単に不便なだけでなく、積極的に間違っています。
@@ -99,10 +125,13 @@ HYDRA-UMC-UPDATER/
 │   ├── detect.py          # ワークスペースルートをスキャンし、何がインストールされているかを検出
 │   ├── github_client.py   # 生コンテンツの並行取得 + 一時的なネットワークエラーに対する本物の再試行/バックオフ
 │   ├── install.py         # git clone/pull + プロジェクト自身のビルドスクリプトへの委譲
-│   ├── gui.py              # ウィンドウ付き GUI（Tkinter/ttk）——デフォルトのエントリポイント
+│   ├── qt_gui.py           # 実際の検出/更新サービスへの Qt Quick ブリッジ
+│   ├── qml/Main.qml        # テーマ、チェックポイント、About を持つデスクトップ画面
+│   ├── gui.py              # PySide6 がない場合の Tkinter 互換フォールバック
 │   └── main.py             # ディスパッチ：デフォルトは GUI、--cli で status/install/update
 ├── build.sh / build.bat    # venv + editable インストール + コンパイルチェック
-├── run.sh / run.bat        # 本ツールを実行（すべての引数を転送——下記の「使用方法」を参照）
+├── run.sh / run.bat        # 標準 GUI / CLI エントリポイント
+├── run-gui.vbs             # コンソールなしの Windows GUI ランチャー
 └── bump_version.py         # エコシステム全体で統一されたオドメーター式インクリメント（pyproject.toml + __init__.py）
 ```
 
@@ -122,12 +151,10 @@ Windows では：先に `build.bat`、その後 `run.bat`（GUI）/ `run.bat
 --cli status` / `run.bat --cli install <name>` / `run.bat --cli
 update <name>`。
 
-GUI には、ソースからビルドされた Linux Python 上で `python3-tk` が
-必要です（Debian/Raspberry Pi OS：`sudo apt install python3-tk`）——
-python.org が提供する Windows/macOS インストーラーには既にバンドル
-されています。それがない場合、引数なしの呼び出しは短い通知を表示し、
-クラッシュする代わりに `--cli` 自身のヘルプテキストにフォールバック
-します。
+優先 GUI にはオプションの Qt ランタイムが必要です（`pip install -e ".[gui]"`;
+`build.bat`/`build.sh` は既にこれを導入します）。`--cli` には GUI 依存がなく、
+ヘッドレス CM5 の正しい入口です。Qt がない場合、古い Tkinter ウィンドウは
+互換フォールバックとしてのみ残ります。
 
 **トラブルシューティング**
 

@@ -2,6 +2,14 @@
   <img src="images/HYDRA_UMC_BANNER.svg" alt="HYDRA-UMC-UPDATER banner" width="100%">
 </p>
 
+<p align="center">
+  <img src="images/HYDRA_UMC_UPDATER_INTERFACE_1.png" alt="HYDRA-UMC-UPDATER 真实桌面总览" width="100%">
+</p>
+
+<p align="center">
+  <img src="images/HYDRA_UMC_UPDATER_INTERFACE_2.png" alt="HYDRA-UMC-UPDATER 真实更新检查点" width="100%">
+</p>
+
 # 🛠️ HYDRA-UMC-UPDATER
 
 <p align="center"><a href="README.md">🇺🇸 English</a> | <a href="README_spa.md">🇪🇸 Español</a> | <a href="README_fra.md">🇫🇷 Français</a> | <a href="README_ita.md">🇮🇹 Italiano</a> | <a href="README_deu.md">🇩🇪 Deutsch</a> | 🇨🇳 <b>简体中文</b> | <a href="README_jpn.md">🇯🇵 日本語</a></p>
@@ -11,8 +19,20 @@
 <p align="left">
   <img src="https://img.shields.io/badge/Licencia-GPL%203.0-blue.svg" alt="GPL 3.0">
   <img src="https://img.shields.io/badge/Language-Python%203.10%2B-blue.svg" alt="Python">
-  <img src="https://img.shields.io/badge/Dependencies-stdlib%20only-brightgreen.svg" alt="stdlib only">
+  <img src="https://img.shields.io/badge/Core-stdlib%20only-brightgreen.svg" alt="stdlib-only CLI core">
+  <img src="https://img.shields.io/badge/Desktop-PySide6%20%7C%20Qt%20Quick-367BF5.svg" alt="PySide6 Qt Quick desktop GUI">
 </p>
+
+> **可视化桌面模式：** 默认桌面界面现通过可选的 `PySide6` GUI 运行时使用
+> **Qt Quick / QML**。更新器核心与 `--cli` 模式仍仅使用标准库，适合无桌面的 CM5。
+>
+> **Windows 启动和操作证据：** 双击 `run-gui.vbs`（或不带参数运行
+> `run.bat`）即可启动无控制台图形客户端。更新面板会显示真实的预检查、源更新、
+> 清单验证、构建测试和完成检查点及捕获的证据；`run.bat --cli ...` 保留诊断终端。
+> 仅在缺少检出时启用安装，仅在 GitHub 版本更高时启用更新。已批准操作期间，
+> 检查点会替换项目控制区；选择其他项目即可恢复控制区。
+> **安装全部缺失项目**和**更新全部过期项目**是分别确认的顺序批量操作，使用相同的
+> 实时状态和安全流程。
 
 ---
 
@@ -71,7 +91,9 @@ OK  build.sh completed successfully.
 
 ## 3. 🧱 架构与设计决策
 
-- **默认为窗口化 GUI，`--cli` 用于无头模式。** Tkinter/ttk（标准库，无新增依赖）——与本生态系统中 `URTC-FLASHER`/`URTC-TESTER` 已经使用的相同 GUI 工具包和双入口点模式：`main.py` 会在*任何*导入 `tkinter` 之前检查 `sys.argv` 中是否有 `--cli`，因此 `--cli` 模式可以在一个真正无头、未安装 `python3-tk` 也没有显示器的 CM5 上工作，而不带参数的裸调用则在其他所有场景（包括带本地桌面/VNC 会话的 CM5，以及开发者自己的 PC）下获得更友好的窗口化体验。
+- **默认 Qt Quick GUI，`--cli` 用于无桌面环境。** `main.py` 会在导入可选 PySide6
+  运行时之前检查 `--cli`。CLI 可在没有显示器或桌面依赖的 CM5 上工作；无参数时会在
+  可用条件下启动 QML，Tkinter 仅保留为临时兼容回退。
 - **`deploy` 是一种分类，而非一种限制。** 把全部 44 个项目都当作"属于 CM5 的东西"是错误的——固件仓库是从 PC 编译并刷写的（CM5 只需要通过 CAN-OTA 得到最终的二进制文件，从不需要本仓库自身的源代码），而若干工具（URTC-FLASHER、HYDRA-UMC-SUITE、HYDRA-UMC-TOOL-CLI……）本应运行在操作员自己的工作站上，而非单元本机内部。`registry.py` 的 `deploy` 字段（"cm5" / "user-pc" / "mobile" / "wearable"）记录了这一点，GUI 的筛选器将其作为一个合理的起点使用——而非硬性限制，因为这个同一工具也可以运行在开发者自己的 PC 上，此时全部 44 个项目都可以被检查。
 - **本工具中不包含针对特定技术栈的构建逻辑。** 本生态系统横跨 7 种工具链（Python、Rust、Go、Node/TS、Android/Kotlin、Flutter、ARM 固件）。在*这里*重新实现 `npm install && npm run build` / `cargo build --release` / `./gradlew assembleDebug` 等，会制造出第二个声称知道如何构建每个项目的地方，注定会与该项目自身真实的（且已经正确的）`build.sh`/`.bat` 逐渐脱节。`install.py` 转而探测一个已知的构建脚本名称（`build.sh`、`build_firmware.sh`、`build_exe.sh`、`build-android.sh` 及其 `.bat` 等效版本——这些是横跨 44 个项目实际使用的真实名称），并运行其中实际存在的那一个。
 - **使用 GitHub 原始内容，而非 Releases API。** 见上方第 2 节——本生态系统的版本控制惯例从不创建标签/发布，因此在这里使用 Releases API 不仅不够方便，而且是彻底错误的做法。
@@ -91,10 +113,13 @@ HYDRA-UMC-UPDATER/
 │   ├── detect.py          # 扫描工作区根目录，检测已安装的内容
 │   ├── github_client.py   # 并发抓取原始内容 + 针对临时性网络错误的真实重试/退避机制
 │   ├── install.py         # git clone/pull + 委托给项目自身的构建脚本
-│   ├── gui.py              # 窗口化 GUI（Tkinter/ttk）——默认入口点
+│   ├── qt_gui.py           # 通向真实发现/更新服务的 Qt Quick 桥接层
+│   ├── qml/Main.qml        # 带主题、检查点和 About 的桌面界面
+│   ├── gui.py              # PySide6 不可用时的 Tkinter 兼容回退
 │   └── main.py             # 分发逻辑：默认 GUI，--cli 用于 status/install/update
 ├── build.sh / build.bat    # venv + 可编辑安装 + 编译检查
-├── run.sh / run.bat        # 运行本工具（转发所有参数——见下方"用法"）
+├── run.sh / run.bat        # 默认 GUI / CLI 入口
+├── run-gui.vbs             # 无控制台窗口的 Windows 图形启动器
 └── bump_version.py         # 生态系统统一的里程表式版本递增（pyproject.toml + __init__.py）
 ```
 
@@ -114,10 +139,9 @@ chmod +x build.sh   # 仅需一次
 status` / `run.bat --cli install <name>` / `run.bat --cli update
 <name>`。
 
-GUI 需要在基于源代码构建的 Linux Python 上安装 `python3-tk`
-（Debian/Raspberry Pi OS：`sudo apt install python3-tk`）——python.org
-提供的 Windows/macOS 安装程序已经内置。如果没有它，裸调用会打印一条
-简短提示，并回退到 `--cli` 自身的帮助文本，而非崩溃。
+首选 GUI 需要可选 Qt 运行时（`pip install -e ".[gui]"`；
+`build.bat`/`build.sh` 已经安装它）。`--cli` 没有图形依赖，适合无桌面的
+CM5。没有 Qt 时，旧 Tkinter 窗口仅作为兼容回退。
 
 **故障排查**
 

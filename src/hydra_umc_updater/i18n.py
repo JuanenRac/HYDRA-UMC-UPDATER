@@ -576,6 +576,206 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
 }
 
 
+# Visual updater shell introduced in v0.2.2.  Kept separately from the
+# original closed vocabulary above so that GUI wording can evolve without
+# making the core install/state translations hard to audit.
+_VISUAL_TRANSLATIONS: dict[str, dict[str, str]] = {
+    "en": {
+        "ui_subtitle": "Discover, verify and update your local ecosystem safely.",
+        "local_ecosystem_title": "◉  Local Ecosystem",
+        "workspace_caption": "WORKSPACE ROOT",
+        "browse_button": "Browse workspace",
+        "metric_detected": "projects discovered",
+        "metric_installed": "installed locally",
+        "metric_updates": "updates available",
+        "registry_title": "▦  Project Registry",
+        "registry_hint": "Live project manifests grouped by their declared ecosystem family.",
+        "safe_update_title": "✓  Safe Update",
+        "safe_update_hint": "Select one project, review its state, then confirm the real action.",
+        "selected_project_caption": "SELECTED PROJECT",
+        "selected_project_none": "No project selected",
+        "open_github_button": "Open on GitHub",
+        "safety_title": "SAFETY GATES",
+        "safety_summary": "• Manifest-driven discovery\n• Manual confirmation required\n• Optional project build\n• Terminal keeps full evidence",
+        "activity_log_title": "ACTIVITY LOG",
+        "status_caption": "SYSTEM STATUS",
+        "log_workspace_changed": "Workspace changed: {path}",
+        "log_local_scan": "Scanning local manifests...",
+        "log_offline_ready": "Offline scan ready: {projects} projects.",
+        "log_github_check": "Checking GitHub release manifests...",
+        "log_github_ready": "GitHub check complete: {projects} projects.",
+        "log_action_started": "{verb} {name} started.",
+        "log_action_finished": "{name}: {result}.",
+        "log_result_ok": "completed",
+        "log_result_failed": "needs attention",
+    },
+    "es": {
+        "ui_subtitle": "Descubre, verifica y actualiza tu ecosistema local de forma segura.",
+        "local_ecosystem_title": "◉  Ecosistema local",
+        "workspace_caption": "RAIZ DEL WORKSPACE",
+        "browse_button": "Elegir workspace",
+        "metric_detected": "proyectos detectados",
+        "metric_installed": "instalados en local",
+        "metric_updates": "actualizaciones disponibles",
+        "registry_title": "▦  Registro de proyectos",
+        "registry_hint": "Manifiestos activos agrupados por la familia declarada del ecosistema.",
+        "safe_update_title": "✓  Actualizacion segura",
+        "safe_update_hint": "Selecciona un proyecto, revisa su estado y confirma la accion real.",
+        "selected_project_caption": "PROYECTO SELECCIONADO",
+        "selected_project_none": "No hay proyecto seleccionado",
+        "open_github_button": "Abrir en GitHub",
+        "safety_title": "BARRERAS DE SEGURIDAD",
+        "safety_summary": "• Descubrimiento por manifiestos\n• Confirmacion manual obligatoria\n• Build del proyecto opcional\n• Terminal con evidencia completa",
+        "activity_log_title": "REGISTRO DE ACTIVIDAD",
+        "status_caption": "ESTADO DEL SISTEMA",
+        "log_workspace_changed": "Workspace cambiado: {path}",
+        "log_local_scan": "Escaneando manifiestos locales...",
+        "log_offline_ready": "Escaneo sin conexion listo: {projects} proyectos.",
+        "log_github_check": "Comprobando manifiestos de lanzamiento en GitHub...",
+        "log_github_ready": "Comprobacion de GitHub terminada: {projects} proyectos.",
+        "log_action_started": "{verb} {name} iniciado.",
+        "log_action_finished": "{name}: {result}.",
+        "log_result_ok": "completado",
+        "log_result_failed": "requiere atencion",
+    },
+    "fr": {
+        "ui_subtitle": "Decouvrez, verifiez et mettez a jour votre ecosysteme local en toute securite.",
+        "local_ecosystem_title": "◉  Ecosysteme local", "workspace_caption": "RACINE DE L'ESPACE DE TRAVAIL",
+        "browse_button": "Choisir l'espace", "metric_detected": "projets detectes", "metric_installed": "installes localement", "metric_updates": "mises a jour disponibles",
+        "registry_title": "▦  Registre des projets", "registry_hint": "Manifestes actifs groupes selon leur famille declaree.",
+        "safe_update_title": "✓  Mise a jour sure", "safe_update_hint": "Selectionnez un projet, verifiez son etat puis confirmez l'action.",
+        "selected_project_caption": "PROJET SELECTIONNE", "selected_project_none": "Aucun projet selectionne", "open_github_button": "Ouvrir sur GitHub",
+        "safety_title": "GARANTIES DE SECURITE", "safety_summary": "• Decouverte par manifestes\n• Confirmation manuelle requise\n• Build optionnel\n• Terminal avec preuve complete",
+        "activity_log_title": "JOURNAL D'ACTIVITE", "status_caption": "ETAT DU SYSTEME", "log_workspace_changed": "Espace modifie : {path}",
+        "log_local_scan": "Analyse des manifestes locaux...", "log_offline_ready": "Analyse hors ligne prete : {projects} projets.",
+        "log_github_check": "Verification des manifestes GitHub...", "log_github_ready": "Verification GitHub terminee : {projects} projets.",
+        "log_action_started": "{verb} {name} demarre.", "log_action_finished": "{name} : {result}.", "log_result_ok": "termine", "log_result_failed": "requiert une attention",
+    },
+    "it": {
+        "ui_subtitle": "Scopri, verifica e aggiorna in sicurezza il tuo ecosistema locale.",
+        "local_ecosystem_title": "◉  Ecosistema locale", "workspace_caption": "RADICE WORKSPACE", "browse_button": "Scegli workspace",
+        "metric_detected": "progetti rilevati", "metric_installed": "installati localmente", "metric_updates": "aggiornamenti disponibili",
+        "registry_title": "▦  Registro progetti", "registry_hint": "Manifesti attivi raggruppati per famiglia dichiarata.",
+        "safe_update_title": "✓  Aggiornamento sicuro", "safe_update_hint": "Seleziona un progetto, controlla lo stato e conferma l'azione.",
+        "selected_project_caption": "PROGETTO SELEZIONATO", "selected_project_none": "Nessun progetto selezionato", "open_github_button": "Apri su GitHub",
+        "safety_title": "CONTROLLI DI SICUREZZA", "safety_summary": "• Scoperta dai manifesti\n• Conferma manuale richiesta\n• Build opzionale\n• Terminale con evidenza completa",
+        "activity_log_title": "REGISTRO ATTIVITA", "status_caption": "STATO DEL SISTEMA", "log_workspace_changed": "Workspace modificato: {path}",
+        "log_local_scan": "Scansione dei manifesti locali...", "log_offline_ready": "Scansione offline pronta: {projects} progetti.",
+        "log_github_check": "Controllo dei manifesti GitHub...", "log_github_ready": "Controllo GitHub completato: {projects} progetti.",
+        "log_action_started": "{verb} {name} avviato.", "log_action_finished": "{name}: {result}.", "log_result_ok": "completato", "log_result_failed": "richiede attenzione",
+    },
+    "de": {
+        "ui_subtitle": "Lokales Okosystem sicher erkennen, prufen und aktualisieren.",
+        "local_ecosystem_title": "◉  Lokales Okosystem", "workspace_caption": "WORKSPACE-STAMM", "browse_button": "Workspace auswahlen",
+        "metric_detected": "Projekte erkannt", "metric_installed": "lokal installiert", "metric_updates": "Updates verfugbar",
+        "registry_title": "▦  Projektregister", "registry_hint": "Aktive Manifeste nach deklarierter Okosystemfamilie gruppiert.",
+        "safe_update_title": "✓  Sicheres Update", "safe_update_hint": "Projekt auswahlen, Status prufen und Aktion bestatigen.",
+        "selected_project_caption": "AUSGEWAHLTES PROJEKT", "selected_project_none": "Kein Projekt ausgewahlt", "open_github_button": "Auf GitHub offnen",
+        "safety_title": "SICHERHEITSSCHLEUSEN", "safety_summary": "• Manifestgesteuerte Erkennung\n• Manuelle Bestatigung erforderlich\n• Optionaler Projekt-Build\n• Terminal mit vollstandiger Evidenz",
+        "activity_log_title": "AKTIVITATSPROTOKOLL", "status_caption": "SYSTEMSTATUS", "log_workspace_changed": "Workspace geandert: {path}",
+        "log_local_scan": "Lokale Manifeste werden gescannt...", "log_offline_ready": "Offline-Scan bereit: {projects} Projekte.",
+        "log_github_check": "GitHub-Manifeste werden gepruft...", "log_github_ready": "GitHub-Prufung abgeschlossen: {projects} Projekte.",
+        "log_action_started": "{verb} {name} gestartet.", "log_action_finished": "{name}: {result}.", "log_result_ok": "abgeschlossen", "log_result_failed": "benotigt Aufmerksamkeit",
+    },
+    "zh": {
+        "ui_subtitle": "安全发现、验证并更新本地生态系统。", "local_ecosystem_title": "◉  本地生态系统", "workspace_caption": "工作区根目录", "browse_button": "选择工作区",
+        "metric_detected": "已发现项目", "metric_installed": "本地已安装", "metric_updates": "可用更新", "registry_title": "▦  项目注册表", "registry_hint": "按已声明生态系统系列分组的活动清单。",
+        "safe_update_title": "✓  安全更新", "safe_update_hint": "选择一个项目，查看状态，然后确认实际操作。", "selected_project_caption": "已选项目", "selected_project_none": "未选择项目", "open_github_button": "在 GitHub 中打开",
+        "safety_title": "安全关卡", "safety_summary": "• 清单驱动的发现\n• 必须手动确认\n• 可选项目构建\n• 终端保留完整证据", "activity_log_title": "活动日志", "status_caption": "系统状态",
+        "log_workspace_changed": "工作区已更改：{path}", "log_local_scan": "正在扫描本地清单...", "log_offline_ready": "离线扫描完成：{projects} 个项目。", "log_github_check": "正在检查 GitHub 清单...", "log_github_ready": "GitHub 检查完成：{projects} 个项目。", "log_action_started": "已开始 {verb} {name}。", "log_action_finished": "{name}：{result}。", "log_result_ok": "已完成", "log_result_failed": "需要注意",
+    },
+    "ja": {
+        "ui_subtitle": "ローカルのエコシステムを安全に検出、検証、更新します。", "local_ecosystem_title": "◉  ローカルエコシステム", "workspace_caption": "ワークスペースのルート", "browse_button": "ワークスペースを選択",
+        "metric_detected": "検出済みプロジェクト", "metric_installed": "ローカルに導入済み", "metric_updates": "更新あり", "registry_title": "▦  プロジェクトレジストリ", "registry_hint": "宣言済みのエコシステムファミリー別にまとめた有効なマニフェスト。",
+        "safe_update_title": "✓  安全な更新", "safe_update_hint": "プロジェクトを選び、状態を確認してから実行を承認します。", "selected_project_caption": "選択中のプロジェクト", "selected_project_none": "プロジェクト未選択", "open_github_button": "GitHub で開く",
+        "safety_title": "安全ゲート", "safety_summary": "• マニフェスト駆動の検出\n• 手動確認が必須\n• プロジェクトビルドは任意\n• 端末に完全な証跡を保持", "activity_log_title": "アクティビティログ", "status_caption": "システム状態",
+        "log_workspace_changed": "ワークスペースを変更しました：{path}", "log_local_scan": "ローカルマニフェストをスキャン中...", "log_offline_ready": "オフラインスキャン完了：{projects} プロジェクト。", "log_github_check": "GitHub マニフェストを確認中...", "log_github_ready": "GitHub の確認完了：{projects} プロジェクト。", "log_action_started": "{verb} {name} を開始しました。", "log_action_finished": "{name}：{result}。", "log_result_ok": "完了", "log_result_failed": "要確認",
+    },
+}
+
+for _language, _visual_copy in _VISUAL_TRANSLATIONS.items():
+    TRANSLATIONS[_language].update(_visual_copy)
+
+_QML_ACTION_COPY: dict[str, dict[str, str]] = {
+    "en": {"status_busy": "WORKING", "status_online": "READY", "local_footer": "The updater never changes more than one project without your confirmation.", "confirm_action_title": "Confirm safe update", "confirm_action_body": "Run the selected action for {project}? The project can invoke git and its own build flow.", "confirm_cancel_button": "Cancel", "batch_actions_title": "BATCH ACTIONS", "install_all_button": "Install all missing ({count})", "update_all_button": "Update all outdated ({count})", "confirm_batch_title": "Confirm batch action", "confirm_batch_install_body": "Install all {count} missing projects sequentially? Each project validates its manifest and runs its own build-test.", "confirm_batch_update_body": "Update all {count} outdated projects sequentially? Each project validates its candidate before a fast-forward-only update.", "checkpoint_batch_title": "UPDATE CHECKPOINTS  |  {current}/{total} {project}", "status_batch_progress": "{verb} {total} approved projects sequentially.", "log_batch_started": "Batch {verb} started: {total} projects.", "log_batch_project": "Batch project {current}/{total}: {name}.", "batch_result_name": "Batch of {total} projects", "msg_batch_nothing_to_do": "No projects match this batch action."},
+    "es": {"status_busy": "TRABAJANDO", "status_online": "LISTO", "local_footer": "El actualizador nunca cambia mas de un proyecto sin tu confirmacion.", "confirm_action_title": "Confirmar actualizacion segura", "confirm_action_body": "Ejecutar la accion seleccionada para {project}? El proyecto puede invocar git y su propio flujo de build.", "confirm_cancel_button": "Cancelar", "batch_actions_title": "ACCIONES EN LOTE", "install_all_button": "Instalar todos los faltantes ({count})", "update_all_button": "Actualizar todos los desfasados ({count})", "confirm_batch_title": "Confirmar accion en lote", "confirm_batch_install_body": "Instalar secuencialmente los {count} proyectos faltantes? Cada proyecto valida su manifiesto y ejecuta su build-test.", "confirm_batch_update_body": "Actualizar secuencialmente los {count} proyectos desfasados? Cada proyecto valida su candidato antes de actualizar solo con fast-forward.", "checkpoint_batch_title": "CHECKPOINTS DE ACTUALIZACION  |  {current}/{total} {project}", "status_batch_progress": "{verb} {total} proyectos aprobados secuencialmente.", "log_batch_started": "Lote de {verb} iniciado: {total} proyectos.", "log_batch_project": "Proyecto del lote {current}/{total}: {name}.", "batch_result_name": "Lote de {total} proyectos", "msg_batch_nothing_to_do": "Ningun proyecto coincide con esta accion en lote."},
+    "fr": {"status_busy": "EN COURS", "status_online": "PRET", "local_footer": "L'outil ne modifie jamais plus d'un projet sans votre confirmation.", "confirm_action_title": "Confirmer la mise a jour sure", "confirm_action_body": "Executer l'action selectionnee pour {project} ? Le projet peut appeler git et son propre build.", "confirm_cancel_button": "Annuler", "batch_actions_title": "ACTIONS PAR LOT", "install_all_button": "Installer tous les manquants ({count})", "update_all_button": "Mettre a jour tous les depasses ({count})", "confirm_batch_title": "Confirmer l'action par lot", "confirm_batch_install_body": "Installer sequentiellement les {count} projets manquants ? Chaque projet valide son manifeste et lance son build-test.", "confirm_batch_update_body": "Mettre a jour sequentiellement les {count} projets depasses ? Chaque projet valide son candidat avant une mise a jour fast-forward uniquement.", "checkpoint_batch_title": "CHECKPOINTS DE MISE A JOUR  |  {current}/{total} {project}", "status_batch_progress": "{verb} {total} projets approuves sequentiellement.", "log_batch_started": "Lot de {verb} demarre : {total} projets.", "log_batch_project": "Projet du lot {current}/{total} : {name}.", "batch_result_name": "Lot de {total} projets", "msg_batch_nothing_to_do": "Aucun projet ne correspond a cette action par lot."},
+    "it": {"status_busy": "IN CORSO", "status_online": "PRONTO", "local_footer": "L'updater non modifica mai piu di un progetto senza conferma.", "confirm_action_title": "Conferma aggiornamento sicuro", "confirm_action_body": "Eseguire l'azione selezionata per {project}? Il progetto puo invocare git e il proprio build.", "confirm_cancel_button": "Annulla", "batch_actions_title": "AZIONI IN BLOCCO", "install_all_button": "Installa tutti i mancanti ({count})", "update_all_button": "Aggiorna tutti gli obsoleti ({count})", "confirm_batch_title": "Conferma azione in blocco", "confirm_batch_install_body": "Installare in sequenza i {count} progetti mancanti? Ogni progetto convalida il manifest ed esegue build-test.", "confirm_batch_update_body": "Aggiornare in sequenza i {count} progetti obsoleti? Ogni progetto convalida il candidato prima di un aggiornamento solo fast-forward.", "checkpoint_batch_title": "CHECKPOINT DI AGGIORNAMENTO  |  {current}/{total} {project}", "status_batch_progress": "{verb} {total} progetti approvati in sequenza.", "log_batch_started": "Blocco di {verb} avviato: {total} progetti.", "log_batch_project": "Progetto del blocco {current}/{total}: {name}.", "batch_result_name": "Blocco di {total} progetti", "msg_batch_nothing_to_do": "Nessun progetto corrisponde a questa azione in blocco."},
+    "de": {"status_busy": "IN ARBEIT", "status_online": "BEREIT", "local_footer": "Der Updater andert nie mehr als ein Projekt ohne deine Bestatigung.", "confirm_action_title": "Sicheres Update bestatigen", "confirm_action_body": "Ausgewahlte Aktion fur {project} ausfuhren? Das Projekt kann git und seinen Build aufrufen.", "confirm_cancel_button": "Abbrechen", "batch_actions_title": "SAMMELAKTIONEN", "install_all_button": "Alle fehlenden installieren ({count})", "update_all_button": "Alle veralteten aktualisieren ({count})", "confirm_batch_title": "Sammelaktion bestatigen", "confirm_batch_install_body": "Alle {count} fehlenden Projekte nacheinander installieren? Jedes Projekt validiert sein Manifest und fuhrt build-test aus.", "confirm_batch_update_body": "Alle {count} veralteten Projekte nacheinander aktualisieren? Jedes Projekt validiert den Kandidaten vor einem Fast-Forward-Update.", "checkpoint_batch_title": "UPDATE-CHECKPOINTS  |  {current}/{total} {project}", "status_batch_progress": "{verb} {total} bestaetigte Projekte nacheinander.", "log_batch_started": "Sammel-{verb} gestartet: {total} Projekte.", "log_batch_project": "Sammelprojekt {current}/{total}: {name}.", "batch_result_name": "Sammlung von {total} Projekten", "msg_batch_nothing_to_do": "Kein Projekt passt zu dieser Sammelaktion."},
+    "zh": {"status_busy": "正在处理", "status_online": "就绪", "local_footer": "未经你的确认，更新器绝不会更改多个项目。", "confirm_action_title": "确认安全更新", "confirm_action_body": "对 {project} 执行所选操作？该项目可能调用 git 和自己的构建流程。", "confirm_cancel_button": "取消", "batch_actions_title": "批量操作", "install_all_button": "安装全部缺失项目 ({count})", "update_all_button": "更新全部过期项目 ({count})", "confirm_batch_title": "确认批量操作", "confirm_batch_install_body": "顺序安装全部 {count} 个缺失项目？每个项目都会验证清单并运行 build-test。", "confirm_batch_update_body": "顺序更新全部 {count} 个过期项目？每个项目都会在仅快进更新前验证候选版本。", "checkpoint_batch_title": "更新检查点  |  {current}/{total} {project}", "status_batch_progress": "正在顺序{verb} {total} 个已批准项目。", "log_batch_started": "已开始{verb}批量操作：{total} 个项目。", "log_batch_project": "批量项目 {current}/{total}: {name}。", "batch_result_name": "{total} 个项目的批量操作", "msg_batch_nothing_to_do": "没有项目符合此批量操作。"},
+    "ja": {"status_busy": "処理中", "status_online": "準備完了", "local_footer": "確認なしに複数のプロジェクトを変更することはありません。", "confirm_action_title": "安全な更新を確認", "confirm_action_body": "{project} に選択した操作を実行しますか？ git とプロジェクト固有のビルドが呼ばれる場合があります。", "confirm_cancel_button": "キャンセル", "batch_actions_title": "一括アクション", "install_all_button": "不足分をすべてインストール ({count})", "update_all_button": "古い項目をすべて更新 ({count})", "confirm_batch_title": "一括アクションを確認", "confirm_batch_install_body": "不足している {count} プロジェクトを順番にインストールしますか？各プロジェクトはマニフェストを検証し build-test を実行します。", "confirm_batch_update_body": "古い {count} プロジェクトを順番に更新しますか？各プロジェクトは fast-forward のみの更新前に候補を検証します。", "checkpoint_batch_title": "更新チェックポイント  |  {current}/{total} {project}", "status_batch_progress": "承認済み {total} プロジェクトを順番に{verb}中です。", "log_batch_started": "一括{verb}を開始: {total} プロジェクト。", "log_batch_project": "一括プロジェクト {current}/{total}: {name}。", "batch_result_name": "{total} プロジェクトの一括処理", "msg_batch_nothing_to_do": "この一括アクションに該当するプロジェクトはありません。"},
+}
+
+for _language, _qml_copy in _QML_ACTION_COPY.items():
+    TRANSLATIONS[_language].update(_qml_copy)
+
+
+# Real operation wording for the Qt Quick checkpoint panel.  This overrides
+# the older Tk-oriented copy that told the operator to read a launch terminal:
+# the QML flow now captures and presents its own bounded command evidence.
+_QML_CHECKPOINT_COPY: dict[str, dict[str, str]] = {
+    "en": {
+        "status_action_progress": "{verb} {name} - real checkpoints and command evidence appear in this window.",
+        "checkpoint_title": "UPDATE CHECKPOINTS", "checkpoint_waiting": "Waiting for an approved action.",
+        "checkpoint_preflight": "Preflight", "checkpoint_source": "Source refresh", "checkpoint_validation": "Manifest validation",
+        "checkpoint_build": "Build-test", "checkpoint_build_skipped": "Build-test skipped", "checkpoint_complete": "Complete",
+        "checkpoint_complete_detail": "The approved action completed successfully.", "checkpoint_failed": "The approved action stopped safely.",
+        "about_qt_runtime": "Qt Quick / PySide6 desktop runtime",
+    },
+    "es": {
+        "status_action_progress": "{verb} {name} - los checkpoints reales y la evidencia se muestran en esta ventana.",
+        "checkpoint_title": "CHECKPOINTS DE ACTUALIZACION", "checkpoint_waiting": "Esperando una accion aprobada.",
+        "checkpoint_preflight": "Comprobacion previa", "checkpoint_source": "Actualizacion del origen", "checkpoint_validation": "Validacion del manifiesto",
+        "checkpoint_build": "Build-test", "checkpoint_build_skipped": "Build-test omitido", "checkpoint_complete": "Completado",
+        "checkpoint_complete_detail": "La accion aprobada termino correctamente.", "checkpoint_failed": "La accion aprobada se detuvo de forma segura.",
+        "about_qt_runtime": "Entorno de escritorio Qt Quick / PySide6",
+    },
+    "fr": {
+        "status_action_progress": "{verb} {name} - les checkpoints reels et les preuves apparaissent dans cette fenetre.",
+        "checkpoint_title": "ETAPES DE MISE A JOUR", "checkpoint_waiting": "En attente d'une action approuvee.",
+        "checkpoint_preflight": "Controle prealable", "checkpoint_source": "Mise a jour de la source", "checkpoint_validation": "Validation du manifeste",
+        "checkpoint_build": "Build-test", "checkpoint_build_skipped": "Build-test ignore", "checkpoint_complete": "Termine",
+        "checkpoint_complete_detail": "L'action approuvee s'est terminee correctement.", "checkpoint_failed": "L'action approuvee s'est arretee en securite.",
+        "about_qt_runtime": "Environnement de bureau Qt Quick / PySide6",
+    },
+    "it": {
+        "status_action_progress": "{verb} {name} - checkpoint reali ed evidenze sono mostrati in questa finestra.",
+        "checkpoint_title": "CHECKPOINT DI AGGIORNAMENTO", "checkpoint_waiting": "In attesa di un'azione approvata.",
+        "checkpoint_preflight": "Controllo preliminare", "checkpoint_source": "Aggiornamento sorgente", "checkpoint_validation": "Validazione manifest",
+        "checkpoint_build": "Build-test", "checkpoint_build_skipped": "Build-test saltato", "checkpoint_complete": "Completato",
+        "checkpoint_complete_detail": "L'azione approvata e terminata correttamente.", "checkpoint_failed": "L'azione approvata si e fermata in sicurezza.",
+        "about_qt_runtime": "Runtime desktop Qt Quick / PySide6",
+    },
+    "de": {
+        "status_action_progress": "{verb} {name} - echte Checkpoints und Belege erscheinen in diesem Fenster.",
+        "checkpoint_title": "UPDATE-CHECKPOINTS", "checkpoint_waiting": "Warte auf eine bestaetigte Aktion.",
+        "checkpoint_preflight": "Vorabprufung", "checkpoint_source": "Quellaktualisierung", "checkpoint_validation": "Manifestprufung",
+        "checkpoint_build": "Build-test", "checkpoint_build_skipped": "Build-test ubersprungen", "checkpoint_complete": "Abgeschlossen",
+        "checkpoint_complete_detail": "Die bestaetigte Aktion wurde erfolgreich abgeschlossen.", "checkpoint_failed": "Die bestaetigte Aktion wurde sicher angehalten.",
+        "about_qt_runtime": "Qt Quick / PySide6 Desktop-Laufzeit",
+    },
+    "zh": {
+        "status_action_progress": "{verb} {name} - 真实检查点和命令证据显示在此窗口中。",
+        "checkpoint_title": "更新检查点", "checkpoint_waiting": "正在等待已批准的操作。",
+        "checkpoint_preflight": "预检查", "checkpoint_source": "源更新", "checkpoint_validation": "清单验证",
+        "checkpoint_build": "构建测试", "checkpoint_build_skipped": "已跳过构建测试", "checkpoint_complete": "已完成",
+        "checkpoint_complete_detail": "已批准的操作已成功完成。", "checkpoint_failed": "已批准的操作已安全停止。",
+        "about_qt_runtime": "Qt Quick / PySide6 桌面运行环境",
+    },
+    "ja": {
+        "status_action_progress": "{verb} {name} - 実際のチェックポイントとコマンド証跡をこの画面に表示します。",
+        "checkpoint_title": "更新チェックポイント", "checkpoint_waiting": "承認済みの操作を待っています。",
+        "checkpoint_preflight": "事前確認", "checkpoint_source": "ソース更新", "checkpoint_validation": "マニフェスト検証",
+        "checkpoint_build": "ビルドテスト", "checkpoint_build_skipped": "ビルドテストを省略", "checkpoint_complete": "完了",
+        "checkpoint_complete_detail": "承認された操作が正常に完了しました。", "checkpoint_failed": "承認された操作は安全に停止しました。",
+        "about_qt_runtime": "Qt Quick / PySide6 デスクトップランタイム",
+    },
+}
+
+for _language, _checkpoint_copy in _QML_CHECKPOINT_COPY.items():
+    TRANSLATIONS[_language].update(_checkpoint_copy)
+
+
 def t(lang: str, key: str, **kwargs: object) -> str:
     """Real translation lookup with real `{placeholder}` substitution
     (str.format, not a template engine) - falls back to English on an

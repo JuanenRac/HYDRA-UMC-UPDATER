@@ -7,6 +7,73 @@ bumped manually only. See `bump_version.py`.
 
 ## [Unreleased] - Real family-tree bug fix (v4 manifest-discovery era)
 
+- **In-window real update checkpoints**: the Qt Quick Safe Update panel now
+  presents Preflight, Source refresh, Manifest validation, Build-test and
+  Complete with a real progress bar. These states are emitted by the existing
+  `install.py` clone/fetch/validation/build workflow; they are not a simulated
+  animation. GUI-launched Git/build child output is captured as bounded
+  in-window evidence and a failed command marks the actual active checkpoint
+  red rather than reporting a false completion.
+- **Console-free graphical launch on Windows**: added `run-gui.vbs`, which
+  launches the local virtual environment's `pythonw.exe` without a Command
+  Prompt. Bare `run.bat` delegates to it; `run.bat --cli ...` deliberately
+  preserves the terminal and pause used for diagnostics.
+- **Qt Quick About panel**: the visual client again exposes author, licence,
+  running version, desktop runtime and a direct repository link.
+- **State-aware action panel**: the visual client now enables Install only
+  for a missing checkout, enables Update only for a strictly newer GitHub
+  version, and disables both for current/ahead local installations. During an
+  approved operation the selected-project controls are replaced by the real
+  checkpoint panel; selecting another project after completion restores the
+  normal controls without sacrificing Safety Gates or Activity Log space.
+- Replaced the text-only header H badge with the existing
+  `images/HYDRA_UMC_ICON.svg`, kept at the original 54 px visual size, and
+  aligned About to the upper-right header edge.
+- **Native application icon**: generated `images/HYDRA_UMC_ICON.ico` from
+  the official SVG and assigned it through Qt to the window/taskbar. Added the
+  reproducible `tools/generate_app_icon.py` generator rather than maintaining
+  an independently drawn binary icon.
+- **Real README evidence**: replaced the obsolete conceptual preview reference
+  with operator-captured `HYDRA_UMC_UPDATER_INTERFACE_1.png` (overview) and
+  `HYDRA_UMC_UPDATER_INTERFACE_2.png` (completed checkpoints) in every public
+  README language.
+- **Operator-confirmed batch maintenance**: the visual client now offers
+  Install all missing and Update all outdated. Both calculate their target set
+  from the live discovered local/remote state, require a separate confirmation,
+  run sequentially through the existing safe per-project path, show the
+  current project in checkpoints and report failures without silently stopping
+  the independent later targets.
+
+- **Qt Quick/QML desktop migration**: the preferred window is now a real
+  PySide6 QML client (`qt_gui.py` + `qml/Main.qml`), not a recoloured Tk
+  layout. It presents local workspace metrics, the manifest-backed project
+  registry, explicit single-project Install/Update actions, visual safety
+  gates and the activity trail in one animated desktop control surface.
+- **One backend, two entry points**: QML calls the existing
+  `discover_workspace`, `discover_remote_projects`, `fetch_all` and
+  `install_or_update` services. The headless `--cli` entry point remains
+  stdlib-only; a legacy Tkinter shell remains as a temporary compatibility
+  fallback if the optional `PySide6` runtime is not installed.
+- Added `docs/QML_DESKTOP_GUI.md`, including the real QML/Python boundary,
+  visual runtime installation, safety flow and Qt linter command.
+- **Second visual pass**: replaced the remaining platform-default Qt buttons,
+  combo boxes and check boxes with themed QML controls. Their backgrounds,
+  borders, pressed/hover states and foreground text are now explicit, avoiding
+  unreadable dark platform text over the updater's dark control surface. The
+  desktop typography is larger and uses a technical system-font preference
+  with platform fallback instead of the small default widget font.
+
+- **Dark desktop updater control surface**: redesigned the real Tkinter GUI
+  around the documented three-panel updater workflow, rather than adding a
+  separate mock screen. The left panel exposes the selected workspace and
+  live project/install/update counts; the centre remains the real
+  manifest-driven family tree; the right panel keeps the selected project,
+  explicit Install/Update actions, safety gates and an on-screen activity
+  trail together. Existing discovery, GitHub verification, confirmation and
+  build flows are unchanged.
+- Added `images/HYDRA_UMC_UPDATER_INTERFACE_PREVIEW.png`, a public visual
+  reference for the real interface, and linked it from every README language.
+
 - **Runtime version-mirror regression**: `pyproject.toml` and the project
   manifest correctly declared `0.2.2`, but the runtime `__version__` mirror
   had remained at `0.2.1`. It is now synchronized, and a test reads both
@@ -19,6 +86,10 @@ bumped manually only. See `bump_version.py`.
 - **Real bug found and fixed via live GUI testing**: `gui.py::_render_rows()` builds the parent/child Treeview in a single insertion pass that requires a project's parent to already be inserted (`parent_iid = entry.parent if (entry.parent and entry.parent in inserted) else ""`), on the assumption - stated in the code's own comment - that discovery sorts each family's parent before its children. That assumption broke once `detect.py::discover_workspace()` moved to dynamic, manifest-driven discovery: it only sorts alphabetically by folder name, which is frequently NOT parent-before-children (e.g. `HYDRA-UMC-ANDROID-CONTROL` sorts before its own parent `HYDRA-UMC-SERVER`). Real impact: 4 of `HYDRA-UMC-SERVER`'s 6 real children (`ANDROID-CONTROL`, `DSI`, `EDITOR-URDF`, `IOS-CONTROL`) rendered as orphaned top-level rows instead of nested under their real parent, while only `STUDIO`/`SUITE` (whose names sort after `SERVER`) nested correctly. The already-correct online `_refresh()` worker sorts `combined` by `(family, parent-first, name)` before rendering; that same sort just wasn't applied to the offline/local-only path. Fixed by sorting inside `_render_rows()` itself (not just at one call site), so it's correct for every caller - offline refresh, a filter change, a language switch - regardless of `self.locals_`'s own order.
 - **Real bug fixed in `tests/test_registry.py`**: a manifest fixture built inside a non-raw Python triple-quoted string double-escaped its embedded regex (`\\d+`, `\\.`), producing invalid JSON (`\d` is not a valid JSON escape) at runtime and making the test fail with `ManifestValidationError` instead of exercising what it was meant to test. Fixed by making the string literal raw (`r'''...'''`) so only JSON's own escaping applies.
 - Verified real: `pytest tests/ -q` -> 17/17 (previously 16 passed, 1 failed). A real local-discovery harness against the actual `C:\Users\juane\Documents\GitHub` checkout confirmed the fix - `HYDRA-UMC-SERVER` now shows 6 real children (was 2), top-level rows dropped from 28 (broken) to the expected 16, all 47 real local manifests still accounted for, and Treeview selection still survives a real language switch.
+
+## [0.2.3]
+
+- Build version synchronized with `hydra-umc.project.json` and the repository-native version source.
 
 ## [0.2.2] - Real anti-rollback and manifest validation before an update
 

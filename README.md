@@ -2,6 +2,14 @@
   <img src="images/HYDRA_UMC_BANNER.svg" alt="HYDRA-UMC-UPDATER banner" width="100%">
 </p>
 
+<p align="center">
+  <img src="images/HYDRA_UMC_UPDATER_INTERFACE_1.png" alt="HYDRA-UMC-UPDATER real desktop overview" width="100%">
+</p>
+
+<p align="center">
+  <img src="images/HYDRA_UMC_UPDATER_INTERFACE_2.png" alt="HYDRA-UMC-UPDATER real update checkpoints" width="100%">
+</p>
+
 # 🛠️ HYDRA-UMC-UPDATER
 
 <p align="center">🇺🇸 <b>English</b> | <a href="README_spa.md">🇪🇸 Español</a> | <a href="README_fra.md">🇫🇷 Français</a> | <a href="README_ita.md">🇮🇹 Italiano</a> | <a href="README_deu.md">🇩🇪 Deutsch</a> | <a href="README_zho.md">🇨🇳 简体中文</a> | <a href="README_jpn.md">🇯🇵 日本語</a></p>
@@ -11,8 +19,24 @@
 <p align="left">
   <img src="https://img.shields.io/badge/Licencia-GPL%203.0-blue.svg" alt="GPL 3.0">
   <img src="https://img.shields.io/badge/Language-Python%203.10%2B-blue.svg" alt="Python">
-  <img src="https://img.shields.io/badge/Dependencies-stdlib%20only-brightgreen.svg" alt="stdlib only">
+  <img src="https://img.shields.io/badge/Core-stdlib%20only-brightgreen.svg" alt="stdlib-only CLI core">
+  <img src="https://img.shields.io/badge/Desktop-PySide6%20%7C%20Qt%20Quick-367BF5.svg" alt="PySide6 Qt Quick desktop GUI">
 </p>
+
+> **Visual desktop mode:** the default desktop interface is now built with
+> **Qt Quick / QML** through the optional `PySide6` GUI runtime. The updater
+> core and `--cli` mode remain stdlib-only for a headless CM5.
+>
+> **Windows launch and update evidence:** double-click `run-gui.vbs` (or use
+> bare `run.bat`) for the console-free desktop client. Its Safe Update panel
+> shows real Preflight, Source refresh, Manifest validation, Build-test and
+> Complete checkpoints with captured command evidence; `run.bat --cli ...`
+> deliberately keeps a terminal for diagnostics.
+> Install is available only for a missing checkout; Update only when GitHub is
+> newer. During an approved action, checkpoints replace the selected-project
+> controls and selecting another project restores them.
+> **Install all missing** and **Update all outdated** are separately confirmed,
+> sequential batch actions built from the same live state and safety path.
 
 ---
 
@@ -63,9 +87,13 @@ OK  build.sh completed successfully.
 ```
 
 Running `hydra-umc-updater` with no arguments (or double-clicking it)
-opens the same information in a window instead - a sortable project
-table, a deploy-target filter, and Install/Update buttons for whichever
-row is selected.
+opens the same information in a dark desktop control surface instead: a
+**Local Ecosystem** panel with live discovery/install/update metrics, a
+manifest-driven **Project Registry** tree, and a **Safe Update** panel for
+the selected project. The layout makes the real guardrails visible:
+manifest discovery, one explicit project action, manual confirmation,
+optional build and an on-screen activity trail; full command evidence
+continues to be written to the launch terminal.
 
 ## 2. 🔄 HOW A CHECK/UPDATE ACTUALLY WORKS
 
@@ -97,14 +125,11 @@ row is selected.
 
 ## 3. 🧱 ARCHITECTURE & DESIGN DECISIONS
 
-- **Windowed GUI by default, `--cli` for headless.** Tkinter/ttk (stdlib,
-  no new dependency) - the same GUI toolkit and dual-entry-point pattern
-  `URTC-FLASHER`/`URTC-TESTER` already use in this ecosystem: `main.py`
-  checks `sys.argv` for `--cli` **before** ever importing `tkinter`, so
-  `--cli` mode works on a genuinely headless CM5 with no `python3-tk`
-  installed and no display, while bare invocation gets the friendlier
-  windowed experience everywhere else (including a CM5 with a local
-  desktop/VNC session, and a developer's own PC).
+- **Qt Quick GUI by default, `--cli` for headless.** `main.py` checks for
+  `--cli` before importing the optional PySide6 runtime, so CLI mode works on
+  a genuinely headless CM5 with no display or desktop dependency. Bare
+  invocation starts the QML client where the runtime is installed; the older
+  Tkinter shell remains only as a temporary compatibility fallback.
 - **The windowed GUI is real, 7-language multilingual (`i18n.py`) - `--cli` deliberately isn't.** Every real widget re-labels live from a language `Combobox` (en/es/fr/it/de/zh/ja, the same 7 the public dashboard and every README ship), detected from a saved preference or the OS's own locale. Project/family names and each project's own real `notes`/`tech` text stay untranslated - `registry.py` is their one source of truth, and 7 parallel copies of real engineering documentation would stop it being that. `--cli` output stays English-only on purpose: it's meant to be scripted/piped, where stable, greppable text matters more than localization.
 - **`deploy` is a classification, not a restriction.** Treating all 44
   projects as "things that belong on the CM5" was wrong - firmware repos
@@ -132,7 +157,7 @@ row is selected.
   the Releases API would be actively wrong here, not just less
   convenient.
 - **A transient network failure gets a real retry; a definitive answer never does.** Every real GitHub request (`github_client.py`'s `_urlopen_with_retries`) retries up to 3 times with backoff, but only for a connection that never got a response at all (DNS/timeout/reset). A real HTTP status GitHub actually returned - 404, 403, 500 - is never retried: GitHub already answered, and hammering it again would only spend more of the rate limit for the same result.
-- **A malformed remote catalog fails loudly; one malformed project doesn't.** If GitHub's repository listing itself is unreachable or unparseable, `discover_remote_projects()` raises - both `gui.py` and `main.py` already catch that and fall back to a locally-discovered project list rather than showing a broken/empty scan. One single repository's malformed manifest, by contrast, is isolated into that scan's own `errors` list and never aborts discovery of the rest - a real fixture-server test (`tests/test_github_client.py`) proves both paths.
+- **A malformed remote catalog fails loudly; one malformed project doesn't.** If GitHub's repository listing itself is unreachable or unparseable, `discover_remote_projects()` raises and the desktop bridge falls back to a locally-discovered project list rather than showing a broken/empty scan. One single repository's malformed manifest, by contrast, is isolated into that scan's own `errors` list and never aborts discovery of the rest - a real fixture-server test (`tests/test_github_client.py`) proves both paths.
 - **`install`/`update` always take one explicit project name.** There is
   no "update everything" subcommand, and this is a design decision, not
   a missing feature - a fleet of real robots is not something to leave
@@ -160,10 +185,13 @@ HYDRA-UMC-UPDATER/
 │   ├── detect.py          # Scans a workspace root for what's installed
 │   ├── github_client.py   # Concurrent raw-content fetch + real retry/backoff for transient network errors
 │   ├── install.py         # git clone/pull + delegate to the project's own build script
-│   ├── gui.py              # Windowed GUI (Tkinter/ttk) - the default entry point
+│   ├── qt_gui.py           # Qt Quick bridge over the real discovery/update services
+│   ├── qml/Main.qml        # Themed desktop shell: controls, checkpoints and About
+│   ├── gui.py              # Legacy Tkinter fallback if PySide6 is unavailable
 │   └── main.py             # Dispatch: GUI by default, --cli for status/install/update
 ├── build.sh / build.bat    # venv + editable install + compile-check
-├── run.sh / run.bat        # Runs the tool (forwards all arguments - see USAGE below)
+├── run.sh / run.bat        # GUI default / CLI entry point
+├── run-gui.vbs             # Windows graphical launcher with no console window
 └── bump_version.py         # Ecosystem-wide odometer bump (pyproject.toml + __init__.py)
 ```
 
@@ -182,11 +210,10 @@ chmod +x build.sh   # one-time
 On Windows: `build.bat`, then `run.bat` (GUI) / `run.bat --cli status` /
 `run.bat --cli install <name>` / `run.bat --cli update <name>`.
 
-The GUI needs `python3-tk` on a from-source Linux Python (Debian/Raspberry
-Pi OS: `sudo apt install python3-tk`) - bundled already with the
-python.org Windows/macOS installers. Without it, bare invocation prints a
-short notice and falls back to `--cli`'s own help text rather than
-crashing.
+The preferred GUI needs the optional Qt runtime (`pip install -e ".[gui]"`;
+`build.bat`/`build.sh` already install it). `--cli` has no GUI dependency and
+is the correct entry point for a headless CM5. If Qt is unavailable, the
+older Tkinter shell is only a compatibility fallback.
 
 **Troubleshooting**
 

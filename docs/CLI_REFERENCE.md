@@ -1,10 +1,9 @@
 # HYDRA-UMC-UPDATER — CLI Reference
 
-`hydra-umc-updater` defaults to a windowed GUI. Passing `--cli` switches
-to the headless argparse CLI documented here, before `tkinter` is ever
-imported — the same pattern URTC-FLASHER's `--cli` fallback uses, so
-`--cli` mode works on a genuinely headless CM5 with no `python3-tk`
-installed and no display. Every example below was captured from a real
+`hydra-umc-updater` defaults to a windowed Qt Quick GUI. Passing `--cli` switches
+to the headless argparse CLI documented here, before the optional desktop
+runtime is imported, so `--cli` mode works on a genuinely headless CM5 with
+no Qt/PySide6 desktop runtime installed and no display. Every example below was captured from a real
 run of the installed CLI — not written from memory.
 
 ## Usage
@@ -173,8 +172,15 @@ back to local-only state with a `WARNING:` line instead of crashing.
 
 ## GUI
 
-Running `hydra-umc-updater` with no arguments (or double-clicking it)
-opens a windowed GUI instead — a sortable, filterable project table with
-Install/Update buttons for whichever row is selected, and a language
+The preferred desktop client is the Qt Quick/QML interface. It is supplied by
+the optional `PySide6` extra and uses the same discovery and update services as
+this CLI; see [QML Desktop GUI](QML_DESKTOP_GUI.md). `--cli` remains fully
+stdlib-only for a headless CM5. A Tkinter window can still appear only as a
+temporary compatibility fallback when the optional Qt runtime is absent.
+
+Running `hydra-umc-updater` with no arguments opens the QML desktop client.
+On Windows, `run-gui.vbs` is the console-free double-click launcher; bare
+`run.bat` delegates to it. The client provides a filterable project table,
+explicit Install/Update actions, real in-window checkpoints and a language
 selector (7 languages; the CLI itself stays English-only, since it's
 meant to be scripted/piped).

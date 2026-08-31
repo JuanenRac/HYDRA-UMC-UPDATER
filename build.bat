@@ -65,16 +65,16 @@ if errorlevel 1 goto :error
 echo       Done.
 echo.
 
-echo [3/5] Installing project (editable, with dev extras) into the venv...
+echo [3/5] Installing project (editable, with dev and QML GUI extras) into the venv...
 python -m pip install --upgrade pip >nul
 if errorlevel 1 goto :error
-python -m pip install -e ".[dev]"
+python -m pip install -e ".[dev,gui]"
 if errorlevel 1 goto :error
 echo       Done.
 echo.
 
 echo [4/5] Verifying the package compiles/imports without errors...
-python -m py_compile src\hydra_umc_updater\__init__.py src\hydra_umc_updater\registry.py src\hydra_umc_updater\version_parse.py src\hydra_umc_updater\detect.py src\hydra_umc_updater\github_client.py src\hydra_umc_updater\install.py src\hydra_umc_updater\main.py src\hydra_umc_updater\gui.py src\hydra_umc_updater\i18n.py
+python -m py_compile src\hydra_umc_updater\__init__.py src\hydra_umc_updater\registry.py src\hydra_umc_updater\version_parse.py src\hydra_umc_updater\detect.py src\hydra_umc_updater\github_client.py src\hydra_umc_updater\install.py src\hydra_umc_updater\main.py src\hydra_umc_updater\gui.py src\hydra_umc_updater\qt_gui.py src\hydra_umc_updater\i18n.py
 if errorlevel 1 goto :error
 python -c "import hydra_umc_updater; print('import OK - version', hydra_umc_updater.__version__)"
 if errorlevel 1 goto :error

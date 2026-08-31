@@ -2,6 +2,14 @@
   <img src="images/HYDRA_UMC_BANNER.svg" alt="HYDRA-UMC-UPDATER banner" width="100%">
 </p>
 
+<p align="center">
+  <img src="images/HYDRA_UMC_UPDATER_INTERFACE_1.png" alt="Vue generale reelle du bureau HYDRA-UMC-UPDATER" width="100%">
+</p>
+
+<p align="center">
+  <img src="images/HYDRA_UMC_UPDATER_INTERFACE_2.png" alt="Checkpoints reels de mise a jour HYDRA-UMC-UPDATER" width="100%">
+</p>
+
 # 🛠️ HYDRA-UMC-UPDATER
 
 <p align="center"><a href="README.md">🇺🇸 English</a> | <a href="README_spa.md">🇪🇸 Español</a> | 🇫🇷 <b>Français</b> | <a href="README_ita.md">🇮🇹 Italiano</a> | <a href="README_deu.md">🇩🇪 Deutsch</a> | <a href="README_zho.md">🇨🇳 简体中文</a> | <a href="README_jpn.md">🇯🇵 日本語</a></p>
@@ -11,8 +19,24 @@
 <p align="left">
   <img src="https://img.shields.io/badge/Licencia-GPL%203.0-blue.svg" alt="GPL 3.0">
   <img src="https://img.shields.io/badge/Language-Python%203.10%2B-blue.svg" alt="Python">
-  <img src="https://img.shields.io/badge/Dependencies-stdlib%20only-brightgreen.svg" alt="stdlib only">
+  <img src="https://img.shields.io/badge/Core-stdlib%20only-brightgreen.svg" alt="stdlib-only CLI core">
+  <img src="https://img.shields.io/badge/Desktop-PySide6%20%7C%20Qt%20Quick-367BF5.svg" alt="PySide6 Qt Quick desktop GUI">
 </p>
+
+> **Mode bureau visuel :** l'interface bureau par defaut utilise maintenant
+> **Qt Quick / QML** avec le runtime GUI optionnel `PySide6`. Le coeur et le
+> mode `--cli` restent uniquement bases sur la bibliotheque standard pour une CM5 headless.
+>
+> **Demarrage Windows et preuves :** ouvrez `run-gui.vbs` (ou `run.bat` sans
+> argument) pour le client graphique sans console. Le panneau de mise a jour
+> affiche les etapes reelles de controle, source, manifeste, build-test et fin
+> avec les preuves capturees ; `run.bat --cli ...` conserve le terminal de diagnostic.
+> Installer n'est actif que sans checkout et Mettre a jour seulement si GitHub
+> est plus recent. Pendant une action approuvee, les checkpoints remplacent les
+> controles du projet ; choisir un autre projet les restaure.
+> **Installer tous les manquants** et **Mettre a jour tous les depasses** sont
+> des actions par lot sequentielles, confirmees separement et fondees sur le
+> meme etat reel et parcours de securite.
 
 ---
 
@@ -103,15 +127,10 @@ ligne sélectionnée.
 
 ## 3. 🧱 ARCHITECTURE ET DÉCISIONS DE CONCEPTION
 
-- **GUI avec fenêtre par défaut, `--cli` pour le mode headless.**
-  Tkinter/ttk (bibliothèque standard, aucune nouvelle dépendance) - la
-  même boîte à outils GUI et le même schéma à double point d'entrée que
-  `URTC-FLASHER`/`URTC-TESTER` utilisent déjà dans cet écosystème :
-  `main.py` vérifie `sys.argv` pour `--cli` **avant** d'importer
-  `tkinter`, donc le mode `--cli` fonctionne sur un CM5 vraiment headless
-  sans `python3-tk` installé ni écran, tandis que l'invocation nue obtient
-  l'expérience avec fenêtre partout ailleurs (y compris un CM5 avec une
-  session de bureau local/VNC, et le propre PC d'un développeur).
+- **GUI Qt Quick par defaut, `--cli` pour le headless.** `main.py` verifie
+  `--cli` avant d'importer le runtime PySide6 optionnel. La CLI fonctionne
+  sur une CM5 sans ecran ni dependance desktop ; sans argument QML demarre
+  lorsqu'il est disponible et Tkinter reste seulement un fallback temporaire.
 - **`deploy` est une classification, pas une restriction.** Traiter les
   44 projets comme "des choses qui appartiennent au CM5" était une
   erreur - les dépôts de firmware sont compilés et flashés DEPUIS un PC
@@ -184,10 +203,13 @@ HYDRA-UMC-UPDATER/
 │   ├── detect.py          # Scanne une racine de workspace pour ce qui est installé
 │   ├── github_client.py   # Récupération concurrente du contenu brut + réessai/backoff réel pour les erreurs réseau transitoires
 │   ├── install.py         # git clone/pull + délègue au script de build propre
-│   ├── gui.py              # GUI avec fenêtre (Tkinter/ttk) - point d'entrée par défaut
+│   ├── qt_gui.py           # Pont Qt Quick vers les services reels de decouverte/mise a jour
+│   ├── qml/Main.qml        # Shell desktop theme avec checkpoints et About
+│   ├── gui.py              # Fallback Tkinter si PySide6 est indisponible
 │   └── main.py             # Répartition : GUI par défaut, --cli pour status/install/update
 ├── build.sh / build.bat    # venv + installation éditable + compile-check
-├── run.sh / run.bat        # Exécute l'outil (transmet tous les arguments - voir USAGE ci-dessous)
+├── run.sh / run.bat        # GUI par defaut / entree CLI
+├── run-gui.vbs             # Lanceur graphique Windows sans console
 └── bump_version.py         # Incrément "compteur kilométrique" de l'écosystème (pyproject.toml + __init__.py)
 ```
 
@@ -206,11 +228,10 @@ chmod +x build.sh   # une seule fois
 Sous Windows : `build.bat`, puis `run.bat` (GUI) / `run.bat --cli status`
 / `run.bat --cli install <nom>` / `run.bat --cli update <nom>`.
 
-La GUI nécessite `python3-tk` sur un Python Linux compilé à part
-(Debian/Raspberry Pi OS : `sudo apt install python3-tk`) - déjà inclus
-dans les installeurs python.org pour Windows/macOS. Sans lui,
-l'invocation nue affiche un bref avertissement et retombe sur le texte
-d'aide du propre `--cli` plutôt que de planter.
+La GUI preferee requiert le runtime Qt optionnel (`pip install -e ".[gui]"`;
+`build.bat`/`build.sh` l'installent deja). `--cli` n'a pas de dependance GUI et
+convient a une CM5 headless. Sans Qt, l'ancienne fenetre Tkinter reste un
+fallback de compatibilite uniquement.
 
 **Dépannage**
 

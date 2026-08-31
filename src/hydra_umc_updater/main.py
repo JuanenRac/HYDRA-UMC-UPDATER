@@ -8,9 +8,10 @@
 # as a sibling directory under one workspace root, same assumption build-
 # frontend.sh/HYDRA-UMC-SUITE's own discovery already make.
 #
-# Bare invocation (no arguments, or double-clicked) launches the windowed
-# GUI (gui.py, Tkinter) - the intended default, on both the CM5's own
-# local desktop/VNC session and the user's own PC. `--cli` switches to the
+# Bare invocation (no arguments, or double-clicked) launches the QML desktop
+# GUI (qt_gui.py, PySide6/Qt Quick) on a workstation or CM5 desktop/VNC
+# session.  The old Tkinter shell stays as a compatibility fallback only when
+# the optional GUI package was not installed. `--cli` switches to the
 # headless argparse CLI below, with three subcommands:
 #   status              - what's installed, what version, what's on GitHub
 #   install <project>   - clone + build ONE project that isn't installed yet
@@ -19,13 +20,9 @@
 # explicit project name - there is no "update everything" - see
 # install.py's own header comment for why.
 #
-# tkinter (and gui.py, which imports it) is only imported once --cli has
-# been ruled out - checked directly against sys.argv, before argparse ever
-# runs - so `--cli` mode never needs tkinter/a display, matching the exact
-# pattern URTC-FLASHER's own urtc_flasher.py already established for this
-# ecosystem (see that file's own header comment for the full reasoning:
-# a genuinely headless CM5 with no python3-tk installed must still be able
-# to run `hydra-umc-updater --cli status`).
+# GUI imports are only attempted after --cli has been ruled out.  A genuinely
+# headless CM5 therefore never needs Qt, tkinter or a display to run
+# `hydra-umc-updater --cli status`.
 # =============================================================================
 from __future__ import annotations
 
@@ -216,16 +213,24 @@ def build_parser() -> argparse.ArgumentParser:
 def main() -> int:
     if "--cli" not in sys.argv:
         try:
-            import tkinter  # noqa: F401 - presence check only, see gui.py for the real import
+            from .qt_gui import launch_qt_gui
         except ImportError:
-            print("tkinter isn't available on this Python install, so the windowed GUI "
-                  "can't start - falling back to --cli mode. To get the GUI: on Debian/"
-                  "Raspberry Pi OS, `sudo apt install python3-tk`; on Windows/macOS "
-                  "python.org installers, tkinter is bundled already, so this usually "
-                  "means a custom/minimal Python build.", file=sys.stderr)
+            # A checkout can still run its original dependency-free desktop
+            # shell before `pip install -e '.[gui]'` has been performed. This
+            # is a compatibility bridge, not the preferred visual path.
+            try:
+                from .gui import launch_gui
+            except ImportError:
+                print("The Qt Quick GUI is not installed and tkinter is unavailable. "
+                      "Use `--cli` on a headless system, or run the project build "
+                      "to install the optional PySide6 GUI runtime.", file=sys.stderr)
+            else:
+                print("Qt Quick GUI runtime is not installed; starting the legacy "
+                      "Tkinter fallback. Run build.bat/build.sh to enable the new "
+                      "visual desktop interface.", file=sys.stderr)
+                return launch_gui(default_workspace_root())
         else:
-            from .gui import launch_gui
-            return launch_gui(default_workspace_root())
+            return launch_qt_gui(default_workspace_root())
 
     argv = [a for a in sys.argv[1:] if a != "--cli"]
     parser = build_parser()

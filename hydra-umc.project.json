@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "ecosystem": "HYDRA-UMC",
   "name": "HYDRA-UMC-UPDATER",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "role": "tool",
   "stack": "python",
   "technologies": [
@@ -20,5 +20,5 @@
     "pattern": "^version\\s*=\\s*\"(\\d+)\\.(\\d+)\\.(\\d+)\""
   },
   "build": "Detects local projects, compares their manifests with GitHub and performs explicit install or update actions.",
-  "notes": "Administrative tooling for the ecosystem catalog. It has its own manifest but is intentionally excluded from the 46-product public dashboard count. Real bounded retry with backoff for transient GitHub network errors; a malformed remote catalog fails loudly (caught by both gui.py and main.py, falling back to local-only state) while one malformed manifest is isolated without aborting discovery of the rest. install.py's clone_or_pull never replaces a healthy local checkout - pull is always --ff-only, never a reset."
+  "notes": "Administrative tooling for the ecosystem catalog. Now included in the public dashboard's own project count (JuanenRac/ecosystem-catalog.json's dashboard_exclude list no longer excludes it). Real bounded retry with backoff for transient GitHub network errors; a malformed remote catalog fails loudly (caught by both gui.py and main.py, falling back to local-only state) while one malformed manifest is isolated without aborting discovery of the rest. install.py's clone_or_pull never replaces a healthy local checkout - pull is always --ff-only, never a reset."
 }
