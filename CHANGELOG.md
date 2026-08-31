@@ -33,6 +33,10 @@ bumped manually only. See `bump_version.py`.
   the official SVG and assigned it through Qt to the window/taskbar. Added the
   reproducible `tools/generate_app_icon.py` generator rather than maintaining
   an independently drawn binary icon.
+- **Animated in-window identity**: the Qt Quick header now uses `VectorImage`
+  for the official SVG and loops its supported transform animation. The native
+  taskbar/window ICO remains intentionally static, as required by that OS icon
+  surface.
 - **Real README evidence**: replaced the obsolete conceptual preview reference
   with operator-captured `HYDRA_UMC_UPDATER_INTERFACE_1.png` (overview) and
   `HYDRA_UMC_UPDATER_INTERFACE_2.png` (completed checkpoints) in every public

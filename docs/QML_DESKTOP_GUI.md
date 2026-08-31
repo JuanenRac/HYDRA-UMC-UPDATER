@@ -117,9 +117,9 @@ card and action buttons in the same visual slot. Safety Gates and Activity Log
 therefore retain their usable lower-panel space. The evidence remains after an
 action completes; selecting another project restores the normal selected
 project controls. The header uses `images/HYDRA_UMC_ICON.svg` at the original
-54 px badge size rather than a text-only placeholder. (The SVG asset is used
-directly; the available Qt SVG renderer determines whether its internal SVG
-animation is rendered on a particular desktop runtime.)
+54 px badge size rather than a text-only placeholder. It is rendered by Qt
+Quick `VectorImage`, with its supported SVG transform animation explicitly
+looped, so the official animated mark remains alive in the desktop surface.
 
 For the operating-system window and Windows taskbar, `qt_gui.py` uses the
 native `images/HYDRA_UMC_ICON.ico`. It is generated from that same SVG by

@@ -10,6 +10,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Dialogs
+import QtQuick.VectorImage
 
 ApplicationWindow {
     id: window
@@ -308,12 +309,17 @@ ApplicationWindow {
             Rectangle {
                 width: 54; height: 54; radius: 16
                 color: "#0e3045"; border.width: 1; border.color: "#2d7695"
-                Image {
+                // Image rasterizes SVG into one image for this surface.
+                // VectorImage preserves the official SVG's supported SMIL
+                // transform animation, so the mark remains alive instead
+                // of becoming a static logo in the Updater command header.
+                VectorImage {
                     anchors.fill: parent
                     anchors.margins: 5
                     source: "../../../images/HYDRA_UMC_ICON.svg"
-                    fillMode: Image.PreserveAspectFit
-                    smooth: true
+                    preferredRendererType: VectorImage.CurveRenderer
+                    animations.loops: Animation.Infinite
+                    animations.paused: false
                 }
             }
             ColumnLayout {
