@@ -195,7 +195,7 @@ HYDRA-UMC-UPDATER/
 └── bump_version.py         # Ecosystem-wide odometer bump (pyproject.toml + __init__.py)
 ```
 
-## ⚙️ BUILD & RUN
+## ⚙️ BUILD & RUN GUIDE
 
 ```bash
 chmod +x build.sh   # one-time
