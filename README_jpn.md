@@ -188,10 +188,9 @@ update <name>`。
 クトリ構成コメントと対応）を参照してください。
 
 ## 👤 作者
-
-**JuanenRac（Electro Hobby 3D）**
-メール：electrohobby3d@gmail.com
-YouTube：[youtube.com/@electrohobby3d](https://youtube.com/@electrohobby3d)
+**JuanenRac** (Electro Hobby 3D)
+📧 electrohobby3d@gmail.com
+📺 [youtube.com/@electrohobby3d](https://youtube.com/@electrohobby3d)
 
 ## 📜 ライセンス
 

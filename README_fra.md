@@ -293,10 +293,9 @@ firmware/outils PC de la tête d'outil URTC - voir le propre groupement de
 répertoires de ce même README) pour la liste complète et actuelle.
 
 ## 👤 AUTEUR
-
-**JuanenRac (Electro Hobby 3D)**
-Email : electrohobby3d@gmail.com
-YouTube : [youtube.com/@electrohobby3d](https://youtube.com/@electrohobby3d)
+**JuanenRac** (Electro Hobby 3D)
+📧 electrohobby3d@gmail.com
+📺 [youtube.com/@electrohobby3d](https://youtube.com/@electrohobby3d)
 
 ## 📜 LICENCE
 

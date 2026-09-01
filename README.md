@@ -270,10 +270,9 @@ grouping (matching this README's own directory-structure comments) for
 the complete, current list.
 
 ## 👤 AUTHOR
-
-**JuanenRac (Electro Hobby 3D)**
-Email: electrohobby3d@gmail.com
-YouTube: [youtube.com/@electrohobby3d](https://youtube.com/@electrohobby3d)
+**JuanenRac** (Electro Hobby 3D)
+📧 electrohobby3d@gmail.com
+📺 [youtube.com/@electrohobby3d](https://youtube.com/@electrohobby3d)
 
 ## 📜 LICENSE
 

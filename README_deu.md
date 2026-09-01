@@ -297,10 +297,9 @@ in `registry.py` (die den Verzeichnisstruktur-Kommentaren dieses selben
 READMEs entspricht) für die vollständige, aktuelle Liste.
 
 ## 👤 AUTOR
-
-**JuanenRac (Electro Hobby 3D)**
-E-Mail: electrohobby3d@gmail.com
-YouTube: [youtube.com/@electrohobby3d](https://youtube.com/@electrohobby3d)
+**JuanenRac** (Electro Hobby 3D)
+📧 electrohobby3d@gmail.com
+📺 [youtube.com/@electrohobby3d](https://youtube.com/@electrohobby3d)
 
 ## 📜 LIZENZ
 

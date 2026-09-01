@@ -173,10 +173,9 @@ Rust 编排/仿真服务、Go 基础设施/CLI 工具、Node 工业网关，以�
 （与本 README 自身的目录结构注释相对应）。
 
 ## 👤 作者
-
-**JuanenRac（Electro Hobby 3D）**
-邮箱：electrohobby3d@gmail.com
-YouTube：[youtube.com/@electrohobby3d](https://youtube.com/@electrohobby3d)
+**JuanenRac** (Electro Hobby 3D)
+📧 electrohobby3d@gmail.com
+📺 [youtube.com/@electrohobby3d](https://youtube.com/@electrohobby3d)
 
 ## 📜 许可证
 

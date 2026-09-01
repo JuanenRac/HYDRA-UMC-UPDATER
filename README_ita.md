@@ -294,10 +294,9 @@ struttura delle directory di questo stesso README) per la lista
 completa e attuale.
 
 ## 👤 AUTORE
-
-**JuanenRac (Electro Hobby 3D)**
-Email: electrohobby3d@gmail.com
-YouTube: [youtube.com/@electrohobby3d](https://youtube.com/@electrohobby3d)
+**JuanenRac** (Electro Hobby 3D)
+📧 electrohobby3d@gmail.com
+📺 [youtube.com/@electrohobby3d](https://youtube.com/@electrohobby3d)
 
 ## 📜 LICENZA
 
