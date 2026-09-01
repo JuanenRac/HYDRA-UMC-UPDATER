@@ -301,16 +301,3 @@ YouTube : [youtube.com/@electrohobby3d](https://youtube.com/@electrohobby3d)
 ## 📜 LICENCE
 
 GPL-3.0 (logiciel) / CC BY-SA 4.0 (documentation) - voir [LICENSE.md](LICENSE.md).
-
-## 🛠️ BUILD & RUN
-
-Utilisez la vérification de compilation sans versionnement avant une compilation de publication :
-
-| Action | Windows | Linux / macOS |
-|---|---|---|
-| Vérification de compilation (sans modifier la version ni le CHANGELOG) | `build-test.bat` | `./build-test.sh` |
-| Exécution / développement (si disponible) | `run*.bat` ou `dev*.bat` | `./run*.sh` ou `./dev*.sh` |
-
-`build-test.bat` et `build-test.sh` compilent ou valident la pile du projet sans incrémenter `hydra-umc.project.json` ni modifier `CHANGELOG.md`. Ils peuvent uniquement créer les sorties normales du compilateur. Les scripts existants `build*.bat`, `build*.sh`, `run*` et `dev*` conservent leur comportement spécifique de versionnement ou d'exécution ; utilisez-les lorsque ce comportement est requis.
-
-> **Sécurité Updater :** les commandes automatiques install et update exécutent uniquement build-test, jamais une compilation versionnée. Les compilations de publication restent une action humaine explicite.
