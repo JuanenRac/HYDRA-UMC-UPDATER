@@ -253,7 +253,7 @@ Tkinter resta solo un fallback di compatibilita.
   status` nella directory propria del progetto) prima di riprovare
   `update`. Questo strumento non forza mai un reset di un checkout.
 
-## 🚀 ROADMAP
+## 🚀 TABELLA DI MARCIA
 
 - Un eseguibile GUI autonomo pacchettizzato (PyInstaller, seguendo la
   propria convenzione `build_exe.bat`/`.sh` di HYDRA-UMC-SUITE) per

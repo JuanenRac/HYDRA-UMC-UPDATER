@@ -257,7 +257,7 @@ bleibt das alte Tkinter-Fenster nur ein Kompatibilitats-Fallback.
   Projekts), bevor Sie `update` erneut versuchen. Dieses Tool erzwingt
   nie einen Reset eines Checkouts.
 
-## 🚀 ROADMAP
+## 🚀 FAHRPLAN
 
 - Eine gepackte eigenständige GUI-ausführbare Datei (PyInstaller, nach der
   eigenen `build_exe.bat`/`.sh`-Konvention von HYDRA-UMC-SUITE) für eine
