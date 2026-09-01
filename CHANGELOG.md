@@ -7,6 +7,12 @@ bumped manually only. See `bump_version.py`.
 
 ## [Unreleased] - Real family-tree bug fix (v4 manifest-discovery era)
 
+- **Fixed `--cli status`'s STACK column running into LOCAL with no space**:
+  the column used a fixed 12-char width, silently fine while every real
+  `stack` value stayed under it - the moment a real manifest recorded the
+  14-char `python-qtquick`, it printed straight into the next column
+  (`python-qtquick0.0.2`). Now sized dynamically from the real data, same
+  approach already used for the PROJECT column.
 - **In-window real update checkpoints**: the Qt Quick Safe Update panel now
   presents Preflight, Source refresh, Manifest validation, Build-test and
   Complete with a real progress bar. These states are emitted by the existing

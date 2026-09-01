@@ -97,7 +97,11 @@ def cmd_status(args: argparse.Namespace) -> int:
     ]
 
     name_w = max((len(p.name) for p in entries.values()), default=7) + 2
-    header = f"{'PROJECT':<{name_w}}{'MATURITY':<13}{'ROLE':<10}{'STACK':<12}{'LOCAL':<10}{'GITHUB':<10}{'STATE'}"
+    # Dynamic like name_w above - a fixed width silently ran stack values
+    # like "python-qtquick" (14 chars) straight into the LOCAL column with
+    # no separating space the moment a stack name grew past the old fixed 12.
+    stack_w = max((len(p.stack) for p in entries.values()), default=5) + 2
+    header = f"{'PROJECT':<{name_w}}{'MATURITY':<13}{'ROLE':<10}{'STACK':<{stack_w}}{'LOCAL':<10}{'GITHUB':<10}{'STATE'}"
     print(header)
     print("-" * len(header))
 
@@ -111,7 +115,7 @@ def cmd_status(args: argparse.Namespace) -> int:
             outdated += 1
         print(
             f"{ls.entry.name:<{name_w}}{ls.entry.maturity:<13}{ls.entry.role:<10}"
-            f"{ls.entry.stack:<12}{local_v:<10}{remote_v:<10}{state}"
+            f"{ls.entry.stack:<{stack_w}}{local_v:<10}{remote_v:<10}{state}"
         )
 
     print()
