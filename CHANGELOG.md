@@ -7,6 +7,15 @@ bumped manually only. See `bump_version.py`.
 
 ## [Unreleased] - Real family-tree bug fix (v4 manifest-discovery era)
 
+- **More developed About dialog**, matching HYDRA-UMC-STUDIO's own
+  `About.tsx`: the placeholder "H" letter box is now the real animated
+  `VectorImage` mark (same source/renderer as the main header), the
+  title is a colored HYDRA-UM-C wordmark, and Version/Author/Email/
+  License are now real structured rows (email opens a `mailto:` link)
+  instead of two plain copyright/license text lines. New `about_tagline`/
+  `about_version_label`/`about_author_label`/`about_email_label`/
+  `about_license_label` keys across all 7 languages; `about_license`'s
+  value expanded from the bare string "GPL-3.0" to the full license name.
 - **Fixed `--cli status`'s STACK column running into LOCAL with no space**:
   the column used a fixed 12-char width, silently fine while every real
   `stack` value stayed under it - the moment a real manifest recorded the
