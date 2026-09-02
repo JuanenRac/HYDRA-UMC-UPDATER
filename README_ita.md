@@ -15,7 +15,7 @@
   <img src="https://img.shields.io/badge/Desktop-PySide6%20%7C%20Qt%20Quick-367BF5.svg" alt="PySide6 Qt Quick desktop GUI">
 </p>
 
-> **Modalita desktop visiva:** l'interfaccia desktop predefinita usa ora
+> **Modalità desktop visiva:** l'interfaccia desktop predefinita usa ora
 > **Qt Quick / QML** con il runtime GUI opzionale `PySide6`. Il nucleo e
 > `--cli` restano solo libreria standard per una CM5 senza schermo.
 >
@@ -23,7 +23,7 @@
 > argomenti) per il client grafico senza console. Il pannello di aggiornamento
 > mostra checkpoint reali di preflight, sorgente, manifest, build-test e fine
 > con evidenze catturate; `run.bat --cli ...` conserva il terminale diagnostico.
-> Installa e attivo solo senza checkout e Aggiorna solo se GitHub e piu recente.
+> Installa è attivo solo senza checkout e Aggiorna solo se GitHub è più recente.
 > Durante un'azione approvata i checkpoint sostituiscono i controlli del
 > progetto; selezionare un altro progetto li ripristina.
 > **Installa tutti i mancanti** e **Aggiorna tutti gli obsoleti** sono azioni
@@ -128,7 +128,7 @@ selezionata.
 
 - **GUI Qt Quick predefinita, `--cli` per headless.** `main.py` controlla
   `--cli` prima di importare il runtime PySide6 opzionale. La CLI funziona su
-  una CM5 senza schermo ne dipendenze desktop; senza argomenti avvia QML quando
+  una CM5 senza schermo né dipendenze desktop; senza argomenti avvia QML quando
   disponibile e Tkinter resta solo un fallback temporaneo.
 - **La GUI con finestra è reale, multilingue in 7 lingue (`i18n.py`) - `--cli` deliberatamente non lo è.** Ogni widget reale si ri-etichetta dal vivo da una `Combobox` di lingua (en/es/fr/it/de/zh/ja, le stesse 7 pubblicate dalla dashboard pubblica e da ogni README), rilevata da una preferenza salvata o dalla locale propria del sistema operativo. I nomi di progetti/famiglie e il testo reale `notes`/`tech` di ciascun progetto restano non tradotti - `registry.py` è la loro unica fonte di verità, e 7 copie parallele di documentazione ingegneristica reale impedirebbero che lo restasse. L'output di `--cli` resta volutamente solo in inglese: è pensato per essere scriptato/reindirizzato, dove un testo stabile e grep-abile conta più della localizzazione.
 - **`deploy` è una classificazione, non una restrizione.** Trattare tutti
@@ -206,7 +206,7 @@ HYDRA-UMC-UPDATER/
 │   ├── install.py         # git clone/pull + delega allo script di build proprio
 │   ├── qt_gui.py           # Bridge Qt Quick verso i servizi reali di scoperta/aggiornamento
 │   ├── qml/Main.qml        # Shell desktop a tema con checkpoint e About
-│   ├── gui.py              # Fallback Tkinter se PySide6 non e disponibile
+│   ├── gui.py              # Fallback Tkinter se PySide6 non è disponibile
 │   └── main.py             # Dispatch: GUI predefinita, --cli per status/install/update
 ├── build.sh / build.bat    # venv + installazione editabile + compile-check
 ├── run.sh / run.bat        # GUI predefinita / ingresso CLI
@@ -230,9 +230,9 @@ Su Windows: `build.bat`, poi `run.bat` (GUI) / `run.bat --cli status` /
 `run.bat --cli install <nome>` / `run.bat --cli update <nome>`.
 
 La GUI preferita richiede il runtime Qt opzionale (`pip install -e ".[gui]"`;
-`build.bat`/`build.sh` lo installano gia). `--cli` non ha dipendenze GUI ed e
+`build.bat`/`build.sh` lo installano già). `--cli` non ha dipendenze GUI ed è
 l'ingresso corretto per una CM5 headless. Senza Qt, la vecchia finestra
-Tkinter resta solo un fallback di compatibilita.
+Tkinter resta solo un fallback di compatibilità.
 
 **Risoluzione dei problemi**
 
