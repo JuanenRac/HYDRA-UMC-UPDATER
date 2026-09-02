@@ -79,6 +79,7 @@ def test_service_is_absent_by_default():
     manifest = parse_manifest(json.dumps(valid_manifest()))
     assert manifest.service_port is None
     assert manifest.service_health_path is None
+    assert manifest.service_systemd_unit is None
 
 
 def test_parses_a_real_service_port_and_health_path():
@@ -115,4 +116,29 @@ def test_rejects_an_unknown_field_inside_service():
     data = valid_manifest()
     data["service"] = {"port": 3000, "protocol": "http"}
     with pytest.raises(ManifestValidationError, match="unknown field.*service"):
+        parse_manifest(json.dumps(data))
+
+
+def test_parses_a_real_service_systemd_unit():
+    data = valid_manifest()
+    data["service"] = {
+        "port": 3000,
+        "health_path": "/api/system/metrics",
+        "systemd_unit": "hydra-umc-server.service",
+    }
+    manifest = parse_manifest(json.dumps(data))
+    assert manifest.service_systemd_unit == "hydra-umc-server.service"
+
+
+def test_service_systemd_unit_is_optional():
+    data = valid_manifest()
+    data["service"] = {"port": 3000}
+    manifest = parse_manifest(json.dumps(data))
+    assert manifest.service_systemd_unit is None
+
+
+def test_rejects_a_service_systemd_unit_without_the_service_suffix():
+    data = valid_manifest()
+    data["service"] = {"port": 3000, "systemd_unit": "hydra-umc-server"}
+    with pytest.raises(ManifestValidationError, match="service.systemd_unit"):
         parse_manifest(json.dumps(data))

@@ -41,6 +41,7 @@ class ProjectEntry:
     # field comments. None/None means "not a network service".
     service_port: int | None = None
     service_health_path: str | None = None
+    service_systemd_unit: str | None = None
 
 
 def entry_from_manifest(manifest: ProjectManifest) -> ProjectEntry:
@@ -60,6 +61,7 @@ def entry_from_manifest(manifest: ProjectManifest) -> ProjectEntry:
         parent=manifest.parent,
         service_port=manifest.service_port,
         service_health_path=manifest.service_health_path,
+        service_systemd_unit=manifest.service_systemd_unit,
     )
 
 

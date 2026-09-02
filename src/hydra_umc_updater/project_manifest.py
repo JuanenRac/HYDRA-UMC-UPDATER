@@ -59,6 +59,11 @@ class ProjectManifest:
     # "do a real HTTP GET against that path and expect a 2xx" instead.
     service_port: int | None = None
     service_health_path: str | None = None
+    # Real, optional systemd unit name the service runs as on the CM5 (e.g.
+    # "hydra-umc-server.service") - documents which unit `systemctl status`/
+    # `journalctl -u` targets for this project, alongside the live-status
+    # probe above. Absent for anything not deployed as a systemd service.
+    service_systemd_unit: str | None = None
 
 
 def _require_string(data: dict[str, Any], field: str) -> str:
@@ -169,7 +174,7 @@ def parse_manifest(text: str, *, expected_name: str | None = None) -> ProjectMan
     if not isinstance(build, str):
         raise ManifestValidationError("build must be a string")
 
-    service_port, service_health_path = _parse_service(data.get("service"))
+    service_port, service_health_path, service_systemd_unit = _parse_service(data.get("service"))
 
     return ProjectManifest(
         schema_version=schema_version,
@@ -189,24 +194,26 @@ def parse_manifest(text: str, *, expected_name: str | None = None) -> ProjectMan
         notes=_require_string(data, "notes"),
         service_port=service_port,
         service_health_path=service_health_path,
+        service_systemd_unit=service_systemd_unit,
     )
 
 
-def _parse_service(raw_service: Any) -> tuple[int | None, str | None]:
+def _parse_service(raw_service: Any) -> tuple[int | None, str | None, str | None]:
     """Validate the optional `service` object (real live-status probe target).
 
     Absent entirely (the common case - a library/CLI/firmware/UI never runs
-    as a network service): returns (None, None). Present: requires a real
-    `port` (1-65535) and accepts an optional `health_path` (an HTTP path
+    as a network service): returns (None, None, None). Present: requires a
+    real `port` (1-65535), accepts an optional `health_path` (an HTTP path
     starting with "/") for an HTTP-level check instead of a bare TCP
-    connect.
+    connect, and accepts an optional `systemd_unit` (the real unit name the
+    service runs as on the CM5, e.g. "hydra-umc-server.service").
     """
     if raw_service is None:
-        return None, None
+        return None, None, None
     if not isinstance(raw_service, dict):
         raise ManifestValidationError("service must be an object when present")
 
-    allowed = {"port", "health_path"}
+    allowed = {"port", "health_path", "systemd_unit"}
     unknown = sorted(set(raw_service) - allowed)
     if unknown:
         raise ManifestValidationError("unknown field(s) in service: " + ", ".join(unknown))
@@ -221,4 +228,10 @@ def _parse_service(raw_service: Any) -> tuple[int | None, str | None]:
         if not isinstance(health_path, str) or not health_path.startswith("/"):
             raise ManifestValidationError("service.health_path must be a string starting with '/'")
 
-    return port, health_path
+    systemd_unit: str | None = None
+    if "systemd_unit" in raw_service:
+        systemd_unit = raw_service["systemd_unit"]
+        if not isinstance(systemd_unit, str) or not systemd_unit.endswith(".service"):
+            raise ManifestValidationError("service.systemd_unit must be a string ending in '.service'")
+
+    return port, health_path, systemd_unit

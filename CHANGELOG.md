@@ -109,6 +109,21 @@ bumped manually only. See `bump_version.py`.
 - **Real bug fixed in `tests/test_registry.py`**: a manifest fixture built inside a non-raw Python triple-quoted string double-escaped its embedded regex (`\\d+`, `\\.`), producing invalid JSON (`\d` is not a valid JSON escape) at runtime and making the test fail with `ManifestValidationError` instead of exercising what it was meant to test. Fixed by making the string literal raw (`r'''...'''`) so only JSON's own escaping applies.
 - Verified real: `pytest tests/ -q` -> 17/17 (previously 16 passed, 1 failed). A real local-discovery harness against the actual `C:\Users\juane\Documents\GitHub` checkout confirmed the fix - `HYDRA-UMC-SERVER` now shows 6 real children (was 2), top-level rows dropped from 28 (broken) to the expected 16, all 47 real local manifests still accounted for, and Treeview selection still survives a real language switch.
 
+## [0.2.5]
+
+- **Fixed a real ecosystem-discovery bug**: `project_manifest.py`'s `service`
+  object schema rejected the `systemd_unit` field (e.g.
+  `"hydra-umc-server.service"`) that 19 repositories' own manifests already
+  declared - `parse_manifest()` raised `ManifestValidationError: unknown
+  field(s) in service: systemd_unit` for every one of them, so
+  `discover_remote_projects()` silently dropped those 19 repositories from
+  every consumer (the ecosystem dashboard showed 36/55 projects, not a
+  crash - just a quietly incomplete list). `service.systemd_unit` is now a
+  recognized optional field (`ProjectManifest.service_systemd_unit` /
+  `ProjectEntry.service_systemd_unit`), validated as a string ending in
+  `.service`, with real test coverage for the accepted, optional, and
+  rejected-without-suffix cases.
+
 ## [0.2.4]
 
 - Build version synchronized with `hydra-umc.project.json` and the repository-native version source.
