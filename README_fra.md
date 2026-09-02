@@ -15,20 +15,20 @@
   <img src="https://img.shields.io/badge/Desktop-PySide6%20%7C%20Qt%20Quick-367BF5.svg" alt="PySide6 Qt Quick desktop GUI">
 </p>
 
-> **Mode bureau visuel :** l'interface bureau par defaut utilise maintenant
-> **Qt Quick / QML** avec le runtime GUI optionnel `PySide6`. Le coeur et le
-> mode `--cli` restent uniquement bases sur la bibliotheque standard pour une CM5 headless.
+> **Mode bureau visuel :** l'interface bureau par défaut utilise maintenant
+> **Qt Quick / QML** avec le runtime GUI optionnel `PySide6`. Le cœur et le
+> mode `--cli` restent uniquement basés sur la bibliothèque standard pour une CM5 headless.
 >
-> **Demarrage Windows et preuves :** ouvrez `run-gui.vbs` (ou `run.bat` sans
+> **Démarrage Windows et preuves :** ouvrez `run-gui.vbs` (ou `run.bat` sans
 > argument) pour le client graphique sans console. Le panneau de mise a jour
-> affiche les etapes reelles de controle, source, manifeste, build-test et fin
-> avec les preuves capturees ; `run.bat --cli ...` conserve le terminal de diagnostic.
-> Installer n'est actif que sans checkout et Mettre a jour seulement si GitHub
-> est plus recent. Pendant une action approuvee, les checkpoints remplacent les
-> controles du projet ; choisir un autre projet les restaure.
-> **Installer tous les manquants** et **Mettre a jour tous les depasses** sont
-> des actions par lot sequentielles, confirmees separement et fondees sur le
-> meme etat reel et parcours de securite.
+> affiche les étapes réelles de contrôle, source, manifeste, build-test et fin
+> avec les preuves capturées ; `run.bat --cli ...` conserve le terminal de diagnostic.
+> Installer n'est actif que sans checkout et Mettre à jour seulement si GitHub
+> est plus récent. Pendant une action approuvée, les checkpoints remplacent les
+> contrôles du projet ; choisir un autre projet les restaure.
+> **Installer tous les manquants** et **Mettre à jour tous les dépassés** sont
+> des actions par lot séquentielles, confirmées séparément et fondées sur le
+> même état réel et parcours de sécurité.
 
 ---
 
@@ -87,7 +87,7 @@ par cible de déploiement, et des boutons Installer/Mettre à jour pour la
 ligne sélectionnée.
 
 <p align="center">
-  <img src="images/HYDRA_UMC_UPDATER_INTERFACE_1.png" alt="Vue generale reelle du bureau HYDRA-UMC-UPDATER" width="100%">
+  <img src="images/HYDRA_UMC_UPDATER_INTERFACE_1.png" alt="Vue générale réelle du bureau HYDRA-UMC-UPDATER" width="100%">
 </p>
 
 ## 2. 🔄 COMMENT FONCTIONNE VRAIMENT UNE VÉRIFICATION/MISE À JOUR
@@ -122,14 +122,14 @@ ligne sélectionnée.
   pourquoi.
 
 <p align="center">
-  <img src="images/HYDRA_UMC_UPDATER_INTERFACE_2.png" alt="Checkpoints reels pendant une installation ou mise a jour HYDRA-UMC-UPDATER" width="100%">
+  <img src="images/HYDRA_UMC_UPDATER_INTERFACE_2.png" alt="Checkpoints réels pendant une installation ou mise à jour HYDRA-UMC-UPDATER" width="100%">
 </p>
 
 ## 3. 🧱 ARCHITECTURE ET DÉCISIONS DE CONCEPTION
 
-- **GUI Qt Quick par defaut, `--cli` pour le headless.** `main.py` verifie
+- **GUI Qt Quick par défaut, `--cli` pour le headless.** `main.py` vérifie
   `--cli` avant d'importer le runtime PySide6 optionnel. La CLI fonctionne
-  sur une CM5 sans ecran ni dependance desktop ; sans argument QML demarre
+  sur une CM5 sans écran ni dépendance desktop ; sans argument QML démarre
   lorsqu'il est disponible et Tkinter reste seulement un fallback temporaire.
 - **L'interface graphique fenêtrée est réelle, multilingue en 7 langues (`i18n.py`) - `--cli` ne l'est délibérément pas.** Chaque widget réel se réétiquette en direct depuis un `Combobox` de langue (en/es/fr/it/de/zh/ja, les 7 mêmes que publient le tableau de bord public et chaque README), détecté à partir d'une préférence enregistrée ou de la locale propre du système d'exploitation. Les noms de projets/familles et le propre texte réel `notes`/`tech` de chaque projet restent non traduits - `registry.py` en est leur unique source de vérité, et 7 copies parallèles de documentation d'ingénierie réelle empêcheraient cela. La sortie de `--cli` reste volontairement en anglais uniquement : elle est destinée à être scriptée/redirigée, où un texte stable et grep-able compte plus que la localisation.
 - **`deploy` est une classification, pas une restriction.** Traiter les
@@ -204,12 +204,12 @@ HYDRA-UMC-UPDATER/
 │   ├── detect.py          # Scanne une racine de workspace pour ce qui est installé
 │   ├── github_client.py   # Récupération concurrente du contenu brut + réessai/backoff réel pour les erreurs réseau transitoires
 │   ├── install.py         # git clone/pull + délègue au script de build propre
-│   ├── qt_gui.py           # Pont Qt Quick vers les services reels de decouverte/mise a jour
+│   ├── qt_gui.py           # Pont Qt Quick vers les services réels de découverte/mise à jour
 │   ├── qml/Main.qml        # Shell desktop theme avec checkpoints et About
 │   ├── gui.py              # Fallback Tkinter si PySide6 est indisponible
 │   └── main.py             # Répartition : GUI par défaut, --cli pour status/install/update
 ├── build.sh / build.bat    # venv + installation éditable + compile-check
-├── run.sh / run.bat        # GUI par defaut / entree CLI
+├── run.sh / run.bat        # GUI par défaut / entrée CLI
 ├── run-gui.vbs             # Lanceur graphique Windows sans console
 └── bump_version.py         # Incrément "compteur kilométrique" de l'écosystème (pyproject.toml + __init__.py)
 ```
@@ -229,10 +229,10 @@ chmod +x build.sh   # une seule fois
 Sous Windows : `build.bat`, puis `run.bat` (GUI) / `run.bat --cli status`
 / `run.bat --cli install <nom>` / `run.bat --cli update <nom>`.
 
-La GUI preferee requiert le runtime Qt optionnel (`pip install -e ".[gui]"`;
-`build.bat`/`build.sh` l'installent deja). `--cli` n'a pas de dependance GUI et
-convient a une CM5 headless. Sans Qt, l'ancienne fenetre Tkinter reste un
-fallback de compatibilite uniquement.
+La GUI préférée requiert le runtime Qt optionnel (`pip install -e ".[gui]"`;
+`build.bat`/`build.sh` l'installent déjà). `--cli` n'a pas de dépendance GUI et
+convient à une CM5 headless. Sans Qt, l'ancienne fenêtre Tkinter reste un
+fallback de compatibilité uniquement.
 
 **Dépannage**
 
