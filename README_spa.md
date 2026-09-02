@@ -16,7 +16,7 @@
 </p>
 
 > **Modo visual de escritorio:** la interfaz de escritorio por defecto usa
-> **Qt Quick / QML** mediante el runtime GUI opcional `PySide6`. El nucleo del
+> **Qt Quick / QML** mediante el runtime GUI opcional `PySide6`. El núcleo del
 > actualizador y el modo `--cli` siguen siendo solo libreria estandar para una CM5 sin pantalla.
 >
 > **Inicio Windows y evidencia de actualizacion:** abre `run-gui.vbs` (o usa
