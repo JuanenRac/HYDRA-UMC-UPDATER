@@ -94,6 +94,7 @@ OK  build.sh completed successfully.
 - **默认 Qt Quick GUI，`--cli` 用于无桌面环境。** `main.py` 会在导入可选 PySide6
   运行时之前检查 `--cli`。CLI 可在没有显示器或桌面依赖的 CM5 上工作；无参数时会在
   可用条件下启动 QML，Tkinter 仅保留为临时兼容回退。
+- **带窗口的 GUI 是真实的,支持 7 种语言的多语言(`i18n.py`)—— `--cli` 则刻意不支持。** 每个真实的控件都会根据保存的偏好或操作系统自身的区域设置,从语言 `Combobox`(en/es/fr/it/de/zh/ja,与公开仪表盘和每份 README 提供的相同 7 种语言)实时重新标注。项目/家族名称以及每个项目自身真实的 `notes`/`tech` 文本保持未翻译——`registry.py` 是它们唯一的真相来源,而 7 份并行的真实工程文档副本会破坏这一点。`--cli` 的输出刻意只保留英文:它是为脚本化/管道化设计的,在这种场景下,稳定、可 grep 的文本比本地化更重要。
 - **`deploy` 是一种分类，而非一种限制。** 把全部 44 个项目都当作"属于 CM5 的东西"是错误的——固件仓库是从 PC 编译并刷写的（CM5 只需要通过 CAN-OTA 得到最终的二进制文件，从不需要本仓库自身的源代码），而若干工具（URTC-FLASHER、HYDRA-UMC-SUITE、HYDRA-UMC-TOOL-CLI……）本应运行在操作员自己的工作站上，而非单元本机内部。`registry.py` 的 `deploy` 字段（"cm5" / "user-pc" / "mobile" / "wearable"）记录了这一点，GUI 的筛选器将其作为一个合理的起点使用——而非硬性限制，因为这个同一工具也可以运行在开发者自己的 PC 上，此时全部 44 个项目都可以被检查。
 - **本工具中不包含针对特定技术栈的构建逻辑。** 本生态系统横跨 7 种工具链（Python、Rust、Go、Node/TS、Android/Kotlin、Flutter、ARM 固件）。在*这里*重新实现 `npm install && npm run build` / `cargo build --release` / `./gradlew assembleDebug` 等，会制造出第二个声称知道如何构建每个项目的地方，注定会与该项目自身真实的（且已经正确的）`build.sh`/`.bat` 逐渐脱节。`install.py` 转而探测一个已知的构建脚本名称（`build.sh`、`build_firmware.sh`、`build_exe.sh`、`build-android.sh` 及其 `.bat` 等效版本——这些是横跨 44 个项目实际使用的真实名称），并运行其中实际存在的那一个。
 - **使用 GitHub 原始内容，而非 Releases API。** 见上方第 2 节——本生态系统的版本控制惯例从不创建标签/发布，因此在这里使用 Releases API 不仅不够方便，而且是彻底错误的做法。

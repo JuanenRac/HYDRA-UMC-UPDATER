@@ -130,6 +130,7 @@ für die ausgewählte Zeile.
   `--cli`, bevor die optionale PySide6-Laufzeit importiert wird. Die CLI
   funktioniert auf einer CM5 ohne Display und Desktop-Abhangigkeit; ohne
   Argumente startet QML, sofern verfugbar, und Tkinter bleibt nur Fallback.
+- **Die Fenster-GUI ist echt und mehrsprachig in 7 Sprachen (`i18n.py`) - `--cli` ist es absichtlich nicht.** Jedes echte Widget benennt sich live aus einer Sprach-`Combobox` neu (en/es/fr/it/de/zh/ja, dieselben 7, die das öffentliche Dashboard und jede README ausliefern), erkannt aus einer gespeicherten Präferenz oder dem eigenen Locale des Betriebssystems. Projekt-/Familiennamen sowie der echte `notes`/`tech`-Text jedes Projekts bleiben unübersetzt - `registry.py` ist ihre einzige Quelle der Wahrheit, und 7 parallele Kopien echter Engineering-Dokumentation würden genau das verhindern. Die `--cli`-Ausgabe bleibt absichtlich nur auf Englisch: Sie ist zum Skripten/Weiterleiten gedacht, wo stabiler, grep-barer Text mehr zählt als Lokalisierung.
 - **`deploy` ist eine Klassifizierung, keine Einschränkung.** Alle 44
   Projekte als "Dinge, die auf den CM5 gehören" zu behandeln, war falsch
   - Firmware-Repos werden VON einem PC kompiliert und geflasht (der CM5

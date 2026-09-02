@@ -131,6 +131,7 @@ ligne sélectionnée.
   `--cli` avant d'importer le runtime PySide6 optionnel. La CLI fonctionne
   sur une CM5 sans ecran ni dependance desktop ; sans argument QML demarre
   lorsqu'il est disponible et Tkinter reste seulement un fallback temporaire.
+- **L'interface graphique fenêtrée est réelle, multilingue en 7 langues (`i18n.py`) - `--cli` ne l'est délibérément pas.** Chaque widget réel se réétiquette en direct depuis un `Combobox` de langue (en/es/fr/it/de/zh/ja, les 7 mêmes que publient le tableau de bord public et chaque README), détecté à partir d'une préférence enregistrée ou de la locale propre du système d'exploitation. Les noms de projets/familles et le propre texte réel `notes`/`tech` de chaque projet restent non traduits - `registry.py` en est leur unique source de vérité, et 7 copies parallèles de documentation d'ingénierie réelle empêcheraient cela. La sortie de `--cli` reste volontairement en anglais uniquement : elle est destinée à être scriptée/redirigée, où un texte stable et grep-able compte plus que la localisation.
 - **`deploy` est une classification, pas une restriction.** Traiter les
   44 projets comme "des choses qui appartiennent au CM5" était une
   erreur - les dépôts de firmware sont compilés et flashés DEPUIS un PC
