@@ -202,11 +202,15 @@ def _parse_service(raw_service: Any) -> tuple[int | None, str | None, str | None
     """Validate the optional `service` object (real live-status probe target).
 
     Absent entirely (the common case - a library/CLI/firmware/UI never runs
-    as a network service): returns (None, None, None). Present: requires a
-    real `port` (1-65535), accepts an optional `health_path` (an HTTP path
-    starting with "/") for an HTTP-level check instead of a bare TCP
-    connect, and accepts an optional `systemd_unit` (the real unit name the
-    service runs as on the CM5, e.g. "hydra-umc-server.service").
+    as a network service): returns (None, None, None). Present: `port`
+    (1-65535) and `systemd_unit` (the real unit name the service runs as on
+    the CM5, e.g. "hydra-umc-server.service") are each individually
+    optional, but at least one of them must be given - a background systemd
+    worker with no listening port declares `systemd_unit` alone; a network
+    service declares `port` (with an optional `health_path`, an HTTP path
+    starting with "/", for an HTTP-level check instead of a bare TCP
+    connect - meaningless without a `port` to connect to, so it requires
+    one).
     """
     if raw_service is None:
         return None, None, None
@@ -218,12 +222,16 @@ def _parse_service(raw_service: Any) -> tuple[int | None, str | None, str | None
     if unknown:
         raise ManifestValidationError("unknown field(s) in service: " + ", ".join(unknown))
 
-    port = raw_service.get("port")
-    if isinstance(port, bool) or not isinstance(port, int) or not (1 <= port <= 65535):
-        raise ManifestValidationError("service.port must be an integer between 1 and 65535")
+    port: int | None = None
+    if "port" in raw_service:
+        port = raw_service["port"]
+        if isinstance(port, bool) or not isinstance(port, int) or not (1 <= port <= 65535):
+            raise ManifestValidationError("service.port must be an integer between 1 and 65535")
 
     health_path: str | None = None
     if "health_path" in raw_service:
+        if port is None:
+            raise ManifestValidationError("service.health_path requires service.port")
         health_path = raw_service["health_path"]
         if not isinstance(health_path, str) or not health_path.startswith("/"):
             raise ManifestValidationError("service.health_path must be a string starting with '/'")
@@ -233,5 +241,8 @@ def _parse_service(raw_service: Any) -> tuple[int | None, str | None, str | None
         systemd_unit = raw_service["systemd_unit"]
         if not isinstance(systemd_unit, str) or not systemd_unit.endswith(".service"):
             raise ManifestValidationError("service.systemd_unit must be a string ending in '.service'")
+
+    if port is None and systemd_unit is None:
+        raise ManifestValidationError("service must declare at least one of port or systemd_unit")
 
     return port, health_path, systemd_unit

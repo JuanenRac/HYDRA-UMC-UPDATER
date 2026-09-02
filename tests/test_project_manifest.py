@@ -142,3 +142,29 @@ def test_rejects_a_service_systemd_unit_without_the_service_suffix():
     data["service"] = {"port": 3000, "systemd_unit": "hydra-umc-server"}
     with pytest.raises(ManifestValidationError, match="service.systemd_unit"):
         parse_manifest(json.dumps(data))
+
+
+def test_parses_a_systemd_unit_alone_with_no_port():
+    """A background worker service that never listens on a network port -
+    e.g. HYDRA-UMC-COGNITIVE-NODE - still needs to declare which systemd
+    unit it runs as without being forced to also declare a fake port."""
+    data = valid_manifest()
+    data["service"] = {"systemd_unit": "hydra-umc-cognitive-node.service"}
+    manifest = parse_manifest(json.dumps(data))
+    assert manifest.service_port is None
+    assert manifest.service_health_path is None
+    assert manifest.service_systemd_unit == "hydra-umc-cognitive-node.service"
+
+
+def test_rejects_an_empty_service_object():
+    data = valid_manifest()
+    data["service"] = {}
+    with pytest.raises(ManifestValidationError, match="service must declare at least one"):
+        parse_manifest(json.dumps(data))
+
+
+def test_rejects_a_service_health_path_without_a_port():
+    data = valid_manifest()
+    data["service"] = {"health_path": "/healthz", "systemd_unit": "hydra-umc-example.service"}
+    with pytest.raises(ManifestValidationError, match="service.health_path requires service.port"):
+        parse_manifest(json.dumps(data))

@@ -109,6 +109,21 @@ bumped manually only. See `bump_version.py`.
 - **Real bug fixed in `tests/test_registry.py`**: a manifest fixture built inside a non-raw Python triple-quoted string double-escaped its embedded regex (`\\d+`, `\\.`), producing invalid JSON (`\d` is not a valid JSON escape) at runtime and making the test fail with `ManifestValidationError` instead of exercising what it was meant to test. Fixed by making the string literal raw (`r'''...'''`) so only JSON's own escaping applies.
 - Verified real: `pytest tests/ -q` -> 17/17 (previously 16 passed, 1 failed). A real local-discovery harness against the actual `C:\Users\juane\Documents\GitHub` checkout confirmed the fix - `HYDRA-UMC-SERVER` now shows 6 real children (was 2), top-level rows dropped from 28 (broken) to the expected 16, all 47 real local manifests still accounted for, and Treeview selection still survives a real language switch.
 
+## [0.2.6]
+
+- **Fixed a second real ecosystem-discovery bug, found while verifying the
+  0.2.5 fix above**: `service.port` was required whenever a `service`
+  object was present at all, so a repo declaring only `systemd_unit` (a
+  background systemd worker with no listening network port - e.g.
+  HYDRA-UMC-COGNITIVE-NODE, HYDRA-UMC-VISION-NODE) still failed manifest
+  validation with `service.port must be an integer between 1 and 65535`.
+  `port` and `systemd_unit` are now each independently optional (at least
+  one is still required), and `health_path` now gives a clear
+  `service.health_path requires service.port` error instead of silently
+  reading a `None` port. Verified against the live ecosystem: discovery
+  went from 36/55 -> 42/55 after the 0.2.5 fix alone, and all remaining
+  failures were this exact port-required bug.
+
 ## [0.2.5]
 
 - **Fixed a real ecosystem-discovery bug**: `project_manifest.py`'s `service`
