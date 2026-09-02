@@ -202,19 +202,35 @@ für die ausgewählte Zeile.
 ```
 HYDRA-UMC-UPDATER/
 ├── src/hydra_umc_updater/
-│   ├── registry.py        # Die 44 Projekte: Repo, Stack, Versionsdatei, Muster, Deployment-Ziel
+│   ├── registry.py         # ProjectEntry - kein statischer Katalog; wird zur Erkennungszeit aus dem eigenen Manifest jedes Repos gebaut
+│   ├── project_manifest.py # Liest/validiert eine repository-eigene hydra-umc.project.json
+│   ├── ecosystem_catalog.py # Parser für den öffentlichen JuanenRac-Ökosystem-Erkennungskatalog
 │   ├── version_parse.py   # EINE Regex-Extraktions-Implementierung, lokal+GitHub
 │   ├── detect.py          # Scannt eine Workspace-Wurzel nach Installiertem
 │   ├── github_client.py   # Nebenläufiger Abruf des Rohinhalts + echter Wiederholungsversuch/Backoff bei vorübergehenden Netzwerkfehlern
 │   ├── install.py         # git clone/pull + delegiert an das eigene Build-Skript
+│   ├── i18n.py             # Echte, vollständige GUI-Übersetzungen (7 Sprachen)
 │   ├── qt_gui.py           # Qt-Quick-Brücke zu realen Erkennungs-/Update-Diensten
 │   ├── qml/Main.qml        # Desktop-Shell mit Theme, Checkpoints und About
 │   ├── gui.py              # Tkinter-Fallback falls PySide6 nicht verfügbar ist
 │   └── main.py             # Dispatch: GUI standardmäßig, --cli für status/install/update
+├── tests/                  # Echte Tests: github_client, i18n, install, project_manifest, registry
+├── docs/
+│   ├── CLI_REFERENCE.md     # Befehlsreferenz
+│   └── QML_DESKTOP_GUI.md   # Qt-Quick-GUI-Architektur
+├── images/                 # Medien, App-Icons und Interface-Screenshots
+├── tools/
+│   ├── build_test.py        # Nicht-versionierender Build-Check
+│   ├── ci_validate.py       # Manifest/CHANGELOG/Docs-Validierung, von CI genutzt
+│   ├── generate_app_icon.py # Rendert das öffentliche HYDRA-UMC-SVG in das von Windows genutzte Icon
+│   ├── migrate_project_manifests.py  # Prüft einen Workspace nach der einmaligen Manifest-Migration
+│   └── validate_project_manifests.py # Validiert repository-eigene Manifeste + native Build-Versionen
+├── .env.example            # Umgebungsvariablen-Vorlage
 ├── build.sh / build.bat    # venv + editierbare Installation + Compile-Check
 ├── run.sh / run.bat        # Standard-GUI / CLI-Einstieg
 ├── run-gui.vbs             # Windows-GUI-Starter ohne Konsole
-└── bump_version.py         # Ökosystemweiter "Kilometerzähler"-Sprung (pyproject.toml + __init__.py)
+├── bump_version.py         # Ökosystemweiter "Kilometerzähler"-Sprung (pyproject.toml + __init__.py)
+└── bump_manifest_version.py # Synchronisiert die Version von hydra-umc.project.json mit der nativen (--sync)
 ```
 
 ## ⚙️ BUILD UND AUSFÜHRUNG

@@ -199,19 +199,35 @@ ligne sélectionnée.
 ```
 HYDRA-UMC-UPDATER/
 ├── src/hydra_umc_updater/
-│   ├── registry.py        # Les 44 projets : dépôt, stack, fichier de version, motif, cible de déploiement
+│   ├── registry.py         # ProjectEntry - aucun catalogue statique ; construit au moment de la découverte depuis le manifeste propre de chaque dépôt
+│   ├── project_manifest.py # Lit/valide un hydra-umc.project.json propre au dépôt
+│   ├── ecosystem_catalog.py # Parseur du catalogue public de découverte de l'écosystème JuanenRac
 │   ├── version_parse.py   # UNE implémentation d'extraction regex, local+GitHub
 │   ├── detect.py          # Scanne une racine de workspace pour ce qui est installé
 │   ├── github_client.py   # Récupération concurrente du contenu brut + réessai/backoff réel pour les erreurs réseau transitoires
 │   ├── install.py         # git clone/pull + délègue au script de build propre
+│   ├── i18n.py             # Vraies traductions complètes de la GUI (7 langues)
 │   ├── qt_gui.py           # Pont Qt Quick vers les services réels de découverte/mise à jour
 │   ├── qml/Main.qml        # Shell desktop theme avec checkpoints et About
 │   ├── gui.py              # Fallback Tkinter si PySide6 est indisponible
 │   └── main.py             # Répartition : GUI par défaut, --cli pour status/install/update
+├── tests/                  # Tests réels : github_client, i18n, install, project_manifest, registry
+├── docs/
+│   ├── CLI_REFERENCE.md     # Référence des commandes
+│   └── QML_DESKTOP_GUI.md   # Architecture de la GUI Qt Quick
+├── images/                 # Médias, icônes de l'app et captures de l'interface
+├── tools/
+│   ├── build_test.py        # Vérification de build sans versionnage
+│   ├── ci_validate.py       # Validation manifeste/CHANGELOG/docs utilisée par CI
+│   ├── generate_app_icon.py # Génère l'icône utilisée par Windows à partir du SVG public HYDRA-UMC
+│   ├── migrate_project_manifests.py  # Audite un workspace après la migration ponctuelle des manifestes
+│   └── validate_project_manifests.py # Valide les manifestes propres à chaque dépôt + les versions natives de build
+├── .env.example            # Modèle de variables d'environnement
 ├── build.sh / build.bat    # venv + installation éditable + compile-check
 ├── run.sh / run.bat        # GUI par défaut / entrée CLI
 ├── run-gui.vbs             # Lanceur graphique Windows sans console
-└── bump_version.py         # Incrément "compteur kilométrique" de l'écosystème (pyproject.toml + __init__.py)
+├── bump_version.py         # Incrément "compteur kilométrique" de l'écosystème (pyproject.toml + __init__.py)
+└── bump_manifest_version.py # Synchronise la version de hydra-umc.project.json avec la version native (--sync)
 ```
 
 ## ⚙️ COMPILATION ET EXÉCUTION

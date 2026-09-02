@@ -121,19 +121,35 @@ OK  build.sh completed successfully.
 ```
 HYDRA-UMC-UPDATER/
 ├── src/hydra_umc_updater/
-│   ├── registry.py        # 44 のプロジェクト：リポジトリ、技術スタック、バージョンファイル、パターン、デプロイターゲット
+│   ├── registry.py         # ProjectEntry - 静的カタログなし。各リポジトリ自身のマニフェストから検出時に構築
+│   ├── project_manifest.py # リポジトリ自身の hydra-umc.project.json を読み取り/検証
+│   ├── ecosystem_catalog.py # JuanenRac エコシステムの公開検出カタログのパーサー
 │   ├── version_parse.py   # ローカル+GitHub 共通の単一の正規表現抽出実装
 │   ├── detect.py          # ワークスペースルートをスキャンし、何がインストールされているかを検出
 │   ├── github_client.py   # 生コンテンツの並行取得 + 一時的なネットワークエラーに対する本物の再試行/バックオフ
 │   ├── install.py         # git clone/pull + プロジェクト自身のビルドスクリプトへの委譲
+│   ├── i18n.py             # 実際の完全なGUI翻訳(7言語)
 │   ├── qt_gui.py           # 実際の検出/更新サービスへの Qt Quick ブリッジ
 │   ├── qml/Main.qml        # テーマ、チェックポイント、About を持つデスクトップ画面
 │   ├── gui.py              # PySide6 がない場合の Tkinter 互換フォールバック
 │   └── main.py             # ディスパッチ：デフォルトは GUI、--cli で status/install/update
+├── tests/                  # 実際のテスト：github_client、i18n、install、project_manifest、registry
+├── docs/
+│   ├── CLI_REFERENCE.md     # コマンドリファレンス
+│   └── QML_DESKTOP_GUI.md   # Qt Quick GUIのアーキテクチャ
+├── images/                 # メディア、アプリアイコン、インターフェースのスクリーンショット
+├── tools/
+│   ├── build_test.py        # バージョンを増やさないビルドチェック
+│   ├── ci_validate.py       # CI が使用するマニフェスト/CHANGELOG/ドキュメント検証
+│   ├── generate_app_icon.py # 公開HYDRA-UMC SVGをWindowsが使用するアイコンにレンダリング
+│   ├── migrate_project_manifests.py  # 一度限りのマニフェスト移行後のワークスペース監査
+│   └── validate_project_manifests.py # リポジトリ自身のマニフェスト+ネイティブビルドバージョンを検証
+├── .env.example            # 環境変数テンプレート
 ├── build.sh / build.bat    # venv + editable インストール + コンパイルチェック
 ├── run.sh / run.bat        # 標準 GUI / CLI エントリポイント
 ├── run-gui.vbs             # コンソールなしの Windows GUI ランチャー
-└── bump_version.py         # エコシステム全体で統一されたオドメーター式インクリメント（pyproject.toml + __init__.py）
+├── bump_version.py         # エコシステム全体で統一されたオドメーター式インクリメント（pyproject.toml + __init__.py）
+└── bump_manifest_version.py # hydra-umc.project.json のバージョンをネイティブ版と同期(--sync)
 ```
 
 ## ⚙️ ビルドと実行

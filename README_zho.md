@@ -109,19 +109,35 @@ OK  build.sh completed successfully.
 ```
 HYDRA-UMC-UPDATER/
 ├── src/hydra_umc_updater/
-│   ├── registry.py        # 44 个项目：仓库、技术栈、版本文件、匹配模式、部署目标
+│   ├── registry.py         # ProjectEntry —— 没有静态目录;在发现时从每个仓库自身的清单构建
+│   ├── project_manifest.py # 读取/校验仓库自身的 hydra-umc.project.json
+│   ├── ecosystem_catalog.py # JuanenRac 生态系统公开发现目录的解析器
 │   ├── version_parse.py   # 单一的正则表达式提取实现，本地+GitHub 通用
 │   ├── detect.py          # 扫描工作区根目录，检测已安装的内容
 │   ├── github_client.py   # 并发抓取原始内容 + 针对临时性网络错误的真实重试/退避机制
 │   ├── install.py         # git clone/pull + 委托给项目自身的构建脚本
+│   ├── i18n.py             # 真实、完整的 GUI 翻译（7 种语言）
 │   ├── qt_gui.py           # 通向真实发现/更新服务的 Qt Quick 桥接层
 │   ├── qml/Main.qml        # 带主题、检查点和 About 的桌面界面
 │   ├── gui.py              # PySide6 不可用时的 Tkinter 兼容回退
 │   └── main.py             # 分发逻辑：默认 GUI，--cli 用于 status/install/update
+├── tests/                  # 真实测试：github_client、i18n、install、project_manifest、registry
+├── docs/
+│   ├── CLI_REFERENCE.md     # 命令参考
+│   └── QML_DESKTOP_GUI.md   # Qt Quick GUI 架构
+├── images/                 # 媒体、应用图标与界面截图
+├── tools/
+│   ├── build_test.py        # 不递增版本号的构建检查
+│   ├── ci_validate.py       # CI 使用的清单/CHANGELOG/文档校验
+│   ├── generate_app_icon.py # 将公开的 HYDRA-UMC SVG 渲染为 Windows 使用的图标
+│   ├── migrate_project_manifests.py  # 一次性清单迁移后对工作区的审计
+│   └── validate_project_manifests.py # 校验仓库自身的清单 + 原生构建版本号
+├── .env.example            # 环境变量模板
 ├── build.sh / build.bat    # venv + 可编辑安装 + 编译检查
 ├── run.sh / run.bat        # 默认 GUI / CLI 入口
 ├── run-gui.vbs             # 无控制台窗口的 Windows 图形启动器
-└── bump_version.py         # 生态系统统一的里程表式版本递增（pyproject.toml + __init__.py）
+├── bump_version.py         # 生态系统统一的里程表式版本递增（pyproject.toml + __init__.py）
+└── bump_manifest_version.py # 将 hydra-umc.project.json 的版本与原生版本同步(--sync)
 ```
 
 ## ⚙️ 构建与运行

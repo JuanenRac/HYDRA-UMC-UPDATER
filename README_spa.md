@@ -200,19 +200,35 @@ seleccionada.
 ```
 HYDRA-UMC-UPDATER/
 ├── src/hydra_umc_updater/
-│   ├── registry.py        # Los 44 proyectos: repo, stack, archivo de versión, patrón, destino de despliegue
+│   ├── registry.py         # ProjectEntry - sin catálogo estático; se construye en tiempo de descubrimiento desde el manifiesto propio de cada repo
+│   ├── project_manifest.py # Lee/valida un hydra-umc.project.json propio de cada repositorio
+│   ├── ecosystem_catalog.py # Parser del catálogo público de descubrimiento del ecosistema de JuanenRac
 │   ├── version_parse.py   # UNA implementación de extracción por regex, local+GitHub
 │   ├── detect.py          # Escanea una raíz de workspace para ver qué está instalado
 │   ├── github_client.py   # Descarga concurrente del contenido raw + reintento/backoff real ante errores de red transitorios
 │   ├── install.py         # git clone/pull + delega en el script de build propio
+│   ├── i18n.py             # Traducciones reales y completas de la GUI (7 idiomas)
 │   ├── qt_gui.py           # Puente Qt Quick hacia los servicios reales de descubrimiento/actualizacion
 │   ├── qml/Main.qml        # Shell de escritorio con tema, checkpoints y About
 │   ├── gui.py              # Fallback Tkinter si PySide6 no esta disponible
 │   └── main.py             # Despacho: GUI por defecto, --cli para status/install/update
+├── tests/                  # Tests reales: github_client, i18n, install, project_manifest, registry
+├── docs/
+│   ├── CLI_REFERENCE.md     # Referencia de comandos
+│   └── QML_DESKTOP_GUI.md   # Arquitectura de la GUI Qt Quick
+├── images/                 # Medios, iconos de app y capturas de la interfaz
+├── tools/
+│   ├── build_test.py        # Comprobación de compilación sin versionado
+│   ├── ci_validate.py       # Validación de manifiesto/CHANGELOG/docs usada por CI
+│   ├── generate_app_icon.py # Renderiza el SVG público de HYDRA-UMC al icono que consume Windows
+│   ├── migrate_project_manifests.py  # Audita un workspace tras la migración de manifiestos de un solo uso
+│   └── validate_project_manifests.py # Valida manifiestos propios de cada repo + versiones nativas de build
+├── .env.example            # Plantilla de variables de entorno
 ├── build.sh / build.bat    # venv + instalación editable + compile-check
 ├── run.sh / run.bat        # GUI por defecto / entrada CLI
 ├── run-gui.vbs             # Lanzador grafico Windows sin ventana de consola
-└── bump_version.py         # Incremento "cuentakilómetros" del ecosistema (pyproject.toml + __init__.py)
+├── bump_version.py         # Incremento "cuentakilómetros" del ecosistema (pyproject.toml + __init__.py)
+└── bump_manifest_version.py # Sincroniza la versión de hydra-umc.project.json con la nativa (--sync)
 ```
 
 ## ⚙️ COMPILACIÓN Y EJECUCIÓN

@@ -180,19 +180,35 @@ continues to be written to the launch terminal.
 ```
 HYDRA-UMC-UPDATER/
 ├── src/hydra_umc_updater/
-│   ├── registry.py        # The 44 projects: repo, stack, version file, pattern, deploy target
+│   ├── registry.py         # ProjectEntry - no static catalogue; built at discovery time from each repo's own manifest
+│   ├── project_manifest.py # Reads/validates a repository-owned hydra-umc.project.json
+│   ├── ecosystem_catalog.py # Parser for the public JuanenRac ecosystem discovery catalog
 │   ├── version_parse.py   # ONE regex-extraction implementation, local+GitHub
 │   ├── detect.py          # Scans a workspace root for what's installed
 │   ├── github_client.py   # Concurrent raw-content fetch + real retry/backoff for transient network errors
 │   ├── install.py         # git clone/pull + delegate to the project's own build script
+│   ├── i18n.py             # Real, complete GUI translations (7 languages)
 │   ├── qt_gui.py           # Qt Quick bridge over the real discovery/update services
 │   ├── qml/Main.qml        # Themed desktop shell: controls, checkpoints and About
 │   ├── gui.py              # Legacy Tkinter fallback if PySide6 is unavailable
 │   └── main.py             # Dispatch: GUI by default, --cli for status/install/update
+├── tests/                  # Real tests: github_client, i18n, install, project_manifest, registry
+├── docs/
+│   ├── CLI_REFERENCE.md     # Command reference
+│   └── QML_DESKTOP_GUI.md   # Qt Quick GUI architecture
+├── images/                 # Media, app icons and interface screenshots
+├── tools/
+│   ├── build_test.py        # Non-versioning build/compile check
+│   ├── ci_validate.py       # Manifest/CHANGELOG/docs validation used by CI
+│   ├── generate_app_icon.py # Renders the public HYDRA-UMC SVG into the Windows-consumed icon
+│   ├── migrate_project_manifests.py  # Audits a workspace after the one-time manifest migration
+│   └── validate_project_manifests.py # Validates repository-owned manifests + native build versions
+├── .env.example            # Environment variable template
 ├── build.sh / build.bat    # venv + editable install + compile-check
 ├── run.sh / run.bat        # GUI default / CLI entry point
 ├── run-gui.vbs             # Windows graphical launcher with no console window
-└── bump_version.py         # Ecosystem-wide odometer bump (pyproject.toml + __init__.py)
+├── bump_version.py         # Ecosystem-wide odometer bump (pyproject.toml + __init__.py)
+└── bump_manifest_version.py # Syncs hydra-umc.project.json's version to the native one (--sync)
 ```
 
 ## ⚙️ BUILD & RUN GUIDE
