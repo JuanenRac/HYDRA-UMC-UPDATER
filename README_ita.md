@@ -38,7 +38,7 @@ HYDRA-UMC-UPDATER è un piccolo strumento - GUI con finestra per
 impostazione predefinita, CLI completa con `--cli` - pensato per girare
 sia sul vero CM5 sia sulla macchina Windows/Linux/macOS personale di uno
 sviluppatore (qualsiasi workspace con lo stesso tipo di checkout) che
-risponde a tre domande per ciascuno degli altri 44 progetti
+risponde a tre domande per ciascuno degli altri 54 progetti
 dell'ecosistema:
 
 1. **Cosa c'è realmente installato qui, e in quale versione?**
@@ -53,7 +53,7 @@ un clic su un pulsante, per una riga selezionata nella tabella della
 GUI) innescato da una persona, per un progetto con un nome, di cui può
 vedere il risultato prima di toccare il successivo.
 
-Nemmeno tutti e 44 i progetti appartengono al CM5 - la maggior parte dei
+Nemmeno tutti e 54 i progetti appartengono al CM5 - la maggior parte dei
 repository con prefisso URTC e alcuni di HYDRA-UMC sono strumenti che uno
 sviluppatore esegue dal proprio PC (il firmware viene compilato e
 flashato DAL posto di lavoro, non costruito SULLA cella), oppure app
@@ -66,14 +66,14 @@ vero CM5), e "mostra tutto" su Windows/macOS.
 ```
 $ hydra-umc-updater --cli status
 Workspace root: /home/pi/HYDRA-UMC
-Checking GitHub... 44/44
+Checking GitHub... 54/54
 PROJECT                        STACK       LOCAL     GITHUB    STATE
 --------------------------------------------------------------------
 HYDRA-UMC                      firmware-c  0.0.7     0.0.7     up to date
 HYDRA-UMC-SERVER               node        0.0.5     0.0.9     OUTDATED
 HYDRA-UMC-STUDIO               node        0.0.8     0.1.3     OUTDATED
 ...
-44/44 installed, 2 outdated
+54/54 installed, 2 outdated
 
 $ hydra-umc-updater --cli update HYDRA-UMC-SERVER
 Updating HYDRA-UMC-SERVER into /home/pi/HYDRA-UMC ...
@@ -103,7 +103,7 @@ selezionata.
   direttamente dal branch predefinito del repo tramite l'host di
   contenuto raw di GitHub - non l'API delle Releases, che riporterebbe
   che tutti i progetti non hanno alcuna release.
-- **Rilevamento locale**: per ciascuno dei 44 progetti conosciuti,
+- **Rilevamento locale**: per ciascuno dei 54 progetti conosciuti,
   controlla se esiste una directory con quel nome esatto sotto la radice
   del workspace (la disposizione standard dell'ecosistema - ogni
   progetto come directory sorella, esattamente ciò che già presuppongono
@@ -132,7 +132,7 @@ selezionata.
   disponibile e Tkinter resta solo un fallback temporaneo.
 - **La GUI con finestra è reale, multilingue in 7 lingue (`i18n.py`) - `--cli` deliberatamente non lo è.** Ogni widget reale si ri-etichetta dal vivo da una `Combobox` di lingua (en/es/fr/it/de/zh/ja, le stesse 7 pubblicate dalla dashboard pubblica e da ogni README), rilevata da una preferenza salvata o dalla locale propria del sistema operativo. I nomi di progetti/famiglie e il testo reale `notes`/`tech` di ciascun progetto restano non tradotti - `registry.py` è la loro unica fonte di verità, e 7 copie parallele di documentazione ingegneristica reale impedirebbero che lo restasse. L'output di `--cli` resta volutamente solo in inglese: è pensato per essere scriptato/reindirizzato, dove un testo stabile e grep-abile conta più della localizzazione.
 - **`deploy` è una classificazione, non una restrizione.** Trattare tutti
-  e 44 i progetti come "cose che appartengono al CM5" era sbagliato - i
+  e 54 i progetti come "cose che appartengono al CM5" era sbagliato - i
   repository di firmware vengono compilati e flashati DA un PC (il CM5
   ha bisogno solo del binario risultante via CAN-OTA, mai del codice
   sorgente di questo repository), e diversi strumenti (URTC-FLASHER,
@@ -142,7 +142,7 @@ selezionata.
   "wearable") registra questo, e il filtro della GUI lo usa come punto di
   partenza ragionevole - mai come restrizione rigida, dato che questo
   stesso strumento è anche pensato per girare sul PC personale di uno
-  sviluppatore, dove tutti e 44 sono ugualmente validi da ispezionare.
+  sviluppatore, dove tutti e 54 sono ugualmente validi da ispezionare.
 - **Nessuna logica di build per stack in questo strumento.**
   L'ecosistema copre 7 toolchain (Python, Rust, Go, Node/TS,
   Android/Kotlin, Flutter, firmware ARM). Reimplementare `npm install &&
@@ -152,7 +152,7 @@ selezionata.
   reale (e già corretto) di quel progetto. `install.py` invece cerca un
   nome di script di build conosciuto (`build.sh`, `build_firmware.sh`,
   `build_exe.sh`, `build-android.sh`, e i loro equivalenti `.bat` - i
-  nomi reali usati nei 44 progetti) ed esegue quello che esiste.
+  nomi reali usati nei 54 progetti) ed esegue quello che esiste.
 - **Contenuto raw di GitHub, non l'API delle Releases.** Vedi la sezione
   2 - la convenzione di versionamento di questo ecosistema non crea mai
   un tag/release, quindi l'API delle Releases sarebbe attivamente
@@ -371,6 +371,8 @@ Questo progetto fa parte dell'ecosistema robotico HYDRA-UMC dello stesso autore 
 
 ## 📚 Documentazione e Comunità
 
+- **[docs/CLI_REFERENCE.md](docs/CLI_REFERENCE.md)** — ogni sottocomando `--cli`, output reale catturato da un'esecuzione reale installata, e il contratto dei codici di uscita.
+- **[docs/QML_DESKTOP_GUI.md](docs/QML_DESKTOP_GUI.md)** — come è strutturato il client desktop Qt Quick/QML, e come resta una vera superficie di controllo sullo stesso backend usato da `--cli`, non una seconda implementazione.
 - **[CONTRIBUTING.md](CONTRIBUTING.md)** — stack tecnologico e linee guida di codifica per una pull request.
 - **[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)** — gli standard di comportamento attesi in questa comunità.
 - **[SECURITY.md](SECURITY.md)** — come segnalare una vulnerabilità, e le reali aree di attenzione sulla sicurezza di questo progetto.
