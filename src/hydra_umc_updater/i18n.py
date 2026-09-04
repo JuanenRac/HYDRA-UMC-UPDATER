@@ -811,6 +811,24 @@ for _language, _checkpoint_copy in _QML_CHECKPOINT_COPY.items():
     TRANSLATIONS[_language].update(_checkpoint_copy)
 
 
+# Real user feedback: the Activity Log couldn't be selected or copy-pasted
+# at all, and only ever showed the last 8 lines - see qt_gui.py's own
+# LOGS_DIR/fullActivity for the real fix (a copyable, unbounded log view
+# plus a real log file on disk).
+_LOG_COPY: dict[str, dict[str, str]] = {
+    "en": {"copy_log_button": "Copy", "log_file_prefix": "Log file:"},
+    "es": {"copy_log_button": "Copiar", "log_file_prefix": "Archivo de registro:"},
+    "fr": {"copy_log_button": "Copier", "log_file_prefix": "Fichier journal :"},
+    "it": {"copy_log_button": "Copia", "log_file_prefix": "File di log:"},
+    "de": {"copy_log_button": "Kopieren", "log_file_prefix": "Protokolldatei:"},
+    "zh": {"copy_log_button": "复制", "log_file_prefix": "日志文件："},
+    "ja": {"copy_log_button": "コピー", "log_file_prefix": "ログファイル："},
+}
+
+for _language, _log_copy in _LOG_COPY.items():
+    TRANSLATIONS[_language].update(_log_copy)
+
+
 def t(lang: str, key: str, **kwargs: object) -> str:
     """Real translation lookup with real `{placeholder}` substitution
     (str.format, not a template engine) - falls back to English on an

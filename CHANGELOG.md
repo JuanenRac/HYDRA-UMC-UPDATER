@@ -7,6 +7,18 @@ bumped manually only. See `bump_version.py`.
 
 ## [Unreleased] - Real family-tree bug fix (v4 manifest-discovery era)
 
+- **Real user feedback (same 3 fixes as HYDRA-UMC-OS-REBUILDER's own
+  identical pass): the GUI window now opens maximized
+  (`visibility: Window.Maximized`), the Activity Log is now real,
+  selectable/copyable text (a `TextArea` in a `ScrollView`, plus a real
+  "Copy" button) instead of an unselectable `ListView`, and every real
+  activity line - not just the last 8 the visible strip shows - now
+  also lands in a real plain-text log file
+  (`~/.hydra_umc_updater/logs/gui_<timestamp>.log`), shown under the
+  log panel. New `UpdaterBridge.fullActivity` (the same real data as
+  `activity`, unbounded) backs the new view; `activity` itself is
+  unchanged. Verified live: the file is created and receives real log
+  lines (including a real 56-project GitHub scan) on a real launch.
 - **New `--cli status --json`**, for scripting - the same real local+
   remote discovery `status` already does, as a real JSON object
   (`projects[]` with name/maturity/role/stack/installed/path/

@@ -16,8 +16,11 @@ stdlib-only and continues to work on a headless CM5 without Qt installed.
 """
 from __future__ import annotations
 
+import logging
 import sys
 import threading
+import time
+import traceback
 import webbrowser
 from pathlib import Path
 
@@ -33,6 +36,39 @@ from .registry import GITHUB_OWNER
 
 
 DEPLOY_ORDER = ("all", "cm5", "user-pc", "mobile", "wearable")
+
+#: Real, plain-text log file, one per real GUI run - the QML Activity Log
+#: only ever shows the last 8 lines (see UpdaterBridge.activity's own
+#: comment), so a real failure's own detail can already have scrolled out
+#: of the visible window by the time someone notices something went
+#: wrong. Every real activity line lands here too, unbounded, plus every
+#: unhandled exception (including from a background thread, which Qt
+#: would otherwise only ever print to a console this GUI doesn't have
+#: when launched by double-click) - same real file-logger convention
+#: this ecosystem's other desktop tools already use (e.g. URTC-TESTER's
+#: own `_file_logger`, HYDRA-UMC-OS-REBUILDER's own qt_gui.py).
+LOGS_DIR = Path.home() / ".hydra_umc_updater" / "logs"
+
+
+def _setup_file_logging() -> Path:
+    LOGS_DIR.mkdir(parents=True, exist_ok=True)
+    log_path = LOGS_DIR / f"gui_{time.strftime('%Y%m%d_%H%M%S')}.log"
+    logger = logging.getLogger("hydra_umc_updater.gui")
+    logger.setLevel(logging.INFO)
+    handler = logging.FileHandler(log_path, encoding="utf-8")
+    handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(message)s"))
+    logger.addHandler(handler)
+    logger.info("HYDRA-UMC Updater GUI v%s starting - log file: %s", __version__, log_path)
+
+    def _log_unhandled(exc_type, exc_value, exc_tb) -> None:
+        logger.error("UNHANDLED EXCEPTION:\n%s", "".join(traceback.format_exception(exc_type, exc_value, exc_tb)))
+        sys.__excepthook__(exc_type, exc_value, exc_tb)
+
+    sys.excepthook = _log_unhandled
+    return log_path
+
+
+_GUI_LOGGER = logging.getLogger("hydra_umc_updater.gui")
 
 
 def _state_key(local: LocalStatus, remote: RemoteStatus | None) -> str:
@@ -68,9 +104,10 @@ class UpdaterBridge(QObject):
     _operationCheckpoint = Signal(str, str)
     _batchProject = Signal(int, int, str)
 
-    def __init__(self, workspace_root: Path):
+    def __init__(self, workspace_root: Path, log_file_path: Path | None = None):
         super().__init__()
         self._workspace_root = workspace_root
+        self._logFilePath = str(log_file_path) if log_file_path else ""
         self._locals: list[LocalStatus] = []
         self._remotes: dict[str, RemoteStatus] = {}
         self._deploy = "cm5" if sys.platform.startswith("linux") else "all"
@@ -116,6 +153,20 @@ class UpdaterBridge(QObject):
     @Property("QStringList", notify=activityChanged)
     def activity(self) -> list[str]:
         return self._activity[-8:]
+
+    @Property("QStringList", notify=activityChanged)
+    def fullActivity(self) -> list[str]:
+        """Every real activity line this session, unbounded - unlike
+        `activity` above (deliberately capped to the last 8 for the
+        always-visible log strip), this backs the real copyable/scrollable
+        log view - real user feedback (see HYDRA-UMC-OS-REBUILDER's own
+        identical fix): a truncated view has no way to show or copy
+        anything that already scrolled out of it."""
+        return self._activity
+
+    @Property(str, constant=True)
+    def logFilePath(self) -> str:
+        return self._logFilePath
 
     @Property("QVariantList", notify=operationChanged)
     def operationSteps(self) -> list[dict[str, str]]:
@@ -537,7 +588,9 @@ class UpdaterBridge(QObject):
         self.statusChanged.emit()
 
     def _append_activity(self, text: str) -> None:
-        self._activity.append(text.replace("\n", " "))
+        line = text.replace("\n", " ")
+        self._activity.append(line)
+        _GUI_LOGGER.info(line)
         self.activityChanged.emit()
 
     def _selected_status(self) -> LocalStatus | None:
@@ -546,6 +599,7 @@ class UpdaterBridge(QObject):
 
 def launch_qt_gui(workspace_root: Path) -> int:
     """Launch the QML desktop application and return its Qt event-loop code."""
+    log_path = _setup_file_logging()
     app = QGuiApplication.instance() or QGuiApplication(sys.argv)
     app.setApplicationName("HYDRA-UMC-UPDATER")
     app.setApplicationDisplayName("HYDRA-UMC Updater")
@@ -558,7 +612,7 @@ def launch_qt_gui(workspace_root: Path) -> int:
         icon = project_root / "images" / "HYDRA_UMC_ICON.svg"
     app.setWindowIcon(QIcon(str(icon)))
     engine = QQmlApplicationEngine()
-    bridge = UpdaterBridge(workspace_root)
+    bridge = UpdaterBridge(workspace_root, log_path)
     engine.rootContext().setContextProperty("backend", bridge)
     qml_path = Path(__file__).with_name("qml") / "Main.qml"
     engine.load(QUrl.fromLocalFile(str(qml_path)))

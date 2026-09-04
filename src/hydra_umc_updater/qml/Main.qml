@@ -19,6 +19,7 @@ ApplicationWindow {
     minimumWidth: 1100
     minimumHeight: 680
     visible: true
+    visibility: Window.Maximized
     title: "HYDRA-UMC Updater"
     color: "#07111e"
 
@@ -575,12 +576,47 @@ ApplicationWindow {
                     Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: window.border }
                     LabelText { text: ui("safety_title"); font.pixelSize: 12; font.bold: true; font.letterSpacing: 1 }
                     LabelText { text: ui("safety_summary"); color: window.textMuted; font.pixelSize: 10; Layout.fillWidth: true; wrapMode: Text.WordWrap }
-                    LabelText { text: ui("activity_log_title"); font.pixelSize: 12; font.bold: true; font.letterSpacing: 1 }
-                    Rectangle { Layout.fillWidth: true; Layout.fillHeight: true; color: "#081623"; radius: 9; border.width: 1; border.color: "#1d4056"
-                        ListView { anchors.fill: parent; anchors.margins: 10; model: backend.activity; clip: true; spacing: 6
-                            delegate: LabelText { required property string modelData; text: "› " + modelData; color: "#9adce3"; font.family: "Cascadia Mono"; font.pixelSize: 10; width: parent.width; wrapMode: Text.WordWrap }
+                    RowLayout {
+                        Layout.fillWidth: true
+                        LabelText { text: ui("activity_log_title"); font.pixelSize: 12; font.bold: true; font.letterSpacing: 1; Layout.fillWidth: true }
+                        GameButton {
+                            text: ui("copy_log_button")
+                            accent: "#264966"
+                            onClicked: { activityLogArea.selectAll(); activityLogArea.copy(); activityLogArea.deselect() }
                         }
                     }
+                    // A real, selectable/copyable, unbounded log - real user
+                    // feedback (see HYDRA-UMC-OS-REBUILDER's own identical
+                    // fix): the previous ListView only ever showed
+                    // backend.activity's own last-8-lines window and
+                    // couldn't be selected or copy-pasted at all, so a real
+                    // failure already scrolled past 8 more log lines had no
+                    // way out of this window. backend.fullActivity is the
+                    // same real data, unbounded; every line is also
+                    // mirrored to a real log FILE on disk (see qt_gui.py's
+                    // own LOGS_DIR), shown below.
+                    Rectangle { Layout.fillWidth: true; Layout.fillHeight: true; color: "#081623"; radius: 9; border.width: 1; border.color: "#1d4056"
+                        ScrollView {
+                            anchors.fill: parent
+                            anchors.margins: 10
+                            clip: true
+                            ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
+                            TextArea {
+                                id: activityLogArea
+                                text: backend.fullActivity.map(function(line) { return "› " + line }).join("\n")
+                                readOnly: true
+                                selectByMouse: true
+                                wrapMode: TextArea.Wrap
+                                color: "#9adce3"
+                                selectionColor: window.cyan
+                                font.family: "Cascadia Mono"
+                                font.pixelSize: 10
+                                background: null
+                                onTextChanged: cursorPosition = length
+                            }
+                        }
+                    }
+                    LabelText { text: ui("log_file_prefix") + " " + backend.logFilePath; color: window.textMuted; font.pixelSize: 9; wrapMode: Text.WrapAnywhere; Layout.fillWidth: true; elide: Text.ElideMiddle }
                 }
             }
         }
