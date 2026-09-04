@@ -7,6 +7,18 @@ bumped manually only. See `bump_version.py`.
 
 ## [Unreleased] - Real family-tree bug fix (v4 manifest-discovery era)
 
+- **New `--cli status --json`**, for scripting - the same real local+
+  remote discovery `status` already does, as a real JSON object
+  (`projects[]` with name/maturity/role/stack/installed/path/
+  local_version/github_version/state, plus installed_count/
+  outdated_count/total). Real bug fixed in the same pass: `cmd_status()`
+  printed `"Workspace root: ..."` (and, with `--offline`, a second plain
+  line) to stdout unconditionally, ahead of the table - with `--json`
+  that broke the exact machine-readability the flag promises, since
+  those lines landed before the JSON object itself. Both are now gated
+  on `not args.json`. New `tests/test_main.py` (this repo's first CLI
+  test file) exercises the real JSON shape against monkeypatched local/
+  remote discovery. Verified live against the real ecosystem too.
 - **More developed About dialog**, matching HYDRA-UMC-STUDIO's own
   `About.tsx`: the placeholder "H" letter box is now the real animated
   `VectorImage` mark (same source/renderer as the main header), the

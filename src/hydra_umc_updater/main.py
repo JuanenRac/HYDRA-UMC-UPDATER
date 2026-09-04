@@ -27,6 +27,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 from pathlib import Path
 
@@ -65,7 +66,15 @@ def _state_label(local: LocalStatus, remote: RemoteStatus | None) -> str:
 
 def cmd_status(args: argparse.Namespace) -> int:
     workspace_root = Path(args.workspace).resolve() if args.workspace else default_workspace_root()
-    print(f"Workspace root: {workspace_root}")
+    # Real bug fixed here, found while adding --json: this line (and the
+    # --offline notice below) printed to stdout unconditionally, ahead of
+    # everything else - the exact opposite of what --json promises a
+    # script piping this output into `json.loads()`. Every diagnostic
+    # stdout print in this function is now gated on `not args.json`;
+    # informational GitHub-check messages already went to stderr, so
+    # those needed no change.
+    if not args.json:
+        print(f"Workspace root: {workspace_root}")
     local_discovery = discover_workspace(workspace_root)
     local_by_name = {status.entry.name: status for status in local_discovery.projects}
 
@@ -83,7 +92,7 @@ def cmd_status(args: argparse.Namespace) -> int:
             # updates; automatic discovery resumes when a token is available.
             print(f"WARNING: remote discovery unavailable: {exc}", file=sys.stderr)
             remotes = fetch_all([status.entry for status in local_discovery.projects])
-    else:
+    elif not args.json:
         print("(--offline: not checking GitHub - showing local state only)")
 
     entries = {name: status.entry for name, status in local_by_name.items()}
@@ -95,6 +104,37 @@ def cmd_status(args: argparse.Namespace) -> int:
         )
         for name, entry in sorted(entries.items(), key=lambda item: item[0].casefold())
     ]
+
+    if args.json:
+        # Real, scripting-friendly shape - every field the human-readable
+        # table below also shows, plus the real local checkout path (not
+        # printed by the table at all) - never a second, independently-
+        # drifting summary of the same discovery data.
+        payload = {
+            "workspace_root": str(workspace_root),
+            "offline": bool(args.offline),
+            "projects": [
+                {
+                    "name": ls.entry.name,
+                    "maturity": ls.entry.maturity,
+                    "role": ls.entry.role,
+                    "stack": ls.entry.stack,
+                    "installed": ls.installed,
+                    "path": str(ls.path),
+                    "local_version": str(ls.version) if ls.version else None,
+                    "github_version": str(remotes[ls.entry.name].version) if ls.entry.name in remotes and remotes[ls.entry.name].version else None,
+                    "state": _state_label(ls, remotes.get(ls.entry.name)),
+                }
+                for ls in locals_
+            ],
+        }
+        installed_count = sum(1 for ls in locals_ if ls.installed)
+        outdated_count = sum(1 for ls in locals_ if _state_label(ls, remotes.get(ls.entry.name)) == "OUTDATED")
+        payload["installed_count"] = installed_count
+        payload["outdated_count"] = outdated_count
+        payload["total"] = len(locals_)
+        print(json.dumps(payload, indent=2, ensure_ascii=False))
+        return 0
 
     name_w = max((len(p.name) for p in entries.values()), default=7) + 2
     # Dynamic like name_w above - a fixed width silently ran stack values
@@ -197,6 +237,7 @@ def build_parser() -> argparse.ArgumentParser:
     status_p.add_argument("--workspace", help="Workspace root to scan (default: this tool's own parent directory).")
     status_p.add_argument("--offline", action="store_true", help="Skip the GitHub check - local state only.")
     status_p.add_argument("--notes", action="store_true", help="Also print each project's real notes (family/parent, what's actually implemented, tech) below the table.")
+    status_p.add_argument("--json", action="store_true", help="Machine-readable JSON instead of the human-readable table (ignores --notes).")
     status_p.set_defaults(func=cmd_status)
 
     install_p = subparsers.add_parser("install", help="Clone and build ONE project that isn't installed yet.")
