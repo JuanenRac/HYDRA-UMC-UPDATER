@@ -5,7 +5,7 @@ version number follows this ecosystem's "odometer" scheme: PATCH +1 on
 every real build, rolling into MINOR past 9 (`0.0.9` -> `0.1.0`); MAJOR is
 bumped manually only. See `bump_version.py`.
 
-## [Unreleased] - Real family-tree bug fix (v4 manifest-discovery era)
+## [0.2.8] - Real family-tree bug fix (v4 manifest-discovery era)
 
 - **Real user feedback (same 3 fixes as HYDRA-UMC-OS-REBUILDER's own
   identical pass): the GUI window now opens maximized
