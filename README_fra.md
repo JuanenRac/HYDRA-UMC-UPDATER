@@ -38,7 +38,7 @@ HYDRA-UMC-UPDATER est un petit outil - GUI avec fenêtre par défaut, CLI
 complète avec `--cli` - destiné à tourner aussi bien sur le vrai CM5 que
 sur la propre machine Windows/Linux/macOS d'un développeur (n'importe
 quel workspace avec le même type de checkout) qui répond à trois
-questions pour chacun des 54 autres projets de l'écosystème :
+questions pour chacun des 55 autres projets de l'écosystème :
 
 1. **Qu'est-ce qui est réellement installé ici, et dans quelle version ?**
 2. **Quelle est la dernière version publiée sur GitHub ?**
@@ -53,7 +53,7 @@ ligne sélectionnée dans le tableau de la GUI) qu'une personne a
 déclenchée, pour un projet nommé, dont elle peut voir le résultat avant
 de toucher au suivant.
 
-Les 54 projets n'appartiennent pas non plus tous au CM5 - la plupart des
+Les 55 projets n'appartiennent pas non plus tous au CM5 - la plupart des
 dépôts préfixés URTC et quelques-uns de HYDRA-UMC sont des outils qu'un
 développeur exécute depuis son propre PC (le firmware est compilé et
 flashé DEPUIS un poste de travail, pas construit SUR la cellule), ou des
@@ -66,14 +66,14 @@ vrai CM5), et "tout afficher" sous Windows/macOS.
 ```
 $ hydra-umc-updater --cli status
 Workspace root: /home/pi/HYDRA-UMC
-Checking GitHub... 54/54
+Checking GitHub... 55/55
 PROJECT                        STACK       LOCAL     GITHUB    STATE
 --------------------------------------------------------------------
 HYDRA-UMC                      firmware-c  0.0.7     0.0.7     up to date
 HYDRA-UMC-SERVER               node        0.0.5     0.0.9     OUTDATED
 HYDRA-UMC-STUDIO               node        0.0.8     0.1.3     OUTDATED
 ...
-54/54 installed, 2 outdated
+55/55 installed, 2 outdated
 
 $ hydra-umc-updater --cli update HYDRA-UMC-SERVER
 Updating HYDRA-UMC-SERVER into /home/pi/HYDRA-UMC ...
@@ -103,7 +103,7 @@ ligne sélectionnée.
   directement depuis la branche par défaut du dépôt via l'hébergeur de
   contenu brut de GitHub - pas l'API des Releases, qui indiquerait que
   tous les projets n'ont aucune release.
-- **Détection locale** : pour chacun des 54 projets connus, vérifie si
+- **Détection locale** : pour chacun des 55 projets connus, vérifie si
   un répertoire portant ce nom exact existe sous la racine du workspace
   (la disposition standard de l'écosystème - chaque projet en tant que
   répertoire voisin, exactement ce que supposent déjà build-frontend.sh
@@ -133,7 +133,7 @@ ligne sélectionnée.
   lorsqu'il est disponible et Tkinter reste seulement un fallback temporaire.
 - **L'interface graphique fenêtrée est réelle, multilingue en 7 langues (`i18n.py`) - `--cli` ne l'est délibérément pas.** Chaque widget réel se réétiquette en direct depuis un `Combobox` de langue (en/es/fr/it/de/zh/ja, les 7 mêmes que publient le tableau de bord public et chaque README), détecté à partir d'une préférence enregistrée ou de la locale propre du système d'exploitation. Les noms de projets/familles et le propre texte réel `notes`/`tech` de chaque projet restent non traduits - `registry.py` en est leur unique source de vérité, et 7 copies parallèles de documentation d'ingénierie réelle empêcheraient cela. La sortie de `--cli` reste volontairement en anglais uniquement : elle est destinée à être scriptée/redirigée, où un texte stable et grep-able compte plus que la localisation.
 - **`deploy` est une classification, pas une restriction.** Traiter les
-  54 projets comme "des choses qui appartiennent au CM5" était une
+  55 projets comme "des choses qui appartiennent au CM5" était une
   erreur - les dépôts de firmware sont compilés et flashés DEPUIS un PC
   (le CM5 n'a besoin que du binaire résultant via CAN-OTA, jamais du code
   source de ce dépôt), et plusieurs outils (URTC-FLASHER,
@@ -143,7 +143,7 @@ ligne sélectionnée.
   "mobile" / "wearable") enregistre cela, et le filtre de la GUI l'utilise
   comme point de départ raisonnable - jamais comme une restriction dure,
   puisque cet outil est aussi destiné à tourner sur le propre PC d'un
-  développeur, où les 54 sont tous aussi légitimes à inspecter.
+  développeur, où les 55 sont tous aussi légitimes à inspecter.
 - **Aucune logique de build par stack dans cet outil.** L'écosystème
   couvre 7 chaînes d'outils (Python, Rust, Go, Node/TS, Android/Kotlin,
   Flutter, firmware ARM). Réimplémenter `npm install && npm run build` /
@@ -152,7 +152,7 @@ ligne sélectionnée.
   garanti de diverger du `build.sh`/`.bat` réel (et déjà correct) de ce
   projet. `install.py` recherche plutôt un nom de script de build connu
   (`build.sh`, `build_firmware.sh`, `build_exe.sh`, `build-android.sh`,
-  et leurs équivalents `.bat` - les noms réels utilisés à travers les 54
+  et leurs équivalents `.bat` - les noms réels utilisés à travers les 55
   projets) et exécute celui qui existe.
 - **Contenu brut de GitHub, pas l'API des Releases.** Voir la section 2 -
   la convention de versionnage de cet écosystème ne crée jamais de

@@ -37,7 +37,7 @@
 HYDRA-UMC-UPDATER is a small tool - windowed GUI by default, full CLI with
 `--cli` - meant to run either on the real CM5 itself or on a developer's
 own Windows/Linux/macOS machine (any workspace checked out the same way)
-that answers three questions for every one of the ecosystem's 54 other
+that answers three questions for every one of the ecosystem's 55 other
 projects:
 
 1. **What's actually installed here, and what version is it?**
@@ -51,7 +51,7 @@ overnight - every real update is a command (or a button click, for one
 row selected in the GUI's table) a person triggered, for one named
 project, whose result they can see before touching the next one.
 
-Not every one of the 54 projects belongs on the CM5 itself, either - most
+Not every one of the 55 projects belongs on the CM5 itself, either - most
 URTC-prefixed repos and a few HYDRA-UMC ones are tools a developer runs
 from their own PC (firmware gets compiled/flashed FROM a workstation, not
 built ON the cell) or apps installed on a phone/watch. `registry.py`'s own
@@ -63,14 +63,14 @@ Windows/macOS.
 ```
 $ hydra-umc-updater --cli status
 Workspace root: /home/pi/HYDRA-UMC
-Checking GitHub... 54/54
+Checking GitHub... 55/55
 PROJECT                        STACK       LOCAL     GITHUB    STATE
 --------------------------------------------------------------------
 HYDRA-UMC                      firmware-c  0.0.7     0.0.7     up to date
 HYDRA-UMC-SERVER               node        0.0.5     0.0.9     OUTDATED
 HYDRA-UMC-STUDIO               node        0.0.8     0.1.3     OUTDATED
 ...
-54/54 installed, 2 outdated
+55/55 installed, 2 outdated
 
 $ hydra-umc-updater --cli update HYDRA-UMC-SERVER
 Updating HYDRA-UMC-SERVER into /home/pi/HYDRA-UMC ...
@@ -103,7 +103,7 @@ continues to be written to the launch terminal.
   writes, straight off the repo's default branch via GitHub's raw
   content host - not the Releases API, which would report every project
   as having no releases at all.
-- **Local detection**: for each of the 54 known projects, checks whether
+- **Local detection**: for each of the 55 known projects, checks whether
   a directory with that exact name exists under the workspace root (the
   standard ecosystem layout - every project as a sibling directory,
   exactly what `build-frontend.sh`/HYDRA-UMC-SUITE's own discovery
@@ -131,7 +131,7 @@ continues to be written to the launch terminal.
   invocation starts the QML client where the runtime is installed; the older
   Tkinter shell remains only as a temporary compatibility fallback.
 - **The windowed GUI is real, 7-language multilingual (`i18n.py`) - `--cli` deliberately isn't.** Every real widget re-labels live from a language `Combobox` (en/es/fr/it/de/zh/ja, the same 7 the public dashboard and every README ship), detected from a saved preference or the OS's own locale. Project/family names and each project's own real `notes`/`tech` text stay untranslated - `registry.py` is their one source of truth, and 7 parallel copies of real engineering documentation would stop it being that. `--cli` output stays English-only on purpose: it's meant to be scripted/piped, where stable, greppable text matters more than localization.
-- **`deploy` is a classification, not a restriction.** Treating all 54
+- **`deploy` is a classification, not a restriction.** Treating all 55
   projects as "things that belong on the CM5" was wrong - firmware repos
   are compiled and flashed FROM a PC (the CM5 only ever needs the
   resulting binary over CAN-OTA, never this repo's own source), and
@@ -140,7 +140,7 @@ continues to be written to the launch terminal.
   itself. `registry.py`'s `deploy` field ("cm5" / "user-pc" / "mobile" /
   "wearable") records that, and the GUI's filter uses it as a sensible
   starting point - never a hard restriction, since this same tool is also
-  meant to run on a developer's own PC where every one of the 54 is fair
+  meant to run on a developer's own PC where every one of the 55 is fair
   game to inspect.
 - **No per-stack build logic in this tool.** The ecosystem spans 7
   toolchains (Python, Rust, Go, Node/TS, Android/Kotlin, Flutter, ARM
@@ -151,7 +151,7 @@ continues to be written to the launch terminal.
   `build.sh`/`.bat`. `install.py` instead probes for a known build-script
   name (`build.sh`, `build_firmware.sh`, `build_exe.sh`,
   `build-android.sh`, and their `.bat` equivalents - the real names used
-  across the 54 projects) and runs whichever one exists.
+  across the 55 projects) and runs whichever one exists.
 - **GitHub raw content, not the Releases API.** See section 2 above -
   this ecosystem's versioning convention never creates a tag/release, so
   the Releases API would be actively wrong here, not just less

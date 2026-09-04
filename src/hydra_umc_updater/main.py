@@ -41,7 +41,7 @@ from .version_parse import Version
 def default_workspace_root() -> Path:
     """This project's own parent directory - correct as long as
     HYDRA-UMC-UPDATER itself was checked out the same way every other
-    ecosystem project is (a sibling of the other 43 under one common
+    ecosystem project is (a sibling of the other 55 under one common
     parent) - the standard layout this whole tool assumes throughout.
     Always overridable with --workspace for anything else (a CM5 install
     under a different path, a CI checkout, ...)."""
@@ -228,7 +228,7 @@ def _install_or_update(args: argparse.Namespace, *, expect_installed: bool) -> i
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="hydra-umc-updater --cli",
-        description="Detects, installs, and manually updates the HYDRA-UMC/URTC ecosystem's 46 projects on this machine.",
+        description="Detects, installs, and manually updates the HYDRA-UMC/URTC ecosystem's 56 projects on this machine.",
     )
     parser.add_argument("--version", action="version", version=f"hydra-umc-updater {__version__}")
     subparsers = parser.add_subparsers(dest="command")
