@@ -349,9 +349,9 @@ ApplicationWindow {
             }
 
             RowLayout { Layout.fillWidth: true; Layout.topMargin: 8
-                GameButton { text: ui("open_github_button"); accent: "#264966"; onClicked: Qt.openUrlExternally("https://github.com/JuanenRac/HYDRA-UMC-UPDATER") }
+                GameButton { text: ui("open_github_button"); Layout.preferredWidth: 230; accent: "#264966"; onClicked: Qt.openUrlExternally("https://github.com/JuanenRac/HYDRA-UMC-UPDATER") }
                 Item { Layout.fillWidth: true }
-                GameButton { text: ui("about_close_button"); accent: window.cyan; onClicked: aboutDialog.close() }
+                GameButton { text: ui("about_close_button"); Layout.preferredWidth: 152; accent: window.cyan; onClicked: aboutDialog.close() }
             }
         }
     }
@@ -415,7 +415,7 @@ ApplicationWindow {
                     LabelText { text: backend.busy ? ui("status_busy") : ui("status_online"); color: window.textMuted; font.pixelSize: 11; font.bold: true }
                 }
             }
-            GameButton { text: ui("menu_about"); accent: "#264966"; Layout.alignment: Qt.AlignRight; onClicked: aboutDialog.open() }
+            GameButton { text: ui("menu_about"); Layout.preferredWidth: 152; accent: "#264966"; Layout.alignment: Qt.AlignRight; onClicked: aboutDialog.open() }
         }
 
         RowLayout {
@@ -448,7 +448,7 @@ ApplicationWindow {
                 }
                 onActivated: backend.setLanguage(model[currentIndex].code)
             }
-            GameButton { text: ui("refresh_button"); enabled: !backend.busy; accent: window.cyan; onClicked: backend.refresh(offlineCheck.checked) }
+            GameButton { text: ui("refresh_button"); Layout.preferredWidth: 150; enabled: !backend.busy; accent: window.cyan; onClicked: backend.refresh(offlineCheck.checked) }
         }
 
         RowLayout {
@@ -581,6 +581,7 @@ ApplicationWindow {
                         LabelText { text: ui("activity_log_title"); font.pixelSize: 12; font.bold: true; font.letterSpacing: 1; Layout.fillWidth: true }
                         GameButton {
                             text: ui("copy_log_button")
+                            Layout.preferredWidth: 128
                             accent: "#264966"
                             onClicked: { activityLogArea.selectAll(); activityLogArea.copy(); activityLogArea.deselect() }
                         }

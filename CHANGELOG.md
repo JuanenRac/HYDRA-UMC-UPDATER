@@ -5,6 +5,15 @@ version number follows this ecosystem's "odometer" scheme: PATCH +1 on
 every real build, rolling into MINOR past 9 (`0.0.9` -> `0.1.0`); MAJOR is
 bumped manually only. See `bump_version.py`.
 
+## Unreleased
+
+- **Real UI sizing pass, per real user feedback**: About and Copy (Activity
+  Log) are now double width; Refresh is 50% wider; the About dialog's own
+  Close button is now double width and its Open on GitHub button is 25%
+  wider. All widths measured from the real current implicit sizes, not
+  guessed. The other, unrelated "Open on GitHub" button (opens a selected
+  project's own GitHub page) is untouched.
+
 ## [0.2.8] - Real family-tree bug fix (v4 manifest-discovery era)
 
 - **Real user feedback (same 3 fixes as HYDRA-UMC-OS-REBUILDER's own
