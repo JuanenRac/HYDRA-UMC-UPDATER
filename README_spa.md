@@ -291,6 +291,7 @@ Este proyecto es parte del ecosistema de robótica HYDRA-UMC del mismo autor (Ju
 **Directamente Relacionados**
 - **[HYDRA-UMC](https://github.com/JuanenRac/HYDRA-UMC)** — la placa madre física del brazo robótico: host CM5 + coprocesador STM32H745 de doble núcleo, coordinando hasta 8 brazos herramienta por CAN-OTA/SPI-OTA — el controlador insignia de celda multi-robot que esta herramienta busca mantener instalado y actualizado en el hardware CM5 real.
 - **[HYDRA-UMC-SUITE](https://github.com/JuanenRac/HYDRA-UMC-SUITE)** — centro de mando de enjambre de escritorio (PySide6) para varios servidores a la vez, empaquetado como ejecutable independiente — otra herramienta Python independiente pensada para ejecutarse junto al controlador de celda, el hermano más cercano en cuanto a rol (una utilidad enfocada del lado del CM5, no parte del propio camino de control del robot).
+- **[HYDRA-UMC-OS-REBUILDER](https://github.com/JuanenRac/HYDRA-UMC-OS-REBUILDER)** — depende de este proyecto como una librería real para su propio descubrimiento del ecosistema en GitHub al construir una imagen nueva de la CM5, en vez de una segunda implementación que pueda divergir de forma independiente.
 
 **También Forma Parte del Ecosistema**
 

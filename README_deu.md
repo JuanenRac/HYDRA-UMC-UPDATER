@@ -296,6 +296,7 @@ Dieses Projekt ist Teil des HYDRA-UMC-Robotik-Ökosystems desselben Autors (Juan
 **Direkt verwandt**
 - **[HYDRA-UMC](https://github.com/JuanenRac/HYDRA-UMC)** — das physische Motherboard des Roboterarms: CM5-Host + Dual-Core-STM32H745, koordiniert bis zu 8 Werkzeugarme über CAN-OTA/SPI-OTA — der Flaggschiff-Multi-Roboter-Zellcontroller, den dieses Tool auf der echten CM5-Hardware installiert und aktuell halten soll.
 - **[HYDRA-UMC-SUITE](https://github.com/JuanenRac/HYDRA-UMC-SUITE)** — Desktop-Schwarmleitstand (PySide6) für mehrere Server gleichzeitig, verpackt als eigenständige ausführbare Datei — ein weiteres eigenständiges Python-Tool, das neben dem Zellcontroller laufen soll, der rollentechnisch nächste Verwandte (ein fokussiertes CM5-seitiges Dienstprogramm, nicht Teil des eigentlichen Robotersteuerungspfads).
+- **[HYDRA-UMC-OS-REBUILDER](https://github.com/JuanenRac/HYDRA-UMC-OS-REBUILDER)** — hängt beim Bau eines neuen CM5-Images von diesem Projekt als echter Bibliothek für die eigene GitHub-Ökosystem-Erkennung ab, statt einer zweiten, unabhängig driftenden Implementierung.
 
 **Ebenfalls Teil des Ökosystems**
 

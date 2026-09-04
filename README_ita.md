@@ -292,6 +292,7 @@ Questo progetto fa parte dell'ecosistema robotico HYDRA-UMC dello stesso autore 
 **Direttamente Correlati**
 - **[HYDRA-UMC](https://github.com/JuanenRac/HYDRA-UMC)** — la scheda madre fisica del braccio robotico: host CM5 + coprocessore STM32H745 dual-core, che coordina fino a 8 bracci utensile via CAN-OTA/SPI-OTA — il controller di cella multi-robot di punta che questo strumento è pensato per mantenere installato e aggiornato sull'hardware CM5 reale.
 - **[HYDRA-UMC-SUITE](https://github.com/JuanenRac/HYDRA-UMC-SUITE)** — centro di comando sciame desktop (PySide6) per più server contemporaneamente, pacchettizzato come eseguibile standalone — un altro strumento Python standalone pensato per essere eseguito accanto al controller di cella, il fratello più vicino per ruolo (un'utilità focalizzata lato CM5, non parte del percorso di controllo del robot stesso).
+- **[HYDRA-UMC-OS-REBUILDER](https://github.com/JuanenRac/HYDRA-UMC-OS-REBUILDER)** — dipende da questo progetto come vera libreria per la propria scoperta dell'ecosistema su GitHub durante la costruzione di una nuova immagine della CM5, invece di una seconda implementazione che potrebbe divergere in modo indipendente.
 
 **Fa Anche Parte dell'Ecosistema**
 
