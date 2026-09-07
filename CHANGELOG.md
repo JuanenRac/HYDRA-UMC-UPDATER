@@ -9,6 +9,32 @@ bumped manually only. See `bump_version.py`.
 
 (nothing yet)
 
+## [0.3.2] - V07-004: promotion could destroy its own only recovery point
+
+Found in an independent revalidation audit (P1), shared with
+HYDRA-UMC-OPS-AGENT's own `canary_deploy.py` (same real gap, same real
+fix - a full transactional journal/rollback across both implementations
+stays real, separate future work, not claimed as done here):
+
+- **The previous installation's own backup used a single fixed path**
+  (`<name>.backup`), `rmtree`'d and overwritten on every promotion. A
+  second real update after a first one already succeeded silently
+  destroyed the ONLY other recoverable copy, with no way back to
+  either release. Now unique per attempt (`<name>.backup-<uuid>`),
+  matching OPS-AGENT's own fix - never overwrites an earlier backup.
+- **A crash or exception in the narrow gap between the two promotion
+  renames used to leave NO active checkout at `path` at all** - the
+  single worst outcome this function's own docstring warned about but
+  never actually handled. Now a best-effort self-heal: if the second
+  rename (staging clone into place) fails, immediately try to rename
+  the backup back so a real installation still exists, with a result
+  message that distinguishes "restored" from "restore also failed."
+
+New `test_two_successive_updates_never_overwrite_the_earlier_backup` and
+`test_promotion_self_heals_when_the_second_rename_fails` in
+`tests/test_install.py` (a real, injected `Path.rename` failure on
+exactly the second promotion rename, nothing else) - 61/61 tests pass.
+
 ## [0.3.1] - V07-001: a real tracked-file edit could still be silently discarded
 
 - **`clone_or_pull()`'s own docstring claimed** "a real local edit... fails

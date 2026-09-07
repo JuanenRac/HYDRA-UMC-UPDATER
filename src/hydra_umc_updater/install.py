@@ -485,11 +485,47 @@ def clone_or_pull(
     # brief gap between these two renames (a crash exactly there would
     # leave `path` genuinely missing) - vastly narrower than before,
     # where the unsafe window spanned the entire build.
-    backup_path = workspace_root / f"{entry.name}.backup"
-    rmtree(backup_path, ignore_errors=True)
+    #
+    # V07-004 (found in an independent revalidation audit, P1; honest,
+    # bounded mitigation, not the full transactional journal/rollback
+    # the finding's own acceptance criteria describes - that needs
+    # designing once, shared with HYDRA-UMC-OPS-AGENT's own
+    # canary_deploy.py, as real, separate future work): two real gaps
+    # existed here. First, `backup_path` reused the SAME fixed name
+    # every promotion (`rmtree(backup_path, ...)` right before renaming
+    # into it) - a second install after a first one already failed
+    # partway would silently delete the ONLY recoverable copy of the
+    # previous installation before even attempting the new promotion.
+    # Now unique per attempt (`.backup-<uuid>`, matching OPS-AGENT's own
+    # fix), never overwriting an earlier backup. Second, a crash or
+    # exception in the narrow gap between the two renames used to leave
+    # NO active checkout at `path` at all, with no attempt to recover -
+    # now a best-effort self-heal: if the second rename fails, this
+    # immediately tries to rename the backup back to `path` so a real
+    # installation still exists, rather than silently leaving neither a
+    # live checkout nor a clear indication of which path holds the real
+    # one.
+    backup_path = workspace_root / f"{entry.name}.backup-{uuid4().hex[:8]}"
     _checkpoint(progress, "validation", "Promoting the verified candidate; the previous installation is kept as a backup.")
     path.rename(backup_path)
-    staging_path.rename(path)
+    try:
+        staging_path.rename(path)
+    except OSError as exc:
+        try:
+            backup_path.rename(path)
+        except OSError:
+            return InstallResult(
+                False,
+                f"promotion failed AND the self-heal restore also failed - {path} may not exist right now; "
+                f"the previous installation should still be recoverable at {backup_path}: {exc}",
+                build_result.output,
+            )
+        return InstallResult(
+            False,
+            f"promotion failed (exit path unavailable: {exc}) - restored the previous installation at {path}; "
+            f"the verified candidate is still available at {staging_path} for manual inspection",
+            build_result.output,
+        )
     sha_label = candidate_sha[:12]
     return InstallResult(
         True,

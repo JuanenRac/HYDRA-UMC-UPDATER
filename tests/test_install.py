@@ -169,12 +169,120 @@ def test_update_verifies_build_in_staging_before_promoting_and_keeps_a_backup(tm
     # the same directory it verified, rather than rebuilding blind.
     assert (local / "built.txt").exists()
 
-    backup = tmp_path / f"{entry().name}.backup"
-    assert backup.is_dir()
+    # V07-004: unique per attempt (`.backup-<uuid>`), not a single fixed
+    # name - see clone_or_pull()'s own comment for the real data-loss gap
+    # a fixed, reused name left open.
+    backups = list(tmp_path.glob(f"{entry().name}.backup-*"))
+    assert len(backups) == 1, backups
+    backup = backups[0]
     assert subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=backup, text=True).strip() == old_head
 
     # No leftover staging directories from a successful run.
     assert not list(tmp_path.glob(f".{entry().name}.update-*"))
+
+
+def test_two_successive_updates_never_overwrite_the_earlier_backup(tmp_path: Path, monkeypatch):
+    # V07-004 (found in an independent revalidation audit, P1): the
+    # previous fixed `<name>.backup` path was `rmtree`'d and overwritten
+    # on every single promotion - a second real update after a first one
+    # already succeeded silently destroyed the ONLY other recoverable
+    # copy of an installation, with no way back to either release.
+    remote = tmp_path / "remote.git"
+    git("init", "--bare", str(remote), cwd=tmp_path)
+    seed = tmp_path / "seed"
+    git("clone", str(remote), str(seed), cwd=tmp_path)
+    git("config", "user.email", "contract@example.invalid", cwd=seed)
+    git("config", "user.name", "Contract", cwd=seed)
+    write_manifest(seed, "1.0.0")
+    write_build_script(seed, ok=True)
+    git("add", "-A", cwd=seed)
+    git("commit", "-m", "v1", cwd=seed)
+    git("push", "origin", "HEAD", cwd=seed)
+
+    local = tmp_path / entry().name
+    git("clone", str(remote), str(local), cwd=tmp_path)
+    # This test's own real upstream IS the bare repo above (REV-001's own
+    # promotion-time reset would otherwise point a promoted checkout at a
+    # real, nonexistent GitHub URL, breaking the SECOND update's own
+    # `git fetch` here - see test_update_restores_the_real_upstream_...
+    # above for the same real reason).
+    monkeypatch.setattr(install, "github_repo_url", lambda _entry: str(remote))
+    v1_head = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=local, text=True).strip()
+
+    write_manifest(seed, "1.1.0")
+    git("add", "-A", cwd=seed)
+    git("commit", "-m", "v2", cwd=seed)
+    git("push", "origin", "HEAD", cwd=seed)
+    first_result = clone_or_pull(entry(), tmp_path)
+    assert first_result.ok, first_result.message
+    v2_head = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=local, text=True).strip()
+
+    write_manifest(seed, "1.2.0")
+    git("add", "-A", cwd=seed)
+    git("commit", "-m", "v3", cwd=seed)
+    git("push", "origin", "HEAD", cwd=seed)
+    second_result = clone_or_pull(entry(), tmp_path)
+    assert second_result.ok, second_result.message
+
+    # Both backups survive, each holding the real revision it was made
+    # from - neither promotion destroyed the other's own recovery point.
+    backups = sorted(tmp_path.glob(f"{entry().name}.backup-*"))
+    assert len(backups) == 2, backups
+    backup_heads = {
+        subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=backup, text=True).strip()
+        for backup in backups
+    }
+    assert backup_heads == {v1_head, v2_head}
+
+
+def test_promotion_self_heals_when_the_second_rename_fails(tmp_path: Path, monkeypatch):
+    # V07-004: a crash or exception in the narrow gap between the two
+    # promotion renames used to leave NO active checkout at all. Inject
+    # a real failure into exactly that second rename (staging -> path)
+    # and confirm the previous installation is restored rather than
+    # silently lost.
+    remote = tmp_path / "remote.git"
+    git("init", "--bare", str(remote), cwd=tmp_path)
+    seed = tmp_path / "seed"
+    git("clone", str(remote), str(seed), cwd=tmp_path)
+    git("config", "user.email", "contract@example.invalid", cwd=seed)
+    git("config", "user.name", "Contract", cwd=seed)
+    write_manifest(seed, "1.0.0")
+    write_build_script(seed, ok=True)
+    git("add", "-A", cwd=seed)
+    git("commit", "-m", "base", cwd=seed)
+    git("push", "origin", "HEAD", cwd=seed)
+
+    local = tmp_path / entry().name
+    git("clone", str(remote), str(local), cwd=tmp_path)
+    old_head = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=local, text=True).strip()
+
+    write_manifest(seed, "1.1.0")
+    git("add", "-A", cwd=seed)
+    git("commit", "-m", "new release", cwd=seed)
+    git("push", "origin", "HEAD", cwd=seed)
+
+    original_rename = Path.rename
+
+    def flaky_rename(self: Path, target):
+        # Only the staging clone's own rename (the second, real
+        # promotion rename) fails - the first rename (installed
+        # checkout -> backup) must go through normally so this test
+        # actually reaches the self-heal path, not fail before it.
+        if self.name.startswith(f".{entry().name}.update-"):
+            raise OSError("synthetic failure injected by test")
+        return original_rename(self, target)
+
+    monkeypatch.setattr(Path, "rename", flaky_rename)
+
+    result = clone_or_pull(entry(), tmp_path)
+
+    assert not result.ok
+    assert "restored the previous installation" in result.message, result.message
+    assert local.is_dir()
+    assert subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=local, text=True).strip() == old_head
+    # Self-heal renamed the backup back - no orphaned backup left behind.
+    assert not list(tmp_path.glob(f"{entry().name}.backup-*"))
 
 
 def test_update_restores_the_real_upstream_remote_on_the_promoted_checkout(tmp_path: Path, monkeypatch):
