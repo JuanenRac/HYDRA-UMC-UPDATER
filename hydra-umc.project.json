@@ -1,0 +1,24 @@
+{
+  "schema_version": "1.0",
+  "ecosystem": "HYDRA-UMC",
+  "name": "HYDRA-UMC-UPDATER",
+  "version": "0.3.1",
+  "role": "tool",
+  "stack": "python",
+  "technologies": [
+    "Python 3.10+",
+    "Tkinter",
+    "Git",
+    "GitHub raw content"
+  ],
+  "deployment_target": "user-pc",
+  "maturity": "established",
+  "family": "Ecosystem Operations",
+  "parent": null,
+  "native_version": {
+    "file": "pyproject.toml",
+    "pattern": "^version\\s*=\\s*\"(\\d+)\\.(\\d+)\\.(\\d+)\""
+  },
+  "build": "Detects local projects, compares their manifests with GitHub and performs explicit install or update actions.",
+  "notes": "Administrative tooling for the ecosystem catalog. Now included in the public dashboard's own project count (JuanenRac/ecosystem-catalog.json's dashboard_exclude list no longer excludes it). Real bounded retry with backoff for transient GitHub network errors; a malformed remote catalog fails loudly (caught by both gui.py and main.py, falling back to local-only state) while one malformed manifest is isolated without aborting discovery of the rest. install.py's clone_or_pull never replaces a healthy local checkout - pull is always --ff-only, never a reset. Updating an existing checkout is now atomic-by-verification: the candidate is cloned+merged+built in an independent staging clone first, and only promoted (via two back-to-back directory renames, previous install kept at <name>.backup) once that build actually succeeds - a build failure, crash, or full disk before promotion leaves the previous installation completely untouched. v0.3.0: the staging clone's own git remote is reset to the real GitHub upstream immediately after creation (a plain `git clone --local` used to leave it pointing at the local install path instead, silently stopping all future updates once promoted), and the installed checkout's own real local data (anything git considers untracked/ignored, e.g. data/settings.json - excluding regenerable build artifacts) is carried into the staging clone before it is built, so a project's own real operational state survives an update instead of being stranded in the kept .backup checkout. A real, genuinely uncommitted edit to an already-TRACKED file is a separate case (V07-001) - checked explicitly upfront and refused outright, never silently discarded via the same staging-clone path."
+}

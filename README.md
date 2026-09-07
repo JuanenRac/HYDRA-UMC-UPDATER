@@ -1,0 +1,388 @@
+<p align="center">
+  <img src="images/HYDRA_UMC_BANNER.svg" alt="HYDRA-UMC-UPDATER banner" width="100%">
+</p>
+
+# 🛠️ HYDRA-UMC-UPDATER
+
+<p align="center">🇺🇸 <b>English</b> | <a href="README_spa.md">🇪🇸 Español</a> | <a href="README_fra.md">🇫🇷 Français</a> | <a href="README_ita.md">🇮🇹 Italiano</a> | <a href="README_deu.md">🇩🇪 Deutsch</a> | <a href="README_zho.md">🇨🇳 简体中文</a> | <a href="README_jpn.md">🇯🇵 日本語</a></p>
+
+### 📦 Detect, Install, and Manually Update the Whole HYDRA-UMC/URTC Ecosystem
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Licencia-GPL%203.0-blue.svg" alt="GPL 3.0">
+  <img src="https://img.shields.io/badge/Language-Python%203.10%2B-blue.svg" alt="Python">
+  <img src="https://img.shields.io/badge/Core-stdlib%20only-brightgreen.svg" alt="stdlib-only CLI core">
+  <img src="https://img.shields.io/badge/Desktop-PySide6%20%7C%20Qt%20Quick-367BF5.svg" alt="PySide6 Qt Quick desktop GUI">
+</p>
+
+> **Visual desktop mode:** the default desktop interface is now built with
+> **Qt Quick / QML** through the optional `PySide6` GUI runtime. The updater
+> core and `--cli` mode remain stdlib-only for a headless CM5.
+>
+> **Windows launch and update evidence:** double-click `run-gui.vbs` (or use
+> bare `run.bat`) for the console-free desktop client. Its Safe Update panel
+> shows real Preflight, Source refresh, Manifest validation, Build-test and
+> Complete checkpoints with captured command evidence; `run.bat --cli ...`
+> deliberately keeps a terminal for diagnostics.
+> Install is available only for a missing checkout; Update only when GitHub is
+> newer. During an approved action, checkpoints replace the selected-project
+> controls and selecting another project restores them.
+> **Install all missing** and **Update all outdated** are separately confirmed,
+> sequential batch actions built from the same live state and safety path.
+
+---
+
+## 1. 🛠️ TECHNICAL OVERVIEW
+
+HYDRA-UMC-UPDATER is a small tool - windowed GUI by default, full CLI with
+`--cli` - meant to run either on the real CM5 itself or on a developer's
+own Windows/Linux/macOS machine (any workspace checked out the same way)
+that answers three questions for every one of the ecosystem's 55 other
+projects:
+
+1. **What's actually installed here, and what version is it?**
+2. **What's the latest version published on GitHub?**
+3. **If GitHub is newer, let me choose one project or a confirmed sequential batch.**
+
+That last point is deliberate and non-negotiable: this tool never changes a
+project on its own initiative. A selected-project action always needs an
+explicit confirmation. The GUI may also offer **Install all missing** or
+**Update all outdated**; each is a separately confirmed, sequential batch
+whose projects follow the same manifest, version and safety gates. A
+robot-control cell must never auto-update overnight without a person
+approving the exact action.
+
+Not every one of the 56 projects belongs on the CM5 itself, either - most
+URTC-prefixed repos and a few HYDRA-UMC ones are tools a developer runs
+from their own PC (firmware gets compiled/flashed FROM a workstation, not
+built ON the cell) or apps installed on a phone/watch. `registry.py`'s own
+`deploy` field records which is which (see section 3), and the GUI's
+project table filters by it - defaulting to "CM5 only" when it detects
+it's running on Linux (the real CM5's own OS), and "show everything" on
+Windows/macOS.
+
+```
+$ hydra-umc-updater --cli status
+Workspace root: /home/pi/HYDRA-UMC
+Checking GitHub... 55/55
+PROJECT                        STACK       LOCAL     GITHUB    STATE
+--------------------------------------------------------------------
+HYDRA-UMC                      firmware-c  0.0.7     0.0.7     up to date
+HYDRA-UMC-SERVER               node        0.0.5     0.0.9     OUTDATED
+HYDRA-UMC-STUDIO               node        0.0.8     0.1.3     OUTDATED
+...
+55/55 installed, 2 outdated
+
+$ hydra-umc-updater --cli update HYDRA-UMC-SERVER
+Updating HYDRA-UMC-SERVER into /home/pi/HYDRA-UMC ...
+OK  Pulled latest into /home/pi/HYDRA-UMC/HYDRA-UMC-SERVER
+OK  build.sh completed successfully.
+```
+
+Running `hydra-umc-updater` with no arguments (or double-clicking it)
+opens the same information in a dark desktop control surface instead: a
+**Local Ecosystem** panel with live discovery/install/update metrics, a
+manifest-driven **Project Registry** tree, and a **Safe Update** panel for
+the selected project. The layout makes the real guardrails visible:
+manifest discovery, one explicit project action, manual confirmation,
+optional build and an on-screen activity trail; full command evidence
+continues to be written to the launch terminal.
+
+<p align="center">
+  <img src="images/HYDRA_UMC_UPDATER_INTERFACE_1.png" alt="HYDRA-UMC-UPDATER real desktop overview" width="100%">
+</p>
+
+## 2. 🔄 HOW A CHECK/UPDATE ACTUALLY WORKS
+
+- **Version source**: this ecosystem's own "odometer" auto-bump
+  convention (every real build increments a version number that lives
+  IN a source file - `pyproject.toml`, `Cargo.toml`, `version.go`,
+  `package.json`, `version.properties`, `pubspec.yaml`, or a firmware
+  `#define`, depending on the project's stack) has never created a git
+  tag or a GitHub Release for that bump. So this tool reads the SAME
+  file every project's own `bump_version.py`/build script already
+  writes, straight off the repo's default branch via GitHub's raw
+  content host - not the Releases API, which would report every project
+  as having no releases at all.
+- **Local detection**: for each of the 55 known projects, checks whether
+  a directory with that exact name exists under the workspace root (the
+  standard ecosystem layout - every project as a sibling directory,
+  exactly what `build-frontend.sh`/HYDRA-UMC-SUITE's own discovery
+  already assume), and if so, reads its OWN local copy of that same
+  version file.
+- **One parsing implementation** (`version_parse.py`) is shared between
+  the local read and the GitHub fetch, so a local checkout and a GitHub
+  fetch are never interpreted by two independently-drifting regexes.
+- **Install/update**: `git clone` (install) builds afterward as a
+  separate step. Updating an EXISTING checkout is atomic-by-verification
+  instead: the candidate is cloned, fast-forward-merged (never a force-
+  reset, so real local edits fail loudly instead of being discarded),
+  and built/verified in a fully independent staging clone FIRST - the
+  live installation is only ever touched (via two back-to-back directory
+  renames, the previous install kept at `<name>.backup`, not deleted) if
+  that staging build actually succeeds. A build failure, a diverged/
+  dirty checkout, a crash, or a full disk at any point before that final
+  promotion leaves the previous installation completely untouched and
+  still operative - see `install.py`'s own `clone_or_pull` docstring.
+  The staging clone's own git remote is restored to the real GitHub
+  upstream right after it is created (a plain local clone would
+  otherwise point it at the old install path, silently ending all future
+  updates once promoted), and the installed checkout's own real local
+  data (anything git considers untracked or ignored - `data/settings.json`
+  and similar, excluding regenerable build artifacts) is carried into
+  the staging clone before it builds, so a project's own real operational
+  state survives an update instead of being stranded in the kept
+  `.backup` checkout.
+  Either way this runs whichever of that project's own `build-test.sh`/
+  `build-test.bat` (the non-versioning check - see section 3) it
+  actually has. This tool never reimplements a project's own build
+  steps.
+
+<p align="center">
+  <img src="images/HYDRA_UMC_UPDATER_INTERFACE_2.png" alt="HYDRA-UMC-UPDATER installation or update checkpoints in progress" width="100%">
+</p>
+
+## 3. 🧱 ARCHITECTURE & DESIGN DECISIONS
+
+- **Qt Quick GUI by default, `--cli` for headless.** `main.py` checks for
+  `--cli` before importing the optional PySide6 runtime, so CLI mode works on
+  a genuinely headless CM5 with no display or desktop dependency. Bare
+  invocation starts the QML client where the runtime is installed; the older
+  Tkinter shell remains only as a temporary compatibility fallback.
+- **The windowed GUI is real, 7-language multilingual (`i18n.py`) - `--cli` deliberately isn't.** Every real widget re-labels live from a language `Combobox` (en/es/fr/it/de/zh/ja, the same 7 the public dashboard and every README ship), detected from a saved preference or the OS's own locale. Project/family names and each project's own real `notes`/`tech` text stay untranslated - `registry.py` is their one source of truth, and 7 parallel copies of real engineering documentation would stop it being that. `--cli` output stays English-only on purpose: it's meant to be scripted/piped, where stable, greppable text matters more than localization.
+- **`deploy` is a classification, not a restriction.** Treating all 55
+  projects as "things that belong on the CM5" was wrong - firmware repos
+  are compiled and flashed FROM a PC (the CM5 only ever needs the
+  resulting binary over CAN-OTA, never this repo's own source), and
+  several tools (URTC-FLASHER, HYDRA-UMC-SUITE, HYDRA-UMC-TOOL-CLI, ...)
+  are meant to run on an operator's own workstation, not inside the cell
+  itself. `registry.py`'s `deploy` field ("cm5" / "user-pc" / "mobile" /
+  "wearable") records that, and the GUI's filter uses it as a sensible
+  starting point - never a hard restriction, since this same tool is also
+  meant to run on a developer's own PC where every one of the 55 is fair
+  game to inspect.
+- **No per-stack build logic in this tool.** The ecosystem spans 7
+  toolchains (Python, Rust, Go, Node/TS, Android/Kotlin, Flutter, ARM
+  firmware). Reimplementing `npm install && npm run build` /
+  `cargo build --release` / `./gradlew assembleDebug` / etc. HERE would
+  create a second place that claims to know how to build each project,
+  guaranteed to drift from that project's own real (and already correct)
+  `build.sh`/`.bat`. `install.py` instead probes for a known build-script
+  name (`build.sh`, `build_firmware.sh`, `build_exe.sh`,
+  `build-android.sh`, and their `.bat` equivalents - the real names used
+  across the 56 projects) and runs whichever one exists.
+- **GitHub raw content, not the Releases API.** See section 2 above -
+  this ecosystem's versioning convention never creates a tag/release, so
+  the Releases API would be actively wrong here, not just less
+  convenient.
+- **A transient network failure gets a real retry; a definitive answer never does.** Every real GitHub request (`github_client.py`'s `_urlopen_with_retries`) retries up to 3 times with backoff, but only for a connection that never got a response at all (DNS/timeout/reset). A real HTTP status GitHub actually returned - 404, 403, 500 - is never retried: GitHub already answered, and hammering it again would only spend more of the rate limit for the same result.
+- **A malformed remote catalog fails loudly; one malformed project doesn't.** If GitHub's repository listing itself is unreachable or unparseable, `discover_remote_projects()` raises and the desktop bridge falls back to a locally-discovered project list rather than showing a broken/empty scan. One single repository's malformed manifest, by contrast, is isolated into that scan's own `errors` list and never aborts discovery of the rest - a real fixture-server test (`tests/test_github_client.py`) proves both paths.
+- **CLI actions remain explicit; GUI batches remain confirmed.** The CLI
+  `install`/`update` commands take one project name. The desktop GUI can also
+  run **Install all missing** or **Update all outdated**, but only after a
+  separate confirmation and sequentially through the same safety gates. No
+  unattended automatic update exists.
+- **stdlib only.** `urllib` for the GitHub fetches (`github_client.py`),
+  `subprocess` for git/build-script calls (`install.py`), nothing else -
+  a tool responsible for keeping every OTHER project's dependencies sane
+  staying dependency-free itself is deliberate.
+- **Known simplification**: HYDRA-UMC and URTC are real multi-component
+  firmware repos (6 and 4 independently-versioned binaries each - see
+  their own `VERSION_CHECKLIST.txt`/`build_firmware.sh`) with no single
+  "the" version number. `registry.py` tracks ONE representative
+  component per repo - good enough to answer "is this repo roughly up to
+  date", not a replacement for `build_firmware.sh`'s own
+  `firmware_manifest.json` for a real flash.
+
+## 📂 DIRECTORY STRUCTURE
+
+```
+HYDRA-UMC-UPDATER/
+├── src/hydra_umc_updater/
+│   ├── registry.py         # ProjectEntry - no static catalogue; built at discovery time from each repo's own manifest
+│   ├── project_manifest.py # Reads/validates a repository-owned hydra-umc.project.json
+│   ├── ecosystem_catalog.py # Parser for the public JuanenRac ecosystem discovery catalog
+│   ├── version_parse.py   # ONE regex-extraction implementation, local+GitHub
+│   ├── detect.py          # Scans a workspace root for what's installed
+│   ├── github_client.py   # Concurrent raw-content fetch + real retry/backoff for transient network errors
+│   ├── install.py         # git clone/pull + delegate to the project's own build script
+│   ├── i18n.py             # Real, complete GUI translations (7 languages)
+│   ├── qt_gui.py           # Qt Quick bridge over the real discovery/update services
+│   ├── qml/Main.qml        # Themed desktop shell: controls, checkpoints and About
+│   ├── gui.py              # Legacy Tkinter fallback if PySide6 is unavailable
+│   └── main.py             # Dispatch: GUI by default, --cli for status/install/update
+├── tests/                  # Real tests: github_client, i18n, install, project_manifest, registry
+├── docs/
+│   ├── CLI_REFERENCE.md     # Command reference
+│   └── QML_DESKTOP_GUI.md   # Qt Quick GUI architecture
+├── images/                 # Media, app icons and interface screenshots
+├── tools/
+│   ├── build_test.py        # Non-versioning build/compile check
+│   ├── ci_validate.py       # Manifest/CHANGELOG/docs validation used by CI
+│   ├── generate_app_icon.py # Renders the public HYDRA-UMC SVG into the Windows-consumed icon
+│   ├── migrate_project_manifests.py  # Audits a workspace after the one-time manifest migration
+│   └── validate_project_manifests.py # Validates repository-owned manifests + native build versions
+├── .env.example            # Environment variable template
+├── build.sh / build.bat    # venv + editable install + compile-check
+├── run.sh / run.bat        # GUI default / CLI entry point
+├── run-gui.vbs             # Windows graphical launcher with no console window
+├── bump_version.py         # Ecosystem-wide odometer bump (pyproject.toml + __init__.py)
+└── bump_manifest_version.py # Syncs hydra-umc.project.json's version to the native one (--sync)
+```
+
+## ⚙️ BUILD & RUN GUIDE
+
+```bash
+chmod +x build.sh   # one-time
+./build.sh          # creates .venv, pip install -e ., compile-checks everything
+./run.sh                              # windowed GUI (default)
+./run.sh --cli status                 # what's installed, local vs. GitHub version
+./run.sh --cli status --offline       # same, skipping the GitHub check
+./run.sh --cli install <PROJECT-NAME> # clone + build one project not yet installed
+./run.sh --cli update  <PROJECT-NAME> # pull + rebuild one project already installed
+```
+
+On Windows: `build.bat`, then `run.bat` (GUI) / `run.bat --cli status` /
+`run.bat --cli install <name>` / `run.bat --cli update <name>`.
+
+The preferred GUI needs the optional Qt runtime (`pip install -e ".[gui]"`;
+`build.bat`/`build.sh` already install it). `--cli` has no GUI dependency and
+is the correct entry point for a headless CM5. If Qt is unavailable, the
+older Tkinter shell is only a compatibility fallback.
+
+**Troubleshooting**
+
+- `status` shows `?` for a project's local or GitHub version: its version
+  file exists but this project's own convention changed since
+  `registry.py` was last updated - check `registry.py`'s entry for that
+  project against its real, current version file.
+- `status` shows `-` for GitHub with no error shown: run `status`
+  (without `--offline`) - `-` only appears when the GitHub check was
+  skipped entirely.
+- `install`/`update` fails with "No build.sh/.bat found": that project
+  uses a build script name this tool doesn't recognize yet - check its
+  own README for the real one, and consider adding it to
+  `install.py`'s own `BUILD_SCRIPT_CANDIDATES_*` lists.
+- `git pull --ff-only` fails: the local checkout has uncommitted changes
+  or diverged history - resolve that manually (`git status` in that
+  project's own directory) before retrying `update`. This tool never
+  force-resets a checkout.
+
+## 🚀 ROADMAP
+
+- A packaged standalone GUI executable (PyInstaller, matching
+  HYDRA-UMC-SUITE's own `build_exe.bat`/`.sh` convention) for a
+  double-click install with no `pip`/venv step at all - today's GUI still
+  needs `./build.sh` first like the CLI does.
+- Optional per-project dependency preflight (report missing toolchains -
+  no Rust/Go/Android SDK/Flutter installed - before an `install` fails
+  partway through).
+- A `--json` output mode for `status`, for scripting against it.
+- Per-component tracking for HYDRA-UMC/URTC's own multi-binary firmware
+  (see the "known simplification" in section 3), once there's a real
+  need beyond the single representative component this tracks today.
+
+## 🔗 Related Projects
+
+This project is part of the HYDRA-UMC robotics ecosystem by the same author (JuanenRac / Electro Hobby 3D). Worth knowing about, since a request might actually be about one of these rather than this repository.
+
+**Directly Related**
+- **[HYDRA-UMC](https://github.com/JuanenRac/HYDRA-UMC)** — the physical robot-arm motherboard: CM5 host + dual-core STM32H745, orchestrating up to 8 tool arms over CAN-OTA/SPI-OTA — the flagship multi-robot cell controller this tool is meant to keep installed and current on the real CM5 hardware.
+- **[HYDRA-UMC-SUITE](https://github.com/JuanenRac/HYDRA-UMC-SUITE)** — desktop (PySide6) swarm command center for multiple servers at once, packaged as a standalone executable — another standalone Python tool meant to run alongside the cell controller, the closest sibling in role (a focused CM5-side utility, not part of the robot-control path itself).
+- **[HYDRA-UMC-OS-REBUILDER](https://github.com/JuanenRac/HYDRA-UMC-OS-REBUILDER)** — depends on this project as a real library for its own GitHub ecosystem discovery when building a fresh CM5 image, rather than a second, independently-drifting implementation.
+- **[HYDRA-UMC-OPS-AGENT](https://github.com/JuanenRac/HYDRA-UMC-OPS-AGENT)** — maintenance-incident coordinator: a low-privilege edge role collects a sanitized inventory/health snapshot, a control-plane role renders it read-only and asks an AI provider to suggest a diagnosis - never applies a patch or deploys anything.
+
+**Also Part of the Ecosystem**
+
+*Core Hardware & Platform*
+- **[HYDRA-UMC-OS](https://github.com/JuanenRac/HYDRA-UMC-OS)** — reproducible Raspberry Pi OS product layer for the CM5: read-only agent, validated config/profiles, WiFi first-contact provisioning.
+- **[HYDRA-UMC-SDK](https://github.com/JuanenRac/HYDRA-UMC-SDK)** — the shared JSON-Schema contract and safety-gate boundary every bridge validates its commands against.
+- **[HYDRA-UMC-CONNECTOR-HUB](https://github.com/JuanenRac/HYDRA-UMC-CONNECTOR-HUB)** — declarative adapter-manifest registry and validator for external-machine connectors; extends the SDK's own contract idea to external machines without replacing the industrial-gateway projects.
+
+*Core Backend & Clients*
+- **[HYDRA-UMC-SERVER](https://github.com/JuanenRac/HYDRA-UMC-SERVER)** — the real headless backend (REST/WebSocket) every control client actually talks to.
+- **[HYDRA-UMC-STUDIO](https://github.com/JuanenRac/HYDRA-UMC-STUDIO)** — web control dashboard with real-time multi-robot 3D visualization.
+- **[HYDRA-UMC-ANDROID-CONTROL](https://github.com/JuanenRac/HYDRA-UMC-ANDROID-CONTROL)** — native Android control app with biometric login and a paired Wear OS companion.
+- **[HYDRA-UMC-IOS-CONTROL](https://github.com/JuanenRac/HYDRA-UMC-IOS-CONTROL)** — iOS/iPadOS control app (Flutter) with real-time WebSocket sync.
+- **[HYDRA-UMC-DSI](https://github.com/JuanenRac/HYDRA-UMC-DSI)** — native touch UI for the onboard 7" DSI touchscreen, embedded on the CM5 itself.
+- **[HYDRA-UMC-EDITOR-URDF](https://github.com/JuanenRac/HYDRA-UMC-EDITOR-URDF)** — desktop graphical URDF creator/editor that pushes finished models into STUDIO's own catalog.
+- **[HYDRA-UMC-BRIDGE-AMR](https://github.com/JuanenRac/HYDRA-UMC-BRIDGE-AMR)** — coordination boundary for AGV/AMR fleets via a real VDA 5050 MQTT publisher.
+- **[HYDRA-UMC-BRIDGE-CNC](https://github.com/JuanenRac/HYDRA-UMC-BRIDGE-CNC)** — high-level CNC-cell coordinator with real GRBL status/control-byte access.
+- **[HYDRA-UMC-BRIDGE-DROIDS](https://github.com/JuanenRac/HYDRA-UMC-BRIDGE-DROIDS)** — coordination boundary for legged/humanoid droids, with a real Boston Dynamics Spot command sender.
+- **[HYDRA-UMC-BRIDGE-LASER](https://github.com/JuanenRac/HYDRA-UMC-BRIDGE-LASER)** — laser-cell safety coordinator reading 3 real key/enclosure/interlock GPIO safeguards.
+- **[HYDRA-UMC-BRIDGE-OPENPNP](https://github.com/JuanenRac/HYDRA-UMC-BRIDGE-OPENPNP)** — safe high-level board-flow coordinator for OpenPnP pick-and-place.
+- **[HYDRA-UMC-BRIDGE-PRINTER3D](https://github.com/JuanenRac/HYDRA-UMC-BRIDGE-PRINTER3D)** — safe coordination boundary for Moonraker/Klipper 3D printers, with real gated job commands.
+- **[HYDRA-UMC-BRIDGE-ROS2](https://github.com/JuanenRac/HYDRA-UMC-BRIDGE-ROS2)** — safety coordinator with a real, lazily-imported rclpy ROS 2 transport.
+- **[HYDRA-UMC-BRIDGE-UAV](https://github.com/JuanenRac/HYDRA-UMC-BRIDGE-UAV)** — coordination boundary for camera-equipped UAVs, with a real MAVLink command sender.
+
+*URTC Tool Platform*
+- **[URTC](https://github.com/JuanenRac/URTC)** — firmware for the physical Universal Robot Tool Controller PCB, 25+ tool profiles over CAN bus.
+- **[URTC-FLASHER](https://github.com/JuanenRac/URTC-FLASHER)** — desktop GUI flashing tool for URTC boards, CAN-OTA plus full-chip SWD/JTAG.
+- **[URTC-TESTER](https://github.com/JuanenRac/URTC-TESTER)** — desktop live CAN-bus diagnostic tool for URTC boards, one panel per tool profile.
+- **[URTC-WEB-STUDIO](https://github.com/JuanenRac/URTC-WEB-STUDIO)** — browser-based alternative to URTC-TESTER via the Web Serial API, no local install needed.
+
+*Vision AI Node (Hailo-8)*
+- **[HYDRA-UMC-VISION-NODE](https://github.com/JuanenRac/HYDRA-UMC-VISION-NODE)** — integration hub for the Hailo-8 vision pipeline, with a real per-stage hardware-readiness check.
+- **[HYDRA-UMC-DETECTION-HEF](https://github.com/JuanenRac/HYDRA-UMC-DETECTION-HEF)** — real compiled-model registry with Hailo-architecture/checksum safe-load verification.
+- **[HYDRA-UMC-VISION-STREAMER](https://github.com/JuanenRac/HYDRA-UMC-VISION-STREAMER)** — real GStreamer pipeline + MediaMTX config generator with a real HailoRT integration boundary.
+- **[HYDRA-UMC-VISUAL-SERVOING-API](https://github.com/JuanenRac/HYDRA-UMC-VISUAL-SERVOING-API)** — real Position-Based Visual Servoing correction law, safety-gated on upstream zone state.
+- **[HYDRA-UMC-SAFETY-ZONES](https://github.com/JuanenRac/HYDRA-UMC-SAFETY-ZONES)** — real zone-breach checking and E-STOP requesting, with calibration-freshness enforcement.
+
+*Cognitive AI Node (Hailo-10)*
+- **[HYDRA-UMC-COGNITIVE-NODE](https://github.com/JuanenRac/HYDRA-UMC-COGNITIVE-NODE)** — integration hub for the Hailo-10 cognitive pipeline (LLM/VLA/voice orchestration).
+- **[HYDRA-UMC-VLA-ENGINE](https://github.com/JuanenRac/HYDRA-UMC-VLA-ENGINE)** — real action-token encoding/decoding and trajectory generation for a Vision-Language-Action model.
+- **[HYDRA-UMC-VOICE-UI](https://github.com/JuanenRac/HYDRA-UMC-VOICE-UI)** — real voice front-end (VAD + intent parser) with a bounded, confirmation-gated Watch relay.
+- **[HYDRA-UMC-SEMANTIC-PLANNER](https://github.com/JuanenRac/HYDRA-UMC-SEMANTIC-PLANNER)** — real rule-based task decomposition and semantic error recovery over MCU error codes.
+- **[HYDRA-UMC-DOCS-QA](https://github.com/JuanenRac/HYDRA-UMC-DOCS-QA)** — real stdlib-only TF-IDF document search over this ecosystem's own Markdown docs.
+
+*Orchestration & Swarm*
+- **[HYDRA-UMC-ORCHESTRATOR](https://github.com/JuanenRac/HYDRA-UMC-ORCHESTRATOR)** — integration hub with a real gRPC/Protobuf health-report contract and mission state machine.
+- **[HYDRA-UMC-JOB-DISPATCHER](https://github.com/JuanenRac/HYDRA-UMC-JOB-DISPATCHER)** — real priority-based job queue with deduplication, over a real HTTP API.
+- **[HYDRA-UMC-NODE-HEALING](https://github.com/JuanenRac/HYDRA-UMC-NODE-HEALING)** — real gRPC-based fleet health watchdog with retry/backoff and identity-mismatch detection.
+- **[HYDRA-UMC-PATH-PLANNER-3D](https://github.com/JuanenRac/HYDRA-UMC-PATH-PLANNER-3D)** — real RRT-based 3D path planner with real obstacle/workspace collision validation.
+- **[HYDRA-UMC-SWARM-SYNC](https://github.com/JuanenRac/HYDRA-UMC-SWARM-SYNC)** — real CRDT LWW-Element-Map state sync, property-tested for multi-cell convergence.
+
+*Digital Twin & Simulation*
+- **[HYDRA-UMC-TWIN](https://github.com/JuanenRac/HYDRA-UMC-TWIN)** — integration hub for the digital-twin engine, with a real version-compatibility sync contract.
+- **[HYDRA-UMC-HIL-BRIDGE](https://github.com/JuanenRac/HYDRA-UMC-HIL-BRIDGE)** — real hardware-in-the-loop safety interlock routing commands between simulation and real hardware.
+- **[HYDRA-UMC-PHYSICS-REPLICA](https://github.com/JuanenRac/HYDRA-UMC-PHYSICS-REPLICA)** — real forward kinematics and joint-limit validation over a real URDF subset.
+- **[HYDRA-UMC-SYNTHETIC-DATA-GEN](https://github.com/JuanenRac/HYDRA-UMC-SYNTHETIC-DATA-GEN)** — real procedural 2D scene generator with YOLO/COCO annotation export.
+
+*Data & Analytics*
+- **[HYDRA-UMC-DATALAKE](https://github.com/JuanenRac/HYDRA-UMC-DATALAKE)** — real sqlite3-backed time-series store with a real ingest/query HTTP API.
+- **[HYDRA-UMC-ANOMALY-DETECTOR](https://github.com/JuanenRac/HYDRA-UMC-ANOMALY-DETECTOR)** — real FFT + statistical baseline anomaly detector with drift monitoring.
+- **[HYDRA-UMC-PRODUCTION-REPORTS](https://github.com/JuanenRac/HYDRA-UMC-PRODUCTION-REPORTS)** — real OEE/availability calculation over DATALAKE history, with reproducible CSV export.
+- **[HYDRA-UMC-TELEMETRY-COLLECTOR](https://github.com/JuanenRac/HYDRA-UMC-TELEMETRY-COLLECTOR)** — real CAN/WebSocket ingestion pipeline into DATALAKE, with sequence deduplication.
+
+*Industrial Gateway*
+- **[HYDRA-UMC-GATEWAY-INDUSTRIAL](https://github.com/JuanenRac/HYDRA-UMC-GATEWAY-INDUSTRIAL)** — integration hub relaying to industrial protocols, with a real command allowlist/backpressure layer.
+- **[HYDRA-UMC-OPCUA-SERVER](https://github.com/JuanenRac/HYDRA-UMC-OPCUA-SERVER)** — real OPC-UA address space, verified with a real binary-protocol client session.
+- **[HYDRA-UMC-MQTT-BROKER](https://github.com/JuanenRac/HYDRA-UMC-MQTT-BROKER)** — real MQTT broker with optional per-client authentication and topic ACLs.
+- **[HYDRA-UMC-MTCONNECT-ADAPTER](https://github.com/JuanenRac/HYDRA-UMC-MTCONNECT-ADAPTER)** — real MTConnect `/probe` and `/current` XML endpoints with degraded-mode output.
+
+*Complementary Tools & Ecosystem Operations*
+- **[HYDRA-UMC-DASHBOARD-AI](https://github.com/JuanenRac/HYDRA-UMC-DASHBOARD-AI)** — Smart Summaries and Anomaly Highlighting panels over DATALAKE/ANOMALY-DETECTOR, with an honest statistical fallback.
+- **[HYDRA-UMC-TOOL-CLI](https://github.com/JuanenRac/HYDRA-UMC-TOOL-CLI)** — fleet CLI with a real, stable exit-code contract, a genuine live client of HYDRA-UMC-SERVER's own API.
+- **[HYDRA-UMC-WATCH](https://github.com/JuanenRac/HYDRA-UMC-WATCH)** — WearOS companion app with real haptic alerts and a paired-phone voice relay.
+- **[URTC-SMART-RACK](https://github.com/JuanenRac/URTC-SMART-RACK)** — firmware for a board-mounting rack with real tool-ID decoding and Smart Idle pre-heating logic.
+- **[URTC-VISION-TOOL](https://github.com/JuanenRac/URTC-VISION-TOOL)** — firmware plus a real Python vision companion for a thermal/RGB inspection tool head.
+
+---
+
+## 📚 Documentation & Community
+
+- **[docs/CLI_REFERENCE.md](docs/CLI_REFERENCE.md)** — every `--cli` subcommand, real output captured from an installed run, and the exit-code contract.
+- **[docs/QML_DESKTOP_GUI.md](docs/QML_DESKTOP_GUI.md)** — how the Qt Quick/QML desktop client is structured, and how it stays a real control surface over the same backend `--cli` uses rather than a second implementation.
+- **[CONTRIBUTING.md](CONTRIBUTING.md)** — tech stack and coding guidelines for a pull request.
+- **[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)** — the standards of behavior expected in this community.
+- **[SECURITY.md](SECURITY.md)** — how to report a vulnerability, and this project's own real security focus areas.
+- **[SUPPORT.md](SUPPORT.md)** — where to ask questions and report bugs.
+
+## 👤 AUTHOR
+**JuanenRac** (Electro Hobby 3D)
+📧 electrohobby3d@gmail.com
+📺 [youtube.com/@electrohobby3d](https://youtube.com/@electrohobby3d)
+
+## 📜 LICENSE
+
+GPL-3.0 (software) / CC BY-SA 4.0 (documentation) - see [LICENSE.md](LICENSE.md).
