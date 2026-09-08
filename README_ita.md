@@ -161,7 +161,7 @@ selezionata.
   HYDRA-UMC-SUITE, HYDRA-UMC-TOOL-CLI, ...) sono pensati per girare sul
   proprio posto di lavoro di un operatore, non dentro la cella stessa.
   Il campo `deploy` di `registry.py` ("cm5" / "user-pc" / "mobile" /
-  "wearable") registra questo, e il filtro della GUI lo usa come punto di
+  "wearable" / "dev-server") registra questo, e il filtro della GUI lo usa come punto di
   partenza ragionevole - mai come restrizione rigida, dato che questo
   stesso strumento è anche pensato per girare sul PC personale di uno
   sviluppatore, dove tutti e 55 sono ugualmente validi da ispezionare.

@@ -9,6 +9,28 @@ bumped manually only. See `bump_version.py`.
 
 (nothing yet)
 
+## [0.3.3] - Recognize the new `dev-server` deployment_target
+
+`HYDRA-UMC-DEV-SERVER`'s own manifest declares `deployment_target:
+"dev-server"` - this project's `VALID_DEPLOYMENT_TARGETS` only allowed
+`cm5`/`user-pc`/`mobile`/`wearable`, so its manifest would have been
+rejected outright by `validate_project_manifests.py`/
+`migrate_project_manifests.py`.
+
+- `src/hydra_umc_updater/project_manifest.py` - `"dev-server"` added to
+  `VALID_DEPLOYMENT_TARGETS`. New tests
+  `test_accepts_dev_server_deployment_target` and
+  `test_rejects_an_unsupported_deployment_target` (the latter didn't
+  exist for any deployment_target value before).
+- `src/hydra_umc_updater/gui.py` and `qt_gui.py` - `"dev-server"` added
+  to both GUIs' own `DEPLOY_ORDER` (Tkinter combo box and the QML
+  `deployOptions` property respectively).
+- `src/hydra_umc_updater/i18n.py` - `"deploy_dev-server"` added to all 7
+  language blocks (en/es/fr/it/de/zh/ja) - `test_i18n.py`'s own
+  every-language-same-keys test enforces this stays complete.
+- README + 6 translations - the `deploy` field's own documented value
+  list now includes `dev-server`.
+
 ## [0.3.2] - V07-004: promotion could destroy its own only recovery point
 
 Found in an independent revalidation audit (P1), shared with

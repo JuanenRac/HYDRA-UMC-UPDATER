@@ -68,6 +68,20 @@ def test_rejects_an_unsupported_maturity():
         parse_manifest(json.dumps(data))
 
 
+def test_accepts_dev_server_deployment_target():
+    data = valid_manifest()
+    data["deployment_target"] = "dev-server"
+    manifest = parse_manifest(json.dumps(data))
+    assert manifest.deployment_target == "dev-server"
+
+
+def test_rejects_an_unsupported_deployment_target():
+    data = valid_manifest()
+    data["deployment_target"] = "cloud"
+    with pytest.raises(ManifestValidationError, match="unsupported deployment_target"):
+        parse_manifest(json.dumps(data))
+
+
 def test_rejects_unknown_fields_to_prevent_silent_dashboard_drift():
     data = valid_manifest()
     data["deployment"] = "cm5"

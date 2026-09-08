@@ -159,7 +159,7 @@ seleccionada.
   y varias herramientas (URTC-FLASHER, HYDRA-UMC-SUITE,
   HYDRA-UMC-TOOL-CLI, ...) están pensadas para correr en el propio puesto
   de trabajo de un operador, no dentro de la célula misma. El campo
-  `deploy` de `registry.py` ("cm5" / "user-pc" / "mobile" / "wearable")
+  `deploy` de `registry.py` ("cm5" / "user-pc" / "mobile" / "wearable" / "dev-server")
   registra eso, y el filtro de la GUI lo usa como punto de partida
   razonable - nunca como una restricción dura, ya que esta misma
   herramienta también está pensada para correr en el PC de un
