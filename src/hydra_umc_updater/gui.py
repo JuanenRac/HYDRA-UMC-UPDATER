@@ -57,7 +57,7 @@ from .registry import GITHUB_OWNER, ProjectEntry
 #: Order matters - shown left-to-right in the filter dropdown, "all" first.
 #: Real labels come from i18n.t(lang, f"deploy_{key}") / "deploy_all" at
 #: render time, not hardcoded here - see UpdaterGUI._deploy_label().
-DEPLOY_ORDER = ["all", "cm5", "user-pc", "mobile", "wearable"]
+DEPLOY_ORDER = ["all", "cm5", "user-pc", "mobile", "wearable", "dev-server"]
 
 #: The four manifest maturity values, in the same order as the dashboard.
 MATURITY_KEYS = ("production", "established", "functional", "scaffolding")

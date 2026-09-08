@@ -161,7 +161,7 @@ für die ausgewählte Zeile.
   HYDRA-UMC-SUITE, HYDRA-UMC-TOOL-CLI, ...) sollen auf dem eigenen
   Arbeitsplatz eines Bedieners laufen, nicht innerhalb der Zelle selbst.
   Das `deploy`-Feld von `registry.py` ("cm5" / "user-pc" / "mobile" /
-  "wearable") verzeichnet das, und der GUI-Filter verwendet es als
+  "wearable" / "dev-server") verzeichnet das, und der GUI-Filter verwendet es als
   sinnvollen Ausgangspunkt - nie als harte Einschränkung, da dieses
   selbe Tool auch auf dem eigenen PC eines Entwicklers laufen soll, wo
   alle 55 gleichermaßen zulässig zu inspizieren sind.

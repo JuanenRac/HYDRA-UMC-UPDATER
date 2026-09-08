@@ -157,7 +157,7 @@ continues to be written to the launch terminal.
   several tools (URTC-FLASHER, HYDRA-UMC-SUITE, HYDRA-UMC-TOOL-CLI, ...)
   are meant to run on an operator's own workstation, not inside the cell
   itself. `registry.py`'s `deploy` field ("cm5" / "user-pc" / "mobile" /
-  "wearable") records that, and the GUI's filter uses it as a sensible
+  "wearable" / "dev-server") records that, and the GUI's filter uses it as a sensible
   starting point - never a hard restriction, since this same tool is also
   meant to run on a developer's own PC where every one of the 55 is fair
   game to inspect.

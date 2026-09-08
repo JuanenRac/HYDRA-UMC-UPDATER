@@ -35,7 +35,7 @@ from .install import install_or_update
 from .registry import GITHUB_OWNER
 
 
-DEPLOY_ORDER = ("all", "cm5", "user-pc", "mobile", "wearable")
+DEPLOY_ORDER = ("all", "cm5", "user-pc", "mobile", "wearable", "dev-server")
 
 #: Real, plain-text log file, one per real GUI run - the QML Activity Log
 #: only ever shows the last 8 lines (see UpdaterBridge.activity's own

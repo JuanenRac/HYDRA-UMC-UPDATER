@@ -158,7 +158,7 @@ ligne sélectionnée.
   HYDRA-UMC-SUITE, HYDRA-UMC-TOOL-CLI, ...) sont destinés à tourner sur
   le propre poste de travail d'un opérateur, pas dans la cellule
   elle-même. Le champ `deploy` de `registry.py` ("cm5" / "user-pc" /
-  "mobile" / "wearable") enregistre cela, et le filtre de la GUI l'utilise
+  "mobile" / "wearable" / "dev-server") enregistre cela, et le filtre de la GUI l'utilise
   comme point de départ raisonnable - jamais comme une restriction dure,
   puisque cet outil est aussi destiné à tourner sur le propre PC d'un
   développeur, où les 55 sont tous aussi légitimes à inspecter.
