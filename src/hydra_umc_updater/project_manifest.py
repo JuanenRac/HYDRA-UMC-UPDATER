@@ -91,7 +91,12 @@ def parse_manifest(text: str, *, expected_name: str | None = None) -> ProjectMan
     # network service has no reason to declare one. Still an explicit,
     # spelled-out set (not "anything goes") so a typo'd key is still
     # caught below, same reasoning as expected_fields itself.
-    optional_fields = {"service"}
+    # "deployment_target_note" (HYDRA-UMC-DEV-SERVER): a real, human-
+    # readable clarification for a deployment_target value whose meaning
+    # isn't self-evident from the enum alone (e.g. "dev-server" is not
+    # the same physical role as "cm5") - optional because most
+    # deployment_target values need no such note.
+    optional_fields = {"service", "deployment_target_note"}
     unknown = sorted(set(data) - expected_fields - optional_fields)
     missing = sorted(expected_fields - set(data))
     if missing:

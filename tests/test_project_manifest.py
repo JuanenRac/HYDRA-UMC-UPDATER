@@ -75,6 +75,18 @@ def test_accepts_dev_server_deployment_target():
     assert manifest.deployment_target == "dev-server"
 
 
+def test_accepts_the_optional_deployment_target_note_field():
+    # Real regression: HYDRA-UMC-DEV-SERVER's own manifest carries this
+    # field to clarify "dev-server" is not the same physical role as
+    # "cm5" - the manifest was being rejected outright as "unknown
+    # field(s): deployment_target_note" before this field was recognized.
+    data = valid_manifest()
+    data["deployment_target"] = "dev-server"
+    data["deployment_target_note"] = "A real clarification, not code."
+    manifest = parse_manifest(json.dumps(data))
+    assert manifest.deployment_target == "dev-server"
+
+
 def test_rejects_an_unsupported_deployment_target():
     data = valid_manifest()
     data["deployment_target"] = "cloud"

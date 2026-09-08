@@ -9,6 +9,23 @@ bumped manually only. See `bump_version.py`.
 
 (nothing yet)
 
+## [0.3.4] - Recognize the optional `deployment_target_note` manifest field
+
+Real regression found while regenerating JuanenRac's own dashboard:
+`HYDRA-UMC-DEV-SERVER`'s manifest was being rejected outright -
+`unknown field(s): deployment_target_note` - excluding it completely
+from both this project's own discovery/status tooling and the public
+dashboard, not just from the new deployment_target value (0.3.3 already
+fixed that half).
+
+- `src/hydra_umc_updater/project_manifest.py` - `"deployment_target_note"`
+  added to `optional_fields` (a real, human-readable clarification for a
+  deployment_target value whose meaning isn't self-evident from the enum
+  alone - optional because most values need no such note). New test
+  `test_accepts_the_optional_deployment_target_note_field`, reproducing
+  the exact real failure against DEV-SERVER's own live manifest before
+  confirming the fix.
+
 ## [0.3.3] - Recognize the new `dev-server` deployment_target
 
 `HYDRA-UMC-DEV-SERVER`'s own manifest declares `deployment_target:
