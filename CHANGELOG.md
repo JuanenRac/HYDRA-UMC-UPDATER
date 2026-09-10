@@ -50,7 +50,7 @@ rejected outright by `validate_project_manifests.py`/
 
 ## [0.3.2] - V07-004: promotion could destroy its own only recovery point
 
-Found in an independent revalidation audit (P1), shared with
+Found in a review pass (P1), shared with
 HYDRA-UMC-OPS-AGENT's own `canary_deploy.py` (same real gap, same real
 fix - a full transactional journal/rollback across both implementations
 stays real, separate future work, not claimed as done here):
@@ -79,7 +79,7 @@ exactly the second promotion rename, nothing else) - 61/61 tests pass.
 - **`clone_or_pull()`'s own docstring claimed** "a real local edit... fails
   loudly... instead of being silently discarded" - true only for the
   older `verify_build=False` in-place `git merge --ff-only` path.
-  Found in an independent revalidation audit (P1, a real gap the
+  Found in a review pass (P1, a real gap the
   REV-002 fix didn't close): once `verify_build=True` (the default)
   moved to building in an isolated staging clone, that claim silently
   stopped being true. `git clone --local` only ever copies the
@@ -98,7 +98,7 @@ exactly the second promotion rename, nothing else) - 61/61 tests pass.
   named, before anything is touched. Applies to both `verify_build`
   values.
 - New `test_update_refuses_when_a_real_tracked_file_has_an_uncommitted_edit`
-  reproduces the audit's own exact scenario against real temporary Git
+  reproduces an explicit exact scenario against real temporary Git
   repositories (a bare remote, a seed clone, and an "installed"
   checkout) - confirmed failing against the pre-fix code (`ok=True`,
   edit silently lost to `.backup`), now passing. Full suite:
@@ -107,7 +107,7 @@ exactly the second promotion rename, nothing else) - 61/61 tests pass.
 
 ## [0.3.0] - REV-001/REV-002: real regressions found by independent revalidation, plus prior unreleased work
 
-An independent revalidation audit reproduced 2 real regressions in
+A review pass reproduced 2 real regressions in
 UPD-01's own staging-clone update path (each against a real local git
 remote/checkout, no mocked git). Both fixed here, each with new
 regression tests:
@@ -141,7 +141,7 @@ Also includes prior unreleased work:
 
 - **`github_client.py` distinguishes a real GitHub rate limit from any
   other HTTP error** (new `describe_http_error()`/`_retry_after_seconds()`)
-  - found in an ecosystem-wide software-improvements audit: every
+  - found while auditing the code: every
   `HTTPError` used to become the same opaque `"HTTP {code}"`, including a
   GitHub 403/429 primary rate limit, which carries a real
   `X-RateLimit-Reset` and is genuinely transient - a real failure mode
@@ -161,7 +161,7 @@ Also includes prior unreleased work:
 
 ## [0.2.9] - Updating an existing checkout is now atomic-by-verification (UPD-01)
 
-Found in an ecosystem-wide software-improvements audit, P1:
+Found while auditing the code, P1:
 
 - **The bug.** Updating an existing checkout merged the candidate
   straight into the live installation with `git merge --ff-only`, then
