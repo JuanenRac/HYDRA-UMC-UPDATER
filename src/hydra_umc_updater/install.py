@@ -100,7 +100,7 @@ def _checkpoint(progress: ProgressCallback | None, phase: str, message: str) -> 
         progress(phase, message)
 
 
-# REV-002 (found in an independent revalidation audit, P1): well-known
+# REV-002 (P1): well-known
 # build-artifact directory names, never carried over by
 # _carry_over_local_data() below even though git genuinely considers
 # them untracked/ignored - always safe to regenerate, and carrying them
@@ -146,7 +146,7 @@ def _tracked_dirty_paths(path: Path) -> list[str]:
     or not (`git status --porcelain`'s own status codes other than
     `??`/`!!`, which _real_untracked_paths() already owns).
 
-    V07-001 (found in an independent revalidation audit, P1): this
+    V07-001 (P1): this
     module's own docstring used to claim "a real local edit... fails
     loudly with git's own error instead of being silently discarded" -
     true only for the older verify_build=False in-place `git merge
@@ -184,7 +184,7 @@ def _carry_over_local_data(old_path: Path, staging_path: Path, *, progress: Prog
     `old_path` into `staging_path` before the candidate is built or
     promoted.
 
-    REV-002 (found in an independent revalidation audit, P1): a real
+    REV-002 (P1): a real
     project's own operational data living inside its checkout (`data/
     settings.json`, `data/users.json`, a real sqlite file, TLS material a
     project generated for itself, ...) is exactly the shape of file `git
@@ -267,7 +267,7 @@ def clone_or_pull(
     that used to be true, but stopped being true the moment verify_build
     defaulted to the isolated staging-clone flow below, V07-001).
 
-    UPD-01 (found in an ecosystem-wide software-improvements audit, P1):
+    UPD-01 (P1):
     updating an EXISTING checkout used to merge the candidate straight
     into `path`, then leave building it to a separate step
     (install_or_update's own run_build_script call) - a build failure
@@ -426,7 +426,7 @@ def clone_or_pull(
             _command_output(result),
         )
 
-    # REV-001 (found in an independent revalidation audit, P1): `git
+    # REV-001 (P1): `git
     # clone --local` above points the new clone's own `origin` remote at
     # the LOCAL SOURCE PATH it was cloned from (`path`, the installation
     # about to be renamed aside) - never at this project's real GitHub
@@ -448,7 +448,7 @@ def clone_or_pull(
             _command_output(result),
         )
 
-    # REV-002 (found in an independent revalidation audit, P1): carry
+    # REV-002 (P1): carry
     # over the installed checkout's own real local data BEFORE building/
     # promoting - see _carry_over_local_data()'s own docstring for the
     # real gap this closes. Done before the build below (not merely
@@ -486,7 +486,7 @@ def clone_or_pull(
     # leave `path` genuinely missing) - vastly narrower than before,
     # where the unsafe window spanned the entire build.
     #
-    # V07-004 (found in an independent revalidation audit, P1; honest,
+    # V07-004 (P1; honest,
     # bounded mitigation, not the full transactional journal/rollback
     # the finding's own acceptance criteria describes - that needs
     # designing once, shared with HYDRA-UMC-OPS-AGENT's own
