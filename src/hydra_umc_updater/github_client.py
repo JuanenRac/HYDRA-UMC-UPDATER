@@ -120,8 +120,8 @@ def _retry_after_seconds(exc: urllib.error.HTTPError) -> float | None:
 
 
 def describe_http_error(exc: urllib.error.HTTPError) -> str:
-    """A real, actionable message for an HTTPError - found in an
-    ecosystem-wide software-improvements audit: every HTTPError used to
+    """A real, actionable message for an HTTPError - found while
+    auditing the code: every HTTPError used to
     become the same opaque `f"HTTP {code}"`, including GitHub's own
     PRIMARY rate limit (a 403/429 with `X-RateLimit-Remaining: 0`), which
     is genuinely transient and tells the caller exactly when it resets

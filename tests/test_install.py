@@ -182,7 +182,7 @@ def test_update_verifies_build_in_staging_before_promoting_and_keeps_a_backup(tm
 
 
 def test_two_successive_updates_never_overwrite_the_earlier_backup(tmp_path: Path, monkeypatch):
-    # V07-004 (found in an independent revalidation audit, P1): the
+    # V07-004 (P1): the
     # previous fixed `<name>.backup` path was `rmtree`'d and overwritten
     # on every single promotion - a second real update after a first one
     # already succeeded silently destroyed the ONLY other recoverable
@@ -286,7 +286,7 @@ def test_promotion_self_heals_when_the_second_rename_fails(tmp_path: Path, monke
 
 
 def test_update_restores_the_real_upstream_remote_on_the_promoted_checkout(tmp_path: Path, monkeypatch):
-    # REV-001 (found in an independent revalidation audit, P1): the
+    # REV-001 (P1): the
     # staging clone `git clone --local ...` creates is a clone OF the
     # local installation path, so its own `origin` remote used to end up
     # pointing at that local path - never this project's real upstream -
@@ -326,7 +326,7 @@ def test_update_restores_the_real_upstream_remote_on_the_promoted_checkout(tmp_p
 
 
 def test_update_carries_over_real_local_data_never_tracked_by_git(tmp_path: Path):
-    # REV-002 (found in an independent revalidation audit, P1): `git
+    # REV-002 (P1): `git
     # clone --local` only ever copies the committed object database - a
     # project's own real local data (config, accounts, generated
     # certificates, ...) living untracked inside its checkout used to be
@@ -347,7 +347,7 @@ def test_update_carries_over_real_local_data_never_tracked_by_git(tmp_path: Path
     local = tmp_path / entry().name
     git("clone", str(remote), str(local), cwd=tmp_path)
     # A real, genuinely untracked file (never added/committed at all) -
-    # the audit's own exact reproduction shape.
+    # the exact shape that reproduced the bug.
     (local / "audit-local-settings.txt").write_text("real operator configuration\n", encoding="utf-8")
     # A real, gitignored directory with real data inside it - the shape
     # every server-side project in this ecosystem actually uses
@@ -373,7 +373,7 @@ def test_update_carries_over_real_local_data_never_tracked_by_git(tmp_path: Path
 
 
 def test_update_refuses_when_a_real_tracked_file_has_an_uncommitted_edit(tmp_path: Path):
-    # V07-001 (found in an independent revalidation audit, P1, a real
+    # V07-001 (P1, a real
     # gap this module's own docstring did not actually close once UPD-01
     # switched to the staging-clone flow): `git clone --local` only ever
     # copies the COMMITTED object database - a genuinely dirty edit to a
@@ -406,7 +406,7 @@ def test_update_refuses_when_a_real_tracked_file_has_an_uncommitted_edit(tmp_pat
     local = tmp_path / entry().name
     git("clone", str(remote), str(local), cwd=tmp_path)
     # A real, uncommitted edit to an already-TRACKED file - never staged,
-    # never committed, exactly the audit's own reproduction shape.
+    # never committed, exactly the shape that reproduced the bug.
     (local / "tracked.txt").write_text("USER_UNCOMMITTED\n", encoding="utf-8")
 
     write_manifest(seed, "1.1.0")
