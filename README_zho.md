@@ -185,6 +185,7 @@ CM5。没有 Qt 时，旧 Tkinter 窗口仅作为兼容回退。
 - **[HYDRA-UMC-SUITE](https://github.com/JuanenRac/HYDRA-UMC-SUITE)** — 面向多台服务器的桌面(PySide6)集群指挥中心，打包为独立可执行文件 —— 另一个旨在与单元控制器并行运行的独立 Python 工具,是角色上最接近的兄弟项目(专注于 CM5 端的实用工具,并非机器人控制路径本身的一部分)。
 - **[HYDRA-UMC-OS-REBUILDER](https://github.com/JuanenRac/HYDRA-UMC-OS-REBUILDER)** —— 在构建全新 CM5 镜像时，依赖本项目作为真实的库来完成自身的 GitHub 生态系统发现，而不是另建一份可能独立漂移的实现。
 - **[HYDRA-UMC-OPS-AGENT](https://github.com/JuanenRac/HYDRA-UMC-OPS-AGENT)** — 维护事件协调器：一个低权限的边缘角色采集经过脱敏的库存/健康快照，一个控制面角色以只读方式渲染它，并请求某个 AI 提供方给出诊断建议——从不应用补丁，也从不部署任何内容。
+- **[HYDRA-UMC-DEV-SERVER](https://github.com/JuanenRac/HYDRA-UMC-DEV-SERVER)** — 可复现的开发主机（Raspberry Pi 5 / CM5），保存整个生态系统的源代码，并在持久队列下运行有界的构建/测试任务；这是专用的开发角色，明确区别于运行中的 CM5。
 
 **生态系统中的其他项目**
 
