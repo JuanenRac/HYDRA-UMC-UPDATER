@@ -7,7 +7,8 @@
   "stack": "python",
   "technologies": [
     "Python 3.10+",
-    "Tkinter",
+    "PySide6 / Qt Quick (QML)",
+    "Tkinter (legacy fallback)",
     "Git",
     "GitHub raw content"
   ],
