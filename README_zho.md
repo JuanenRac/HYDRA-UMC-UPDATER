@@ -26,6 +26,8 @@
 > **安装全部缺失项目**和**更新全部过期项目**是分别确认的顺序批量操作，使用相同的
 > 实时状态和安全流程。
 
+**诚实核查 - 今天真正能运行的部分：** 整个生态系统的发现/版本逻辑（`registry.py`、`project_manifest.py`、`ecosystem_catalog.py`、`version_parse.py`、`detect.py`）、带重试/退避的真实 GitHub 原始内容客户端（`github_client.py`），以及安装/更新流水线中"克隆-暂存-验证-提升"的真实逻辑（`install.py`）都是真实且经过测试的——64 个通过的测试（`pytest tests/`），包括一个证明"目录损坏"与"单个项目清单损坏"相互隔离的模拟 HTTP 服务器，以及在临时目录中进行的真实 git 克隆/构建往返测试。`--cli status`/`install`/`update` 在你真正运行它们时，会端到端地驱动这同一套经过测试的核心逻辑，访问真实、在线的 GitHub 原始内容服务器（而非模拟）。Qt Quick 桌面 GUI（`qt_gui.py`、`qml/Main.qml`）和旧版 Tkinter 后备方案（`gui.py`）把同一套经过测试的核心接入一个真实窗口，并已经在真实的生态系统检出目录上运行过，但两者都没有自己的自动化测试——不存在 `test_gui.py`/`test_qt_gui.py`，因为这里没有尝试去驱动真实的 Qt/Tk 事件循环。`i18n.py` 的 7 语言覆盖由测试强制保证（`test_i18n.py`），但仅保证各语言间的键一致性，不保证翻译质量。具体已经交付了什么，请参见 `CHANGELOG.md`。
+
 ---
 
 ## 1. 🛠️ 技术概述

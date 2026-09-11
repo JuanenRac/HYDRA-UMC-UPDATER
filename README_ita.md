@@ -30,6 +30,8 @@
 > in blocco sequenziali, confermate separatamente e basate sullo stesso stato
 > reale e percorso di sicurezza.
 
+**Verifica di onestà - cosa funziona davvero oggi:** la logica di discovery/versione a livello di ecosistema (`registry.py`, `project_manifest.py`, `ecosystem_catalog.py`, `version_parse.py`, `detect.py`), il vero client GitHub raw-content con retry/backoff (`github_client.py`) e la logica clona-prepara-verifica-promuovi della pipeline di installazione/aggiornamento (`install.py`) sono reali e testati - 64 test superati (`pytest tests/`), incluso un server HTTP fittizio che dimostra l'isolamento tra un catalogo malformato e un singolo progetto malformato, più veri round-trip di clone/build git in directory temporanee. `--cli status`/`install`/`update` eseguono lo stesso nucleo testato end-to-end contro il vero host GitHub raw-content live (non un mock) ogni volta che li esegui davvero. La GUI desktop Qt Quick (`qt_gui.py`, `qml/Main.qml`) e il fallback Tkinter legacy (`gui.py`) collegano quello stesso nucleo testato a una finestra reale e sono stati eseguiti su veri checkout dell'ecosistema, ma nessuna delle due ha un test automatico proprio - non esiste `test_gui.py`/`test_qt_gui.py`, poiché qui non si tenta di guidare un vero event loop Qt/Tk. La copertura a 7 lingue di `i18n.py` è verificata da test (`test_i18n.py`), ma solo per la parità delle chiavi tra lingue, non per la qualità della traduzione. Vedi `CHANGELOG.md` per sapere esattamente cosa è stato consegnato finora.
+
 ---
 
 ## 1. 🛠️ PANORAMICA TECNICA
