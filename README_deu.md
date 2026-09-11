@@ -30,6 +30,8 @@
 > separat bestätigte, sequenzielle Sammelaktionen auf Basis desselben realen
 > Zustands und Sicherheitswegs.
 
+**Ehrlichkeitscheck - was heute wirklich funktioniert:** die ökosystemweite Discovery-/Versionslogik (`registry.py`, `project_manifest.py`, `ecosystem_catalog.py`, `version_parse.py`, `detect.py`), der echte GitHub-Raw-Content-Client mit Retry/Backoff (`github_client.py`) und die Clone-Stage-Verify-Promote-Logik der Installations-/Update-Pipeline (`install.py`) sind real und getestet - 64 bestandene Tests (`pytest tests/`), einschließlich eines Fixture-HTTP-Servers, der die Isolation zwischen einem fehlerhaften Katalog und einem einzelnen fehlerhaften Projekt beweist, plus echter Temp-Verzeichnis-Git-Clone/Build-Round-Trips. `--cli status`/`install`/`update` durchlaufen denselben getesteten Kern end-to-end gegen den echten, live GitHub-Raw-Content-Host (kein Mock), sobald man sie tatsächlich ausführt. Die Qt-Quick-Desktop-GUI (`qt_gui.py`, `qml/Main.qml`) und der alte Tkinter-Fallback (`gui.py`) verdrahten denselben getesteten Kern mit einem echten Fenster und wurden auf echten Ökosystem-Checkouts ausgeführt, aber keine der beiden hat einen eigenen automatisierten Test - es gibt kein `test_gui.py`/`test_qt_gui.py`, da hier keine echte Qt/Tk-Ereignisschleife angesteuert wird. Die 7-Sprachen-Abdeckung von `i18n.py` wird durch einen Test erzwungen (`test_i18n.py`), aber nur für Schlüssel-Parität zwischen Sprachen, nicht für Übersetzungsqualität. Siehe `CHANGELOG.md` für das, was bisher genau ausgeliefert wurde.
+
 ---
 
 ## 1. 🛠️ TECHNISCHER ÜBERBLICK

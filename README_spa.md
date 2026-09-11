@@ -31,6 +31,8 @@
 > acciones de lote secuenciales, confirmadas por separado y basadas en el mismo
 > estado real y flujo de seguridad.
 
+**Comprobación de honestidad - lo que realmente funciona hoy:** la lógica de descubrimiento/versión de todo el ecosistema (`registry.py`, `project_manifest.py`, `ecosystem_catalog.py`, `version_parse.py`, `detect.py`), el cliente real de GitHub raw-content con reintento/backoff (`github_client.py`) y la lógica del pipeline de instalación/actualización de clonar-preparar-verificar-promover (`install.py`) son reales y están probados - 64 tests que pasan (`pytest tests/`), incluido un servidor HTTP de fixture que demuestra el aislamiento entre un catálogo malformado y un solo proyecto malformado, además de round-trips reales de clonado/build de git en directorios temporales. `--cli status`/`install`/`update` ejercitan ese mismo núcleo probado de extremo a extremo contra el host real y en vivo de GitHub raw-content (no un mock) cada vez que realmente los ejecutas. La GUI de escritorio Qt Quick (`qt_gui.py`, `qml/Main.qml`) y el respaldo heredado en Tkinter (`gui.py`) conectan ese mismo núcleo probado a una ventana real y se han ejecutado en checkouts reales del ecosistema, pero ninguna de las dos tiene un test automatizado propio - no existe `test_gui.py`/`test_qt_gui.py`, ya que aquí no se intenta manejar un bucle de eventos real de Qt/Tk. La cobertura de 7 idiomas de `i18n.py` está reforzada por test (`test_i18n.py`), pero solo para la paridad de claves entre idiomas, no para la calidad de la traducción. Consulta `CHANGELOG.md` para ver exactamente qué se ha entregado hasta ahora.
+
 ---
 
 ## 1. 🛠️ VISIÓN TÉCNICA
