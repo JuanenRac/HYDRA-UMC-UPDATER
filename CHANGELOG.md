@@ -9,6 +9,43 @@ bumped manually only. See `bump_version.py`.
 
 (nothing yet)
 
+## [0.3.5] - P01: an optional durable promotion journal, wired into every real promotion
+
+V07-004's own real, bounded mitigation (this project's in-process
+self-heal for the narrow gap between clone_or_pull's own 2 promotion
+renames) already named the real remaining gap: "not the full
+transactional journal/rollback... that needs designing once, shared
+with HYDRA-UMC-OPS-AGENT's own canary_deploy.py". HYDRA-UMC-SDK now
+ships that shared journal (`promotion_journal.py`) - this wires it in.
+
+`install.py` imports `hydra_umc_sdk.promotion_journal` inside a
+try/except at module load, mirroring the SAME optional-extra shape
+this project's own PySide6 GUI dependency already established (see the
+new `durable-journal` entry in `pyproject.toml`'s
+`[project.optional-dependencies]`): the safety-critical update core
+stays usable with zero external dependencies when it isn't installed -
+`clone_or_pull()`'s own existing in-process self-heal is completely
+unchanged either way. When it IS installed, a `PromotionRecord` is
+written to disk (atomically) before the first real rename, advanced as
+each rename succeeds, and completed on success - so a promotion
+interrupted by a full process crash, `kill -9`, power loss, or a reboot
+(not just an in-process exception) is recoverable. New
+`recover_interrupted_promotions()`, called automatically at the start
+of `install_or_update()` (every real entry point - CLI, Tkinter GUI, Qt
+GUI - funnels through it) - a genuine no-op when nothing was pending or
+when the SDK isn't installed.
+
+4 new tests (`test_install.py`): the real no-SDK no-op default, a full
+real promotion through `clone_or_pull()` with the SDK importable
+leaving nothing pending in the journal, a real crash simulation healed
+by `recover_interrupted_promotions()`, and confirmation
+`install_or_update()` actually calls recovery before its own work.
+
+Verified: 68/68 tests (run against this repo's own `.venv` specifically -
+a stray, unrelated venv happening to be active on the shell can shadow
+this project's own package with an older installed copy, silently
+hiding real new test failures/passes), ci_validate PASS 0.3.5.
+
 ## [0.3.4] - Recognize the optional `deployment_target_note` manifest field
 
 Real regression found while regenerating JuanenRac's own dashboard:
