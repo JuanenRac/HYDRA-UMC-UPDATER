@@ -33,6 +33,49 @@ from uuid import uuid4
 from .project_manifest import ManifestValidationError, ProjectManifest, parse_manifest
 from .registry import ProjectEntry, github_repo_url
 
+# P01/V07-004: the durable version of this module's own in-process
+# self-heal for the narrow gap between the 2 promotion renames below (see
+# clone_or_pull's own docstring) - HYDRA-UMC-SDK's promotion_journal
+# module, shared with HYDRA-UMC-OPS-AGENT's own canary_deploy.py, exactly
+# as that fix's own comment called for. Optional (see pyproject.toml's
+# own "durable-journal" extra) so this project's safety-critical update
+# core stays usable with zero external dependencies - the SAME
+# stdlib-only-by-default / opt-in-extra shape this module's own PySide6
+# GUI dependency already established. Without it installed, promotion
+# still works exactly as before (the in-process self-heal already in
+# clone_or_pull), just without surviving a full process crash.
+try:
+    from hydra_umc_sdk.promotion_journal import PromotionJournal, PromotionPhase
+    from hydra_umc_sdk.promotion_journal import recover as _recover_promotions
+    _HAS_DURABLE_JOURNAL = True
+except ImportError:
+    _HAS_DURABLE_JOURNAL = False
+
+# One journal file per workspace, not per project - a single small JSON
+# file covers however many projects this workspace ever promotes,
+# consistent with PromotionJournal's own "proportionate for a handful of
+# records" design.
+_JOURNAL_FILENAME = ".hydra_umc_updater_promotion_journal.json"
+
+
+def recover_interrupted_promotions(workspace_root: Path) -> list[str]:
+    """Heals any promotion this updater itself started and never finished
+    - a real process crash, `kill -9`, power loss, or a reboot exactly
+    between the 2 renames in clone_or_pull's own promotion step. Called
+    once at the start of install_or_update() (every real entry point -
+    CLI, Tkinter GUI, Qt GUI - funnels through it), so a genuinely
+    interrupted prior run is healed before another update ever proceeds.
+
+    Returns the human-readable actions recover() took (empty if nothing
+    was pending, OR if hydra-umc-sdk itself isn't installed - see this
+    module's own header comment for why that is a real, honest no-op
+    rather than an error)."""
+    if not _HAS_DURABLE_JOURNAL:
+        return []
+    journal = PromotionJournal(workspace_root / _JOURNAL_FILENAME)
+    return _recover_promotions(journal)
+
+
 # Checked in this order - the first one that exists in the checkout is the
 # one actually run. Covers every real name used across the 44 projects
 # (see this module's own header comment) without needing a per-project
@@ -506,8 +549,19 @@ def clone_or_pull(
     # live checkout nor a clear indication of which path holds the real
     # one.
     backup_path = workspace_root / f"{entry.name}.backup-{uuid4().hex[:8]}"
+    # P01/V07-004: a durable journal entry, written to disk BEFORE the
+    # first real rename, so recover_interrupted_promotions() can heal
+    # this promotion even if the process itself dies right here - the
+    # in-process self-heal below still runs unconditionally either way,
+    # this is additive, never a replacement for it. journal is None
+    # (never referenced past this point) when hydra-umc-sdk isn't
+    # installed - see this module's own header comment.
+    journal = PromotionJournal(workspace_root / _JOURNAL_FILENAME) if _HAS_DURABLE_JOURNAL else None
+    promotion_id = journal.begin(entry.name, path, staging_path, backup_path).promotion_id if journal else None
     _checkpoint(progress, "validation", "Promoting the verified candidate; the previous installation is kept as a backup.")
     path.rename(backup_path)
+    if journal:
+        journal.advance(promotion_id, PromotionPhase.BACKED_UP)
     try:
         staging_path.rename(path)
     except OSError as exc:
@@ -520,12 +574,20 @@ def clone_or_pull(
                 f"the previous installation should still be recoverable at {backup_path}: {exc}",
                 build_result.output,
             )
+        if journal:
+            # The in-process self-heal above already fully resolved this -
+            # nothing left for a later recover_interrupted_promotions()
+            # call to do.
+            journal.complete(promotion_id)
         return InstallResult(
             False,
             f"promotion failed (exit path unavailable: {exc}) - restored the previous installation at {path}; "
             f"the verified candidate is still available at {staging_path} for manual inspection",
             build_result.output,
         )
+    if journal:
+        journal.advance(promotion_id, PromotionPhase.PROMOTED)
+        journal.complete(promotion_id)
     sha_label = candidate_sha[:12]
     return InstallResult(
         True,
@@ -595,7 +657,14 @@ def install_or_update(
     ever promoting it into the real installation - see that function's
     own docstring. A brand-new clone has no previous installation to
     protect, so it still gets its separate run_build_script call here,
-    exactly as before."""
+    exactly as before.
+
+    P01: heals any promotion a PREVIOUS run of this updater started and
+    never finished (a real process crash exactly between clone_or_pull's
+    own 2 promotion renames) before this run's own work begins - see
+    recover_interrupted_promotions()'s own doc comment. A genuine no-op
+    when nothing was pending, or when hydra-umc-sdk isn't installed."""
+    recover_interrupted_promotions(workspace_root)
     was_existing_checkout = (workspace_root / entry.name / ".git").is_dir()
     results = [clone_or_pull(entry, workspace_root, verify_build=build, progress=progress)]
     if results[0].ok and build and not was_existing_checkout:

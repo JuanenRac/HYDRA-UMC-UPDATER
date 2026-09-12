@@ -5,14 +5,49 @@
 # =============================================================================
 from __future__ import annotations
 
+import importlib
 import json
 import os
 import subprocess
+import sys
 from pathlib import Path
 
 from hydra_umc_updater import install
 from hydra_umc_updater.install import clone_or_pull, find_build_test_script, run_build_script
 from hydra_umc_updater.registry import ProjectEntry
+
+# P01: the sibling HYDRA-UMC-SDK checkout's own src/ tree, if this repo
+# happens to be checked out alongside it (the real, normal layout for
+# this ecosystem's own workspace - see registry.py's own real project
+# list). Not a hard dependency of this test file itself: tests exercising
+# the durable-journal path skip cleanly (rather than fail) when it isn't
+# present, since a standalone HYDRA-UMC-UPDATER checkout (no sibling SDK)
+# is exactly the real "hydra-umc-sdk isn't installed" case install.py's
+# own header comment already documents as a supported, honest fallback.
+_SDK_SRC = Path(__file__).resolve().parents[2] / "HYDRA-UMC-SDK" / "clients" / "python" / "src"
+
+
+def _reload_install_with_sdk_on_path():
+    """Adds the sibling SDK's src/ to sys.path and reloads hydra_umc_updater.install
+    so its own module-level `_HAS_DURABLE_JOURNAL` try/except re-runs and
+    succeeds - the only way to exercise that branch, since it's decided
+    once at import time. Returns the reloaded module; caller is
+    responsible for restoring the original state via
+    `_reload_install_without_sdk()` once done, so later tests in this
+    same file see the real, default (no-SDK) behavior again."""
+    sys.path.insert(0, str(_SDK_SRC))
+    for name in ("hydra_umc_sdk", "hydra_umc_sdk.promotion_journal"):
+        sys.modules.pop(name, None)
+    return importlib.reload(install)
+
+
+def _reload_install_without_sdk():
+    if str(_SDK_SRC) in sys.path:
+        sys.path.remove(str(_SDK_SRC))
+    for name in list(sys.modules):
+        if name == "hydra_umc_sdk" or name.startswith("hydra_umc_sdk."):
+            del sys.modules[name]
+    return importlib.reload(install)
 
 
 def entry() -> ProjectEntry:
@@ -526,3 +561,105 @@ def test_refuses_a_remote_manifest_version_lower_than_the_installed_version(tmp_
     assert not result.ok
     assert "anti-rollback refused update" in result.message
     assert subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=local, text=True).strip() == local_head
+
+
+# ---------------------------------------------------------------------------
+# P01: durable promotion journal (hydra-umc-sdk's promotion_journal module,
+# an optional dependency - see install.py's own header comment).
+# ---------------------------------------------------------------------------
+
+def test_recover_interrupted_promotions_is_a_real_noop_without_the_sdk_installed():
+    # The default state for this whole test file: hydra-umc-sdk is not on
+    # sys.path, so install.py's own top-level try/except left
+    # _HAS_DURABLE_JOURNAL False - the honest, documented fallback for a
+    # standalone checkout, not a crash or a hidden dependency error.
+    assert install._HAS_DURABLE_JOURNAL is False
+    assert install.recover_interrupted_promotions(Path("/does/not/matter")) == []
+
+
+def test_promotion_journal_records_and_completes_a_real_successful_update(tmp_path: Path):
+    if not _SDK_SRC.is_dir():
+        import pytest
+        pytest.skip(f"no sibling HYDRA-UMC-SDK checkout at {_SDK_SRC}")
+    reloaded = _reload_install_with_sdk_on_path()
+    try:
+        assert reloaded._HAS_DURABLE_JOURNAL is True
+
+        remote = tmp_path / "remote.git"
+        git("init", "--bare", str(remote), cwd=tmp_path)
+        seed = tmp_path / "seed"
+        git("clone", str(remote), str(seed), cwd=tmp_path)
+        git("config", "user.email", "contract@example.invalid", cwd=seed)
+        git("config", "user.name", "Contract", cwd=seed)
+        write_manifest(seed, "1.0.0")
+        write_build_script(seed, ok=True)
+        git("add", "-A", cwd=seed)
+        git("commit", "-m", "base", cwd=seed)
+        git("push", "origin", "HEAD", cwd=seed)
+
+        local = tmp_path / entry().name
+        git("clone", str(remote), str(local), cwd=tmp_path)
+
+        write_manifest(seed, "1.1.0")
+        git("add", "-A", cwd=seed)
+        git("commit", "-m", "new release", cwd=seed)
+        git("push", "origin", "HEAD", cwd=seed)
+
+        result = reloaded.clone_or_pull(entry(), tmp_path)
+
+        assert result.ok, result.message
+        journal_path = tmp_path / reloaded._JOURNAL_FILENAME
+        assert journal_path.exists(), "a real promotion with the SDK installed must write a journal file"
+        journal = reloaded.PromotionJournal(journal_path)
+        assert journal.pending() == [], "a fully successful promotion must leave nothing pending in the journal"
+    finally:
+        _reload_install_without_sdk()
+
+
+def test_recover_interrupted_promotions_heals_a_real_crash_left_backed_up(tmp_path: Path):
+    if not _SDK_SRC.is_dir():
+        import pytest
+        pytest.skip(f"no sibling HYDRA-UMC-SDK checkout at {_SDK_SRC}")
+    reloaded = _reload_install_with_sdk_on_path()
+    try:
+        # Simulates exactly the real gap clone_or_pull()'s own promotion
+        # step can crash in: the target was already renamed aside to
+        # backup, but staging never got promoted into its place - target
+        # is genuinely missing.
+        target = tmp_path / entry().name
+        backup = tmp_path / f"{entry().name}.backup-deadbeef"
+        backup.mkdir()
+        (backup / "marker.txt").write_text("previous real install", encoding="utf-8")
+
+        journal = reloaded.PromotionJournal(tmp_path / reloaded._JOURNAL_FILENAME)
+        record = journal.begin(entry().name, target, tmp_path / f".{entry().name}.update-x", backup)
+        journal.advance(record.promotion_id, reloaded.PromotionPhase.BACKED_UP)
+
+        actions = reloaded.recover_interrupted_promotions(tmp_path)
+
+        assert target.exists(), "the interrupted promotion must be healed by restoring the backup"
+        assert (target / "marker.txt").read_text(encoding="utf-8") == "previous real install"
+        assert not backup.exists()
+        assert any("restored" in action for action in actions)
+    finally:
+        _reload_install_without_sdk()
+
+
+def test_install_or_update_calls_recovery_before_its_own_work(tmp_path: Path, monkeypatch):
+    # install_or_update() must heal a real interrupted promotion from a
+    # PREVIOUS run before starting its own new work - verified here
+    # without the SDK at all: recover_interrupted_promotions() itself is
+    # monkeypatched to prove it's actually called, at the right time
+    # (before the real clone_or_pull work), regardless of whether the SDK
+    # happens to be installed.
+    calls = []
+    monkeypatch.setattr(install, "recover_interrupted_promotions", lambda root: calls.append(root) or [])
+
+    project = tmp_path / entry().name
+    project.mkdir()
+    sentinel = project / "not-a-git-repo.txt"
+    sentinel.write_text("x", encoding="utf-8")
+
+    install.install_or_update(entry(), tmp_path)
+
+    assert calls == [tmp_path]
