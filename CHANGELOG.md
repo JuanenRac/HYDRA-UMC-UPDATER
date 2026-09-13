@@ -5,6 +5,26 @@ version number follows this ecosystem's "odometer" scheme: PATCH +1 on
 every real build, rolling into MINOR past 9 (`0.0.9` -> `0.1.0`); MAJOR is
 bumped manually only. See `bump_version.py`.
 
+## [0.4.0] - H052/H053: stale project counts and an out-of-date contributor guide
+
+- H052: replaced every hardcoded "44"/"55"/"56 projects" reference across
+  the README (all 7 languages) and `CONTRIBUTING.md` with real,
+  discovery-based prose ("every discovered project") instead of a fixed
+  number - the actual count is whatever `detect.py` finds today, and
+  will keep drifting out of date the same way 44 became 55 became 56 if
+  a fixed number is written down again. The illustrative CLI output
+  example is now explicitly labeled as illustrative and uses a count
+  that matches today's real ecosystem size rather than a stale one.
+- H053: `CONTRIBUTING.md`'s own guideline 4 claimed "there is no 'update
+  everything' command, and no PR should add one" - false today: the GUI's
+  real, operator-confirmed **Install all missing**/**Update all
+  outdated** batch actions (`qt_gui.py`'s `performBatch()`) already exist
+  and call the same `install_or_update()` the CLI uses, once per project,
+  only after an explicit confirmation dialog. Rewritten to describe both
+  correctly: the CLI/core function stays strictly one-project-at-a-time,
+  and the GUI's confirmed batch mode is the one deliberate, already-shipped
+  exception, not a contradiction of the rule.
+
 ## [0.3.9] - H049: a broken git status read as a clean checkout
 
 `_tracked_dirty_paths()` treated a `git status` that failed to even run
