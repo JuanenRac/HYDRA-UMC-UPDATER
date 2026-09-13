@@ -21,10 +21,9 @@
 # =============================================================================
 from __future__ import annotations
 
-import json
 import locale
-import os
-from pathlib import Path
+
+from . import settings
 
 #: (code, native display name with flag) - same order shown in the
 #: language combobox, same 7 codes the dashboard and every README already
@@ -41,18 +40,22 @@ LANGUAGES: list[tuple[str, str]] = [
 
 _LANG_CODES = {code for code, _ in LANGUAGES}
 
-#: One JSON file in the user's own home directory - the real, simple
-#: equivalent of the dashboard's own localStorage for a desktop app that
-#: has no browser storage to reuse. Only ever holds `{"lang": "<code>"}`.
-_CONFIG_PATH = Path.home() / ".hydra_umc_updater_lang.json"
-
 
 def resolve_initial_lang() -> str:
     """Real preference resolution, same precedence order as the
     dashboard's own resolveInitialLang(): a previously saved choice on
-    this machine, then the OS's own configured locale, then English."""
-    saved = _load_saved_lang()
-    if saved:
+    this machine, then the OS's own configured locale, then English.
+
+    The saved choice now lives in `settings.py`'s own shared
+    `~/.hydra_umc_updater_settings.json` (alongside the real remembered
+    workspace root) rather than this module's own separate file - a
+    language already saved in the OLD `~/.hydra_umc_updater_lang.json`
+    is still honored via `settings.get_saved_lang()`'s own migration
+    path, so upgrading never silently resets an already-configured
+    language back to the OS locale.
+    """
+    saved = settings.get_saved_lang()
+    if saved in _LANG_CODES:
         return saved
 
     try:
@@ -71,25 +74,10 @@ def resolve_initial_lang() -> str:
 
 
 def save_lang_preference(lang: str) -> None:
-    """Best-effort persistence - a real write to a real file in the
-    user's home directory, same non-fatal-on-failure spirit as the
-    dashboard's own try/except around localStorage.setItem (a read-only
-    home directory, a permissions issue, etc. must never crash the GUI
-    over a saved preference)."""
-    try:
-        _CONFIG_PATH.write_text(json.dumps({"lang": lang}), encoding="utf-8")
-    except OSError:
-        pass
-
-
-def _load_saved_lang() -> str | None:
-    try:
-        raw = _CONFIG_PATH.read_text(encoding="utf-8")
-        data = json.loads(raw)
-        lang = data.get("lang")
-        return lang if lang in _LANG_CODES else None
-    except (OSError, json.JSONDecodeError, AttributeError):
-        return None
+    """Best-effort persistence into the shared settings file - see
+    `settings.save_lang()`'s own docstring for the non-fatal-on-failure
+    guarantee this keeps."""
+    settings.save_lang(lang)
 
 
 # =============================================================================

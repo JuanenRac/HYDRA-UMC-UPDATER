@@ -28,7 +28,7 @@ from PySide6.QtCore import QObject, Property, QUrl, Signal, Slot
 from PySide6.QtGui import QGuiApplication, QIcon
 from PySide6.QtQml import QQmlApplicationEngine
 
-from . import __version__, i18n
+from . import __version__, i18n, settings
 from .detect import LocalStatus, discover_workspace
 from .github_client import RemoteStatus, discover_remote_projects, fetch_all
 from .install import install_or_update
@@ -334,6 +334,9 @@ class UpdaterBridge(QObject):
         if not path:
             return
         self._workspace_root = Path(path)
+        # Real user request: remember this choice - previously reset to
+        # main.py's own default_workspace_root() on every single launch.
+        settings.save_workspace_root(self._workspace_root)
         self._append_activity(self.text("log_workspace_changed").format(path=self._workspace_root))
         self.summaryChanged.emit()
         self.refresh(False)

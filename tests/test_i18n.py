@@ -13,7 +13,7 @@ import json
 
 import pytest
 
-from hydra_umc_updater import i18n
+from hydra_umc_updater import i18n, settings
 
 
 def test_every_language_has_exactly_the_same_keys_as_english():
@@ -52,27 +52,43 @@ def test_t_does_not_crash_on_a_missing_placeholder_value():
 
 @pytest.fixture
 def isolated_config(tmp_path, monkeypatch):
-    fake_path = tmp_path / ".hydra_umc_updater_lang.json"
-    monkeypatch.setattr(i18n, "_CONFIG_PATH", fake_path)
+    # i18n.py's own persistence now lives in settings.py's shared file -
+    # isolate both that and the legacy migration source so a real
+    # developer machine's own saved preference can never leak into a test.
+    fake_path = tmp_path / ".hydra_umc_updater_settings.json"
+    fake_legacy_path = tmp_path / ".hydra_umc_updater_lang.json"
+    monkeypatch.setattr(settings, "SETTINGS_PATH", fake_path)
+    monkeypatch.setattr(settings, "_LEGACY_LANG_PATH", fake_legacy_path)
     return fake_path
 
 
 def test_save_and_load_lang_preference_round_trips_for_real(isolated_config):
-    assert i18n._load_saved_lang() is None
+    assert settings.get_saved_lang() is None
     i18n.save_lang_preference("ja")
     assert isolated_config.exists()
     assert json.loads(isolated_config.read_text(encoding="utf-8")) == {"lang": "ja"}
-    assert i18n._load_saved_lang() == "ja"
+    assert settings.get_saved_lang() == "ja"
 
 
-def test_load_saved_lang_ignores_an_unsupported_language_code(isolated_config):
+def test_resolve_initial_lang_ignores_an_unsupported_saved_language_code(isolated_config, monkeypatch):
     isolated_config.write_text(json.dumps({"lang": "klingon"}), encoding="utf-8")
-    assert i18n._load_saved_lang() is None
+    monkeypatch.setattr(i18n.locale, "getlocale", lambda: (None, None))
+    assert i18n.resolve_initial_lang() == "en"
 
 
-def test_load_saved_lang_ignores_a_corrupt_file(isolated_config):
+def test_resolve_initial_lang_ignores_a_corrupt_settings_file(isolated_config, monkeypatch):
     isolated_config.write_text("not json at all", encoding="utf-8")
-    assert i18n._load_saved_lang() is None
+    monkeypatch.setattr(i18n.locale, "getlocale", lambda: (None, None))
+    assert i18n.resolve_initial_lang() == "en"
+
+
+def test_resolve_initial_lang_migrates_a_real_pre_existing_legacy_language_file(isolated_config, monkeypatch):
+    # Real upgrade path: a language already saved in the OLD, i18n-only
+    # file (before settings.py existed) must not be silently lost just
+    # because the new shared file doesn't exist yet.
+    settings._LEGACY_LANG_PATH.write_text(json.dumps({"lang": "fr"}), encoding="utf-8")
+    monkeypatch.setattr(i18n.locale, "getlocale", lambda: ("de_DE", "UTF-8"))
+    assert i18n.resolve_initial_lang() == "fr"
 
 
 def test_resolve_initial_lang_prefers_a_real_saved_preference(isolated_config, monkeypatch):
