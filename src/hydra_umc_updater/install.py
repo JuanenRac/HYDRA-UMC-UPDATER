@@ -211,6 +211,14 @@ def _real_untracked_paths(path: Path) -> list[str]:
     return paths
 
 
+class DirtyCheckError(RuntimeError):
+    """H049 (shared with HYDRA-UMC-OPS-AGENT's own sibling helper): `git
+    status` itself failed to run against a checkout (not a git
+    repository, git missing from PATH, a permissions/IO error, ...) -
+    see `_tracked_dirty_paths()`'s own docstring for why this must never
+    be read as "no dirty files found". Nothing was touched."""
+
+
 def _tracked_dirty_paths(path: Path) -> list[str]:
     """Returns every real path (relative to `path`) this checkout's own
     git considers a TRACKED file with a real uncommitted change - staged
@@ -232,12 +240,24 @@ def _tracked_dirty_paths(path: Path) -> list[str]:
     real edit survives only there while this function's own caller
     still reports `ok=True`. Checked explicitly, upfront, so this can
     fail loudly again before any staging work happens at all - matching
-    what the docstring already promised."""
+    what the docstring already promised.
+
+    H049 (P0, shared with OPS-AGENT's own sibling helper): a `git
+    status` that fails to even RUN (returncode != 0) used to be treated
+    exactly like "ran fine, found nothing dirty" - the one real
+    uncommitted edit this function exists to catch became invisible the
+    moment the check itself broke. Raises DirtyCheckError instead: not
+    being able to verify clean is not the same as clean."""
     result = subprocess.run(
         ["git", "status", "--porcelain", "-z"],
         cwd=str(path), check=False, capture_output=True, text=True,
     )
-    if result.returncode != 0 or not result.stdout:
+    if result.returncode != 0:
+        raise DirtyCheckError(
+            f"could not verify {path} has no uncommitted changes - `git status` itself failed "
+            f"(exit {result.returncode}): {result.stderr.strip() or '(no stderr)'}"
+        )
+    if not result.stdout:
         return []
     paths: list[str] = []
     for entry_text in result.stdout.split("\0"):
@@ -404,7 +424,10 @@ def clone_or_pull(
     # itself. Applies to both verify_build values - a caller intending
     # the older in-place-merge path (verify_build=False) never wanted
     # a real local edit silently discarded either.
-    dirty = _tracked_dirty_paths(path)
+    try:
+        dirty = _tracked_dirty_paths(path)
+    except DirtyCheckError as exc:
+        return InstallResult(False, str(exc))
     if dirty:
         preview = ", ".join(dirty[:5]) + (f" (+{len(dirty) - 5} more)" if len(dirty) > 5 else "")
         return InstallResult(

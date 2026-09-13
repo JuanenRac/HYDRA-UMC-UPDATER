@@ -463,6 +463,23 @@ def test_update_refuses_when_a_real_tracked_file_has_an_uncommitted_edit(tmp_pat
     assert not (tmp_path / f"{entry().name}.backup").exists(), "a refused update must never rename anything aside"
 
 
+def test_tracked_dirty_paths_raises_when_git_status_itself_fails(tmp_path: Path):
+    # H049 (P0, shared with HYDRA-UMC-OPS-AGENT's own sibling helper): a
+    # `git status` that fails to even run (here: not a git repository at
+    # all, exit 128) used to be treated exactly like "ran fine, found
+    # nothing dirty" - the one real uncommitted edit this function exists
+    # to catch became invisible the moment the check itself broke.
+    from hydra_umc_updater.install import DirtyCheckError, _tracked_dirty_paths
+
+    not_a_repo = tmp_path / "not-a-repo"
+    not_a_repo.mkdir()
+
+    import pytest
+
+    with pytest.raises(DirtyCheckError):
+        _tracked_dirty_paths(not_a_repo)
+
+
 def test_update_build_failure_leaves_the_previous_installation_completely_untouched(tmp_path: Path):
     remote = tmp_path / "remote.git"
     git("init", "--bare", str(remote), cwd=tmp_path)
