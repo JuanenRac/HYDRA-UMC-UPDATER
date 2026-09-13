@@ -576,9 +576,27 @@ ApplicationWindow {
                     Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: window.border }
                     LabelText { text: ui("safety_title"); font.pixelSize: 12; font.bold: true; font.letterSpacing: 1 }
                     LabelText { text: ui("safety_summary"); color: window.textMuted; font.pixelSize: 10; Layout.fillWidth: true; wrapMode: Text.WordWrap }
+                    Item { Layout.fillHeight: true }
+                }
+            }
+
+            // Real user request: the activity log (with its own copy
+            // button) used to live crammed at the bottom of Safe Update,
+            // squeezed into whatever height was left under the action
+            // buttons/checkpoints/safety notice above it - genuinely hard
+            // to read a real failure's last few lines while also seeing
+            // the current operation's own checkpoints. Now its own frame,
+            // full-height, to the right of Safe Update - Project Registry
+            // (the only Layout.fillWidth panel in this row) gives up the
+            // space for it automatically.
+            SectionPanel {
+                Layout.preferredWidth: 340
+                Layout.fillHeight: true
+                ColumnLayout {
+                    anchors.fill: parent; anchors.margins: 18; spacing: 10
                     RowLayout {
                         Layout.fillWidth: true
-                        LabelText { text: ui("activity_log_title"); font.pixelSize: 12; font.bold: true; font.letterSpacing: 1; Layout.fillWidth: true }
+                        LabelText { text: ui("activity_log_title"); font.pixelSize: 18; font.bold: true; Layout.fillWidth: true }
                         GameButton {
                             text: ui("copy_log_button")
                             Layout.preferredWidth: 128

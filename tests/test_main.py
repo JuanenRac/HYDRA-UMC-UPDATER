@@ -67,3 +67,26 @@ def test_status_json_output_is_real_machine_readable_json(monkeypatch, capsys, t
     assert by_name["HYDRA-UMC-SDK"]["state"] == "OUTDATED"
     assert by_name["HYDRA-UMC-GHOST"]["installed"] is False
     assert by_name["HYDRA-UMC-GHOST"]["local_version"] is None
+
+
+# =============================================================================
+# resolve_workspace_root() - real user request: remember a chosen
+# workspace root across GUI launches instead of resetting to
+# default_workspace_root() every time.
+# =============================================================================
+
+
+def test_resolve_workspace_root_uses_the_real_saved_one_when_present(monkeypatch, tmp_path) -> None:
+    from hydra_umc_updater import settings
+
+    real_dir = tmp_path / "saved-workspace"
+    real_dir.mkdir()
+    monkeypatch.setattr(settings, "get_saved_workspace_root", lambda: real_dir)
+    assert main_module.resolve_workspace_root() == real_dir
+
+
+def test_resolve_workspace_root_falls_back_to_the_real_default_when_nothing_saved(monkeypatch) -> None:
+    from hydra_umc_updater import settings
+
+    monkeypatch.setattr(settings, "get_saved_workspace_root", lambda: None)
+    assert main_module.resolve_workspace_root() == main_module.default_workspace_root()

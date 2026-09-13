@@ -48,7 +48,7 @@ from pathlib import Path
 import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 
-from . import __version__, i18n
+from . import __version__, i18n, settings
 from .detect import LocalStatus, discover_workspace
 from .github_client import RemoteStatus, discover_remote_projects, fetch_all
 from .install import install_or_update
@@ -509,6 +509,10 @@ class UpdaterGUI:
         if not chosen:
             return
         self.workspace_root = Path(chosen)
+        # Real user request: remember this choice - see settings.py's own
+        # module docstring; the Qt Quick GUI's setWorkspaceUrl() does the
+        # same for the same reason.
+        settings.save_workspace_root(self.workspace_root)
         self.workspace_lbl.config(text=str(self.workspace_root))
         self._append_log(self.t("log_workspace_changed", path=self.workspace_root))
         self._refresh(offline=self.offline_var.get())

@@ -5,9 +5,37 @@ version number follows this ecosystem's "odometer" scheme: PATCH +1 on
 every real build, rolling into MINOR past 9 (`0.0.9` -> `0.1.0`); MAJOR is
 bumped manually only. See `bump_version.py`.
 
-## Unreleased
+## [0.3.8]
 
-(nothing yet)
+- **Real user request: remember the workspace root and language across
+  launches.** New `settings.py` - a single shared
+  `~/.hydra_umc_updater_settings.json`, superseding `i18n.py`'s own
+  previous language-only file (`~/.hydra_umc_updater_lang.json`, still
+  read once as a real migration source so an already-configured
+  language is never silently lost). The GUI's "Browse" workspace picker
+  (both the Qt Quick `setWorkspaceUrl()` and the legacy Tkinter
+  `_choose_workspace()`) used to reset back to `default_workspace_root()`
+  (this repo's own parent directory) on every single launch - both now
+  persist the real chosen directory, and a new `resolve_workspace_root()`
+  prefers it (only when it is still a real, existing directory - a
+  saved path pointing at a since-deleted/renamed location is never
+  silently trusted) over the old heuristic, for the two GUI launch
+  paths only (`--cli` subcommands keep resolving `default_workspace_root()`
+  directly, so a script's behavior never depends on a GUI preference
+  saved on the same machine).
+- **Real user request: the activity log gets its own frame.** Used to
+  be crammed at the bottom of the "Safe Update" panel, squeezed under
+  the action buttons/checkpoints/safety notice - genuinely hard to read
+  a real failure's last few lines while also watching the current
+  operation's own checkpoints. Now its own full-height panel to the
+  right of Safe Update, with its own copy button; Project Registry (the
+  one `Layout.fillWidth` panel in that row) gives up the space for it
+  automatically.
+- Auto-refreshing GitHub on startup was already real (`UpdaterBridge.__init__()`'s
+  own `self.refresh(False)`) - confirmed while investigating the above,
+  no change needed there.
+
+17 new tests (`test_settings.py`, `test_i18n.py`, `test_main.py`).
 
 ## [0.3.7] - Real, actionable messages for GitHub's own primary rate limit
 

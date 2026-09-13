@@ -31,7 +31,7 @@ import json
 import sys
 from pathlib import Path
 
-from . import __version__
+from . import __version__, settings
 from .detect import LocalStatus, discover_workspace
 from .github_client import RemoteStatus, discover_remote_projects, fetch_all
 from .install import install_or_update
@@ -46,6 +46,20 @@ def default_workspace_root() -> Path:
     Always overridable with --workspace for anything else (a CM5 install
     under a different path, a CI checkout, ...)."""
     return Path(__file__).resolve().parents[3]
+
+
+def resolve_workspace_root() -> Path:
+    """Real user request: the GUI's "Browse" used to reset back to
+    `default_workspace_root()` on every single launch, with no way to
+    remember a different one. Prefers a previously chosen, still-real
+    directory (`settings.get_saved_workspace_root()` already refuses a
+    saved path that no longer exists) over the parent-directory
+    heuristic - used only by the GUI launch paths below; `--cli`
+    subcommands keep resolving `default_workspace_root()` directly so a
+    script's own behavior never depends on a GUI preference saved on the
+    same machine.
+    """
+    return settings.get_saved_workspace_root() or default_workspace_root()
 
 
 def _state_label(local: LocalStatus, remote: RemoteStatus | None) -> str:
@@ -273,9 +287,9 @@ def main() -> int:
                 print("Qt Quick GUI runtime is not installed; starting the legacy "
                       "Tkinter fallback. Run build.bat/build.sh to enable the new "
                       "visual desktop interface.", file=sys.stderr)
-                return launch_gui(default_workspace_root())
+                return launch_gui(resolve_workspace_root())
         else:
-            return launch_qt_gui(default_workspace_root())
+            return launch_qt_gui(resolve_workspace_root())
 
     argv = [a for a in sys.argv[1:] if a != "--cli"]
     parser = build_parser()
