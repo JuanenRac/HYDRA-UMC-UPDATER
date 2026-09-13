@@ -34,6 +34,7 @@ from hydra_umc_updater.github_client import (
     _urlopen_with_retries,
     describe_http_error,
     discover_remote_projects,
+    is_primary_rate_limited,
 )
 from hydra_umc_updater.registry import ProjectEntry
 
@@ -71,7 +72,11 @@ def valid_manifest(name: str, version: str = "1.2.3") -> dict[str, object]:
 
 
 class _FixtureHandler(http.server.BaseHTTPRequestHandler):
-    routes: dict[str, tuple[int, bytes]] = {}
+    # A route may be (status, body) or (status, body, extra_headers) - the
+    # 3-tuple form exists so a test can simulate a real GitHub response
+    # header (X-RateLimit-Remaining/-Reset) alongside the status/body,
+    # without a second fixture-server flavor.
+    routes: dict[str, tuple] = {}
 
     def log_message(self, format, *args):
         pass  # keep the real test server quiet
@@ -82,9 +87,12 @@ class _FixtureHandler(http.server.BaseHTTPRequestHandler):
             self.send_response(404)
             self.end_headers()
             return
-        status, body = entry
+        status, body, *rest = entry
+        extra_headers = rest[0] if rest else {}
         self.send_response(status)
         self.send_header("Content-Type", "application/json")
+        for key, value in extra_headers.items():
+            self.send_header(key, value)
         self.end_headers()
         self.wfile.write(body)
 
@@ -113,6 +121,26 @@ def test_discover_remote_projects_raises_clearly_on_malformed_repo_list_json(mon
     ) as base_url:
         monkeypatch.setattr(github_client, "GITHUB_API_BASE", base_url)
         with pytest.raises(RuntimeError, match="unable to list GitHub repositories"):
+            discover_remote_projects()
+
+
+def test_discover_remote_projects_names_the_real_rate_limit_reset_time(monkeypatch):
+    # Found while diagnosing a real report of repeated GitHub refreshes
+    # silently listing fewer and fewer projects (42 -> 9 -> 0): this
+    # repo-listing call's own error used to embed a bare str(HTTPError)
+    # ("HTTP Error 403: rate limit exceeded"), never telling the caller
+    # it was the hourly PRIMARY limit, when it resets, or that
+    # GITHUB_TOKEN raises it.
+    with fixture_server(
+        {
+            "/users/JuanenRac/repos?type=owner&per_page=100&page=1": (
+                403, b'{"message": "rate limit exceeded"}',
+                {"X-RateLimit-Remaining": "0", "X-RateLimit-Reset": "1700000000"},
+            )
+        }
+    ) as base_url:
+        monkeypatch.setattr(github_client, "GITHUB_API_BASE", base_url)
+        with pytest.raises(RuntimeError, match="rate limited by GitHub"):
             discover_remote_projects()
 
 
@@ -295,6 +323,23 @@ def test_describe_http_error_falls_back_for_a_real_access_restriction():
     assert describe_http_error(_http_error(403)) == "HTTP 403"
     assert describe_http_error(_http_error(403, {"X-RateLimit-Remaining": "5"})) == "HTTP 403"
     assert describe_http_error(_http_error(404)) == "HTTP 404"
+
+
+def test_is_primary_rate_limited_recognizes_the_real_signal():
+    assert is_primary_rate_limited(_http_error(403, {"X-RateLimit-Remaining": "0"}))
+    assert is_primary_rate_limited(_http_error(429, {"X-RateLimit-Remaining": "0"}))
+
+
+def test_is_primary_rate_limited_is_false_for_a_real_unrelated_error():
+    # A caller (like HYDRA-UMC-OS-REBUILDER's own resolve_commit_shas())
+    # uses this to decide whether to abort an entire batch early - it
+    # must never fire for an ordinary 404/403-without-the-signal, which
+    # legitimately means "just this one lookup failed", not "the whole
+    # remaining budget is dead".
+    assert not is_primary_rate_limited(_http_error(403))
+    assert not is_primary_rate_limited(_http_error(403, {"X-RateLimit-Remaining": "5"}))
+    assert not is_primary_rate_limited(_http_error(404))
+    assert not is_primary_rate_limited(_http_error(500))
 
 
 def test_urlopen_with_retries_reads_module_constants_by_default(monkeypatch):
