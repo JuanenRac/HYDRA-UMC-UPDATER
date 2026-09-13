@@ -9,6 +9,23 @@ bumped manually only. See `bump_version.py`.
 
 (nothing yet)
 
+## [0.3.7] - Real, actionable messages for GitHub's own primary rate limit
+
+- **Real, actionable messages for GitHub's own primary rate limit** -
+  found while diagnosing a live report of a consuming tool
+  (HYDRA-UMC-OS-REBUILDER) whose GitHub refresh silently listed fewer
+  and fewer projects on repeated clicks (42 -> 9 -> 0), staying at 0
+  even after restarting the app. Root cause: `discover_remote_projects()`'s
+  own repo-listing call embedded a bare `str(HTTPError)` ("HTTP Error
+  403: rate limit exceeded") instead of the already-existing
+  `describe_http_error()` - which already knows how to say exactly when
+  the limit resets and that `GITHUB_TOKEN` raises it, but was never
+  used here. New `is_primary_rate_limited()` - the real detection
+  condition `describe_http_error()` already used internally, now a
+  reusable public predicate a caller can use to make a real decision
+  (like aborting an entire batch of per-project calls early) rather
+  than just describing one already-failed request. 4 new tests.
+
 ## [0.3.6] - P01/I13: a real post-promotion health check, wired into every promotion that declares one
 
 I13 ("Checkpoints respaldados por postcondiciones"): finishing the 2

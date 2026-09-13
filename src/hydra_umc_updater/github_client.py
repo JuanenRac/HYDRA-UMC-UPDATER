@@ -119,6 +119,18 @@ def _retry_after_seconds(exc: urllib.error.HTTPError) -> float | None:
     return seconds if seconds >= 0 else None
 
 
+def is_primary_rate_limited(exc: urllib.error.HTTPError) -> bool:
+    """True when `exc` is GitHub's real PRIMARY (hourly) rate limit - a
+    403/429 with `X-RateLimit-Remaining: 0` - as opposed to a real 404,
+    a genuine permission error, or the SECONDARY rate limit
+    `_urlopen_with_retries` already retries via `Retry-After`. Extracted
+    from `describe_http_error()`'s own detection so a caller that needs
+    to make a real decision (stop burning the rest of a batch against an
+    already-exhausted budget, not just describe one failure) does not
+    have to duplicate this condition or string-match a message."""
+    return exc.code in (403, 429) and exc.headers is not None and exc.headers.get("X-RateLimit-Remaining") == "0"
+
+
 def describe_http_error(exc: urllib.error.HTTPError) -> str:
     """A real, actionable message for an HTTPError - found while
     auditing the code: every HTTPError used to
@@ -129,7 +141,7 @@ def describe_http_error(exc: urllib.error.HTTPError) -> str:
     status/discovery across 55+ repos without a `GITHUB_TOKEN`
     (unauthenticated GitHub API calls are capped at 60/hour)."""
     headers = exc.headers
-    if exc.code in (403, 429) and headers is not None and headers.get("X-RateLimit-Remaining") == "0":
+    if is_primary_rate_limited(exc):
         reset_raw = headers.get("X-RateLimit-Reset")
         if reset_raw is not None:
             try:
@@ -295,7 +307,16 @@ def discover_remote_projects(
         request = urllib.request.Request(url, headers=headers, method="GET")
         try:
             payload = json.loads(_urlopen_with_retries(request, timeout=REQUEST_TIMEOUT_S).decode("utf-8", errors="replace"))
-        except (urllib.error.URLError, urllib.error.HTTPError, TimeoutError, socket.timeout, OSError, json.JSONDecodeError) as exc:
+        except urllib.error.HTTPError as exc:
+            # Found while diagnosing a real report of repeated GitHub
+            # refreshes silently listing fewer and fewer projects (42 ->
+            # 9 -> 0): the raw `str(exc)` this used to embed here (a bare
+            # "HTTP Error 403: rate limit exceeded") never told the
+            # caller it was the hourly PRIMARY rate limit, when it
+            # resets, or that GITHUB_TOKEN raises the limit - all of
+            # which describe_http_error() already knows how to say.
+            raise RuntimeError(f"unable to list GitHub repositories for {owner}: {describe_http_error(exc)}") from exc
+        except (urllib.error.URLError, TimeoutError, socket.timeout, OSError, json.JSONDecodeError) as exc:
             raise RuntimeError(f"unable to list GitHub repositories for {owner}: {exc}") from exc
         if not isinstance(payload, list):
             raise RuntimeError(f"unexpected GitHub repository-list response for {owner}")
