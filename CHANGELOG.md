@@ -5,6 +5,18 @@ version number follows this ecosystem's "odometer" scheme: PATCH +1 on
 every real build, rolling into MINOR past 9 (`0.0.9` -> `0.1.0`); MAJOR is
 bumped manually only. See `bump_version.py`.
 
+## [0.3.9] - H049: a broken git status read as a clean checkout
+
+`_tracked_dirty_paths()` treated a `git status` that failed to even run
+(not a git repository, git missing from PATH, a permissions/IO error) exactly
+like "ran fine, found nothing dirty" - the one real uncommitted edit this
+check exists to catch became invisible the moment the check itself broke,
+and `clone_or_pull()` would proceed as if the installed checkout were
+genuinely clean. Now fails closed: a `git status` failure raises a new
+`DirtyCheckError`, caught at the call site and reported as a real, honest
+`InstallResult(False, ...)` - the same shared gap and fix already closed in
+HYDRA-UMC-OPS-AGENT's own sibling helper. 1 new regression test.
+
 ## [0.3.8]
 
 - **Real user request: remember the workspace root and language across
