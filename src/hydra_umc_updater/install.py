@@ -44,8 +44,18 @@ from .registry import ProjectEntry, github_repo_url
 # GUI dependency already established. Without it installed, promotion
 # still works exactly as before (the in-process self-heal already in
 # clone_or_pull), just without surviving a full process crash.
+#
+# P01/I13: the same optional package also carries check_service_health() -
+# when a project's own manifest declares a real service_port +
+# service_health_path, a promotion is not reported as a real success
+# until that real endpoint answers healthy (see _health_check_url_for()
+# and clone_or_pull's own promotion step below), and a crash between
+# promoting and checking is itself recoverable via
+# recover_interrupted_promotions() (the pending check runs for real on
+# the next call, never repeating the build).
 try:
     from hydra_umc_sdk.promotion_journal import PromotionJournal, PromotionPhase
+    from hydra_umc_sdk.promotion_journal import check_service_health as _check_service_health
     from hydra_umc_sdk.promotion_journal import recover as _recover_promotions
     _HAS_DURABLE_JOURNAL = True
 except ImportError:
@@ -56,6 +66,24 @@ except ImportError:
 # consistent with PromotionJournal's own "proportionate for a handful of
 # records" design.
 _JOURNAL_FILENAME = ".hydra_umc_updater_promotion_journal.json"
+
+
+def _health_check_url_for(entry: ProjectEntry) -> str | None:
+    """I13's own real 'servicio comprobado' target - only ever built when
+    the project's own manifest declares BOTH `service_port` and
+    `service_health_path` (see ProjectEntry's own field comments); either
+    alone declares nothing checkable. Always `127.0.0.1`: this checks
+    whatever is listening on THIS host, immediately after THIS host's own
+    checkout was just promoted - never a remote address a manifest could
+    otherwise smuggle in. A project whose real runtime lives elsewhere
+    (e.g. deployed separately to /opt/hydra-umc/<svc> and restarted by
+    HYDRA-UMC-OS's own provisioning scripts, not served directly from this
+    checkout) simply should not declare `service_health_path` in a context
+    where checking it here wouldn't mean anything - that is the project's
+    own manifest to author, not a judgment call this function makes."""
+    if entry.service_port is None or not entry.service_health_path:
+        return None
+    return f"http://127.0.0.1:{entry.service_port}{entry.service_health_path}"
 
 
 def recover_interrupted_promotions(workspace_root: Path) -> list[str]:
@@ -556,8 +584,9 @@ def clone_or_pull(
     # this is additive, never a replacement for it. journal is None
     # (never referenced past this point) when hydra-umc-sdk isn't
     # installed - see this module's own header comment.
+    health_check_url = _health_check_url_for(entry)
     journal = PromotionJournal(workspace_root / _JOURNAL_FILENAME) if _HAS_DURABLE_JOURNAL else None
-    promotion_id = journal.begin(entry.name, path, staging_path, backup_path).promotion_id if journal else None
+    promotion_id = journal.begin(entry.name, path, staging_path, backup_path, health_check_url=health_check_url).promotion_id if journal else None
     _checkpoint(progress, "validation", "Promoting the verified candidate; the previous installation is kept as a backup.")
     path.rename(backup_path)
     if journal:
@@ -587,8 +616,34 @@ def clone_or_pull(
         )
     if journal:
         journal.advance(promotion_id, PromotionPhase.PROMOTED)
-        journal.complete(promotion_id)
     sha_label = candidate_sha[:12]
+    # I13: a promotion that finishes its 2 renames is not yet a HEALTHY
+    # promotion when the project itself declares a real health endpoint -
+    # check it for real before ever calling this a success, rather than
+    # treating "the files moved" as the whole postcondition. Skipped
+    # entirely (same as before this feature existed) when the project
+    # declares no health endpoint, or the optional durable-journal
+    # dependency isn't installed at all (no journal to even record the
+    # check against - see this module's own header comment).
+    if journal and health_check_url:
+        healthy, reason = _check_service_health(health_check_url)
+        if not healthy:
+            return InstallResult(
+                False,
+                f"Promoted {path} to v{candidate.version} (commit {sha_label}), but its own declared health "
+                f"check at {health_check_url} still fails ({reason}) - the promotion is left pending in the "
+                f"journal; re-running install_or_update() will retry the check without repeating the build",
+                build_result.output,
+            )
+        journal.complete(promotion_id)
+        return InstallResult(
+            True,
+            f"Updated {path} to v{candidate.version} (commit {sha_label}) after a verified build and a real "
+            f"passing health check ({reason}); previous installation kept at {backup_path}",
+            build_result.output,
+        )
+    if journal:
+        journal.complete(promotion_id)
     return InstallResult(
         True,
         f"Updated {path} to v{candidate.version} (commit {sha_label}) after a verified build; "

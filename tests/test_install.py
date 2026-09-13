@@ -616,6 +616,116 @@ def test_promotion_journal_records_and_completes_a_real_successful_update(tmp_pa
         _reload_install_without_sdk()
 
 
+def _entry_with_health(*, port: int) -> ProjectEntry:
+    return ProjectEntry(
+        entry().name, "python", "pyproject.toml", r"(\d+)\.(\d+)\.(\d+)",
+        service_port=port, service_health_path="/health",
+    )
+
+
+def test_i13_promotion_completes_only_after_a_real_passing_health_check(tmp_path: Path):
+    if not _SDK_SRC.is_dir():
+        import pytest
+        pytest.skip(f"no sibling HYDRA-UMC-SDK checkout at {_SDK_SRC}")
+    import threading
+    from http.server import BaseHTTPRequestHandler, HTTPServer
+
+    class _Handler(BaseHTTPRequestHandler):
+        def do_GET(self):  # noqa: N802
+            self.send_response(200)
+            self.end_headers()
+
+        def log_message(self, *args):
+            pass
+
+    server = HTTPServer(("127.0.0.1", 0), _Handler)
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    reloaded = _reload_install_with_sdk_on_path()
+    try:
+        port = server.server_address[1]
+        remote = tmp_path / "remote.git"
+        git("init", "--bare", str(remote), cwd=tmp_path)
+        seed = tmp_path / "seed"
+        git("clone", str(remote), str(seed), cwd=tmp_path)
+        git("config", "user.email", "contract@example.invalid", cwd=seed)
+        git("config", "user.name", "Contract", cwd=seed)
+        write_manifest(seed, "1.0.0")
+        write_build_script(seed, ok=True)
+        git("add", "-A", cwd=seed)
+        git("commit", "-m", "base", cwd=seed)
+        git("push", "origin", "HEAD", cwd=seed)
+
+        local = tmp_path / entry().name
+        git("clone", str(remote), str(local), cwd=tmp_path)
+
+        write_manifest(seed, "1.1.0")
+        git("add", "-A", cwd=seed)
+        git("commit", "-m", "new release", cwd=seed)
+        git("push", "origin", "HEAD", cwd=seed)
+
+        result = reloaded.clone_or_pull(_entry_with_health(port=port), tmp_path)
+
+        assert result.ok, result.message
+        assert "passing health check" in result.message
+        journal = reloaded.PromotionJournal(tmp_path / reloaded._JOURNAL_FILENAME)
+        assert journal.pending() == [], "a genuinely passing health check must complete the promotion"
+    finally:
+        _reload_install_without_sdk()
+        server.shutdown()
+        thread.join(timeout=5)
+
+
+def test_i13_promotion_stays_pending_when_the_health_check_fails(tmp_path: Path):
+    if not _SDK_SRC.is_dir():
+        import pytest
+        pytest.skip(f"no sibling HYDRA-UMC-SDK checkout at {_SDK_SRC}")
+    import socket
+
+    # A real, guaranteed-closed local port - nothing is listening, so the
+    # freshly-promoted "service" this entry declares can never answer.
+    probe = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    probe.bind(("127.0.0.1", 0))
+    closed_port = probe.getsockname()[1]
+    probe.close()
+
+    reloaded = _reload_install_with_sdk_on_path()
+    try:
+        remote = tmp_path / "remote.git"
+        git("init", "--bare", str(remote), cwd=tmp_path)
+        seed = tmp_path / "seed"
+        git("clone", str(remote), str(seed), cwd=tmp_path)
+        git("config", "user.email", "contract@example.invalid", cwd=seed)
+        git("config", "user.name", "Contract", cwd=seed)
+        write_manifest(seed, "1.0.0")
+        write_build_script(seed, ok=True)
+        git("add", "-A", cwd=seed)
+        git("commit", "-m", "base", cwd=seed)
+        git("push", "origin", "HEAD", cwd=seed)
+
+        local = tmp_path / entry().name
+        git("clone", str(remote), str(local), cwd=tmp_path)
+
+        write_manifest(seed, "1.1.0")
+        git("add", "-A", cwd=seed)
+        git("commit", "-m", "new release", cwd=seed)
+        git("push", "origin", "HEAD", cwd=seed)
+
+        result = reloaded.clone_or_pull(_entry_with_health(port=closed_port), tmp_path)
+
+        # I13's own real acceptance test, end to end: the files DID
+        # promote (the checkout really is the new version), but a
+        # failing health check must never be reported as success, and
+        # must never be silently pruned from the journal either.
+        assert not result.ok, "a failing health check must not be reported as a successful install"
+        assert "health" in result.message
+        journal = reloaded.PromotionJournal(tmp_path / reloaded._JOURNAL_FILENAME)
+        assert len(journal.pending()) == 1, "the promotion must stay pending for recovery/a human, not be silently completed"
+        assert (local / "hydra-umc.project.json").read_text(encoding="utf-8").count("1.1.0") >= 1, "the promotion itself really did happen - only its health is in question"
+    finally:
+        _reload_install_without_sdk()
+
+
 def test_recover_interrupted_promotions_heals_a_real_crash_left_backed_up(tmp_path: Path):
     if not _SDK_SRC.is_dir():
         import pytest
