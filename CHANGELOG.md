@@ -9,6 +9,38 @@ bumped manually only. See `bump_version.py`.
 
 (nothing yet)
 
+## [0.3.6] - P01/I13: a real post-promotion health check, wired into every promotion that declares one
+
+I13 ("Checkpoints respaldados por postcondiciones"): finishing the 2
+promotion renames is not the same as a HEALTHY promotion - the real
+postcondition is "servicio comprobado" (service checked), not merely
+"files moved". `install.py` now builds a real
+`http://127.0.0.1:<service_port><service_health_path>` target
+(`_health_check_url_for()`) whenever a project's own manifest declares
+BOTH fields, passes it into the durable journal (HYDRA-UMC-SDK's new
+`check_service_health()`, see that project's own 0.1.9), and only
+reports the promotion a real success once that endpoint genuinely
+answers 2xx - a 4xx/5xx (the freshly-promoted code IS running, but is
+not well) is treated as a real failure, not waved through. A project
+declaring neither field behaves exactly as before this feature existed.
+
+If the process crashes between promoting and checking, the durable
+journal already recorded the health-check target before either
+happened - `recover_interrupted_promotions()` now runs that pending
+check for real on the next start (never repeating the clone/build), and
+still refuses to mark the promotion complete until it genuinely passes.
+This is I13's own literal acceptance test: cut the process after
+promoting and before checking health, restart, and the pending check
+runs for real rather than announcing success prematurely.
+
+2 new tests (`test_install.py`): a real local HTTP server answering 200
+completes the promotion end to end, and a real closed port leaves the
+promotion honestly reported as failed AND still pending in the journal
+(the checkout itself really was promoted - only its health is in
+question).
+
+Verified: 70/70 tests, `ci_validate.py` PASS.
+
 ## [0.3.5] - P01: an optional durable promotion journal, wired into every real promotion
 
 V07-004's own real, bounded mitigation (this project's in-process
