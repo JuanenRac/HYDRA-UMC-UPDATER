@@ -86,12 +86,12 @@ HYDRA-UMC-OPS-AGENT's own sibling helper. 1 new regression test.
   (like aborting an entire batch of per-project calls early) rather
   than just describing one already-failed request. 4 new tests.
 
-## [0.3.6] - P01/I13: a real post-promotion health check, wired into every promotion that declares one
+## [0.3.6] - A real post-promotion health check, wired into every promotion that declares one
 
-I13 ("Checkpoints respaldados por postcondiciones"): finishing the 2
+Checkpoints backed by real postconditions: finishing the 2
 promotion renames is not the same as a HEALTHY promotion - the real
-postcondition is "servicio comprobado" (service checked), not merely
-"files moved". `install.py` now builds a real
+postcondition is that the service was actually checked, not merely
+that files were moved. `install.py` now builds a real
 `http://127.0.0.1:<service_port><service_health_path>` target
 (`_health_check_url_for()`) whenever a project's own manifest declares
 BOTH fields, passes it into the durable journal (HYDRA-UMC-SDK's new
@@ -106,7 +106,7 @@ journal already recorded the health-check target before either
 happened - `recover_interrupted_promotions()` now runs that pending
 check for real on the next start (never repeating the clone/build), and
 still refuses to mark the promotion complete until it genuinely passes.
-This is I13's own literal acceptance test: cut the process after
+The acceptance test: cut the process after
 promoting and before checking health, restart, and the pending check
 runs for real rather than announcing success prematurely.
 
@@ -118,13 +118,13 @@ question).
 
 Verified: 70/70 tests, `ci_validate.py` PASS.
 
-## [0.3.5] - P01: an optional durable promotion journal, wired into every real promotion
+## [0.3.5] - An optional durable promotion journal, wired into every real promotion
 
-V07-004's own real, bounded mitigation (this project's in-process
+This project's own real, bounded mitigation (an in-process
 self-heal for the narrow gap between clone_or_pull's own 2 promotion
-renames) already named the real remaining gap: "not the full
-transactional journal/rollback... that needs designing once, shared
-with HYDRA-UMC-OPS-AGENT's own canary_deploy.py". HYDRA-UMC-SDK now
+renames) already named the real remaining gap: not the full
+transactional journal/rollback, which needed designing once and sharing
+with HYDRA-UMC-OPS-AGENT's own canary_deploy.py. HYDRA-UMC-SDK now
 ships that shared journal (`promotion_journal.py`) - this wires it in.
 
 `install.py` imports `hydra_umc_sdk.promotion_journal` inside a
@@ -194,9 +194,9 @@ rejected outright by `validate_project_manifests.py`/
 - README + 6 translations - the `deploy` field's own documented value
   list now includes `dev-server`.
 
-## [0.3.2] - V07-004: promotion could destroy its own only recovery point
+## [0.3.2] - Promotion could destroy its own only recovery point
 
-Found in a review pass (P1), shared with
+Found in a review pass, shared with
 HYDRA-UMC-OPS-AGENT's own `canary_deploy.py` (same real gap, same real
 fix - a full transactional journal/rollback across both implementations
 stays real, separate future work, not claimed as done here):
@@ -220,13 +220,13 @@ New `test_two_successive_updates_never_overwrite_the_earlier_backup` and
 `tests/test_install.py` (a real, injected `Path.rename` failure on
 exactly the second promotion rename, nothing else) - 61/61 tests pass.
 
-## [0.3.1] - V07-001: a real tracked-file edit could still be silently discarded
+## [0.3.1] - A real tracked-file edit could still be silently discarded
 
 - **`clone_or_pull()`'s own docstring claimed** "a real local edit... fails
   loudly... instead of being silently discarded" - true only for the
   older `verify_build=False` in-place `git merge --ff-only` path.
-  Found in a review pass (P1, a real gap the
-  REV-002 fix didn't close): once `verify_build=True` (the default)
+  Found in a review pass, a real gap an
+  earlier fix didn't close: once `verify_build=True` (the default)
   moved to building in an isolated staging clone, that claim silently
   stopped being true. `git clone --local` only ever copies the
   COMMITTED object database - a genuine uncommitted edit to an
@@ -251,14 +251,14 @@ exactly the second promotion rename, nothing else) - 61/61 tests pass.
   `PYTHONPATH=src python -m pytest tests -q` - 59 passed (was 58).
   `tools/ci_validate.py` PASS.
 
-## [0.3.0] - REV-001/REV-002: real regressions found by independent revalidation, plus prior unreleased work
+## [0.3.0] - Real regressions found by independent revalidation, plus prior unreleased work
 
 A review pass reproduced 2 real regressions in
-UPD-01's own staging-clone update path (each against a real local git
+this project's own staging-clone update path (each against a real local git
 remote/checkout, no mocked git). Both fixed here, each with new
 regression tests:
 
-- **REV-001 [P1]:** `git clone --local` (used to build the staging
+- `git clone --local` (used to build the staging
   clone) points the new clone's own `origin` remote at the LOCAL SOURCE
   PATH it was cloned from - never this project's real GitHub upstream.
   Left uncorrected, the checkout that staging clone becomes once
@@ -268,7 +268,7 @@ regression tests:
   its first verified-build update. Fixed: the staging clone's `origin`
   is reset to the real upstream (`github_repo_url()`) immediately after
   it is created, before build or promotion.
-- **REV-002 [P1]:** `git clone --local` only ever copies the committed
+- `git clone --local` only ever copies the committed
   object database - a project's own real local data living untracked
   inside its checkout (`data/settings.json`, `data/users.json`, a real
   sqlite file, generated TLS material, ...) was left behind entirely
@@ -305,9 +305,9 @@ Also includes prior unreleased work:
   guessed. The other, unrelated "Open on GitHub" button (opens a selected
   project's own GitHub page) is untouched.
 
-## [0.2.9] - Updating an existing checkout is now atomic-by-verification (UPD-01)
+## [0.2.9] - Updating an existing checkout is now atomic-by-verification
 
-Found while auditing the code, P1:
+Found while auditing the code:
 
 - **The bug.** Updating an existing checkout merged the candidate
   straight into the live installation with `git merge --ff-only`, then
