@@ -30,6 +30,7 @@ from pathlib import Path
 from typing import Callable
 from uuid import uuid4
 
+from .evidence import installed_state, record_attempt
 from .project_manifest import ManifestValidationError, ProjectManifest, parse_manifest
 from .registry import ProjectEntry, github_repo_url
 
@@ -746,6 +747,7 @@ def install_or_update(
     when nothing was pending, or when hydra-umc-sdk isn't installed."""
     recover_interrupted_promotions(workspace_root)
     was_existing_checkout = (workspace_root / entry.name / ".git").is_dir()
+    before = installed_state(workspace_root / entry.name)
     results = [clone_or_pull(entry, workspace_root, verify_build=build, progress=progress)]
     if results[0].ok and build and not was_existing_checkout:
         results.append(run_build_script(entry, workspace_root, progress=progress))
@@ -753,6 +755,14 @@ def install_or_update(
         _checkpoint(progress, "build", "Build already verified in an isolated staging clone before promotion.")
     elif results[0].ok:
         _checkpoint(progress, "build", "Build-test was deliberately skipped for this one approved source refresh.")
+    record_attempt(
+        workspace_root,
+        project=entry.name,
+        before=before,
+        after=installed_state(workspace_root / entry.name),
+        ok=all(r.ok for r in results),
+        message="; ".join(r.message for r in results),
+    )
     return results
 
 

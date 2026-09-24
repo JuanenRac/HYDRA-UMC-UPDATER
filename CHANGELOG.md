@@ -5,6 +5,14 @@ version number follows this ecosystem's "odometer" scheme: PATCH +1 on
 every real build, rolling into MINOR past 9 (`0.0.9` -> `0.1.0`); MAJOR is
 bumped manually only. See `bump_version.py`.
 
+## [0.4.3] - Every install or update attempt leaves evidence
+
+- `evidence.py`: after each install or update the updater appends one line to
+  `<workspace>/.hydra-umc-updater/evidence.jsonl` with the project, the installed version and
+  commit before and after, whether the attempt succeeded and its message. A failed or
+  interrupted attempt leaves a trace and recording can never fail an update. The existing
+  staging, backup and interrupted-promotion recovery are unchanged. Five new tests.
+
 ## [0.4.2] - Separate-field version patterns may carry a build entry
 
 - The manifest parser and the version reader accept an optional `build` regex in
