@@ -33,7 +33,7 @@ from uuid import uuid4
 from .project_manifest import ManifestValidationError, ProjectManifest, parse_manifest
 from .registry import ProjectEntry, github_repo_url
 
-# P01/V07-004: the durable version of this module's own in-process
+# P01/the durable version of this module's own in-process
 # self-heal for the narrow gap between the 2 promotion renames below (see
 # clone_or_pull's own docstring) - HYDRA-UMC-SDK's promotion_journal
 # module, shared with HYDRA-UMC-OPS-AGENT's own canary_deploy.py, exactly
@@ -45,7 +45,7 @@ from .registry import ProjectEntry, github_repo_url
 # still works exactly as before (the in-process self-heal already in
 # clone_or_pull), just without surviving a full process crash.
 #
-# P01/I13: the same optional package also carries check_service_health() -
+# P01/the same optional package also carries check_service_health -
 # when a project's own manifest declares a real service_port +
 # service_health_path, a promotion is not reported as a real success
 # until that real endpoint answers healthy (see _health_check_url_for()
@@ -69,7 +69,7 @@ _JOURNAL_FILENAME = ".hydra_umc_updater_promotion_journal.json"
 
 
 def _health_check_url_for(entry: ProjectEntry) -> str | None:
-    """I13's own real 'servicio comprobado' target - only ever built when
+    """this project's own real 'servicio comprobado' target - only ever built when
     the project's own manifest declares BOTH `service_port` and
     `service_health_path` (see ProjectEntry's own field comments); either
     alone declares nothing checkable. Always `127.0.0.1`: this checks
@@ -171,7 +171,7 @@ def _checkpoint(progress: ProgressCallback | None, phase: str, message: str) -> 
         progress(phase, message)
 
 
-# REV-002 (P1): well-known
+# well-known
 # build-artifact directory names, never carried over by
 # _carry_over_local_data() below even though git genuinely considers
 # them untracked/ignored - always safe to regenerate, and carrying them
@@ -188,7 +188,7 @@ _NEVER_CARRIED_OVER_DIR_NAMES = {
 def _real_untracked_paths(path: Path) -> list[str]:
     """Returns every real path (relative to `path`) this checkout's own
     git considers untracked OR ignored (`git status`'s own `??`/`!!`
-    codes) - the exact real local-data shape REV-002 needs carried over
+    codes) - the exact real local-data shape needs carried over
     into a staging clone, which `git clone --local` never copies (it
     only ever copies the committed object database). Deliberately never
     includes a modified TRACKED file - a genuinely dirty working tree on
@@ -212,7 +212,7 @@ def _real_untracked_paths(path: Path) -> list[str]:
 
 
 class DirtyCheckError(RuntimeError):
-    """H049 (shared with HYDRA-UMC-OPS-AGENT's own sibling helper): `git
+    """(shared with HYDRA-UMC-OPS-AGENT's own sibling helper): `git
     status` itself failed to run against a checkout (not a git
     repository, git missing from PATH, a permissions/IO error, ...) -
     see `_tracked_dirty_paths()`'s own docstring for why this must never
@@ -225,11 +225,11 @@ def _tracked_dirty_paths(path: Path) -> list[str]:
     or not (`git status --porcelain`'s own status codes other than
     `??`/`!!`, which _real_untracked_paths() already owns).
 
-    V07-001 (P1): this
+    this
     module's own docstring used to claim "a real local edit... fails
     loudly with git's own error instead of being silently discarded" -
     true only for the older verify_build=False in-place `git merge
-    --ff-only` path. Once UPD-01 moved the default (verify_build=True)
+    --ff-only` path. Once moved the default (verify_build=True)
     flow to an isolated staging clone, that claim silently stopped being
     true: `git clone --local` only ever copies the COMMITTED object
     database, so a real uncommitted edit to an already-tracked file
@@ -242,7 +242,7 @@ def _tracked_dirty_paths(path: Path) -> list[str]:
     fail loudly again before any staging work happens at all - matching
     what the docstring already promised.
 
-    H049 (P0, shared with OPS-AGENT's own sibling helper): a `git
+    (P0, shared with OPS-AGENT's own sibling helper): a `git
     status` that fails to even RUN (returncode != 0) used to be treated
     exactly like "ran fine, found nothing dirty" - the one real
     uncommitted edit this function exists to catch became invisible the
@@ -275,7 +275,7 @@ def _carry_over_local_data(old_path: Path, staging_path: Path, *, progress: Prog
     `old_path` into `staging_path` before the candidate is built or
     promoted.
 
-    REV-002 (P1): a real
+    a real
     project's own operational data living inside its checkout (`data/
     settings.json`, `data/users.json`, a real sqlite file, TLS material a
     project generated for itself, ...) is exactly the shape of file `git
@@ -356,9 +356,9 @@ def clone_or_pull(
     checked upfront (see _tracked_dirty_paths()'s own docstring for why
     this can no longer be left to git's own `merge --ff-only` error:
     that used to be true, but stopped being true the moment verify_build
-    defaulted to the isolated staging-clone flow below, V07-001).
+    defaulted to the isolated staging-clone flow below, ).
 
-    UPD-01 (P1):
+    (P1):
     updating an EXISTING checkout used to merge the candidate straight
     into `path`, then leave building it to a separate step
     (install_or_update's own run_build_script call) - a build failure
@@ -417,7 +417,7 @@ def clone_or_pull(
     except ManifestValidationError as exc:
         return InstallResult(False, f"installed checkout failed manifest validation: {exc}")
 
-    # V07-001: refuse upfront, before any fetch/staging work, if a real
+    # refuse upfront, before any fetch/staging work, if a real
     # tracked file has a genuine uncommitted edit - see
     # _tracked_dirty_paths()'s own docstring for exactly why the
     # staging-clone flow below can no longer be trusted to catch this
@@ -477,7 +477,7 @@ def clone_or_pull(
             )
         return InstallResult(True, f"Pulled latest into {path}")
 
-    # UPD-01: prove the candidate actually builds in a fully independent
+    # prove the candidate actually builds in a fully independent
     # staging clone BEFORE touching `path` at all - see this function's
     # own docstring. Resolved as a real SHA (not the name "FETCH_HEAD",
     # which means something different in every repo) BEFORE staging even
@@ -520,7 +520,7 @@ def clone_or_pull(
             _command_output(result),
         )
 
-    # REV-001 (P1): `git
+    # `git
     # clone --local` above points the new clone's own `origin` remote at
     # the LOCAL SOURCE PATH it was cloned from (`path`, the installation
     # about to be renamed aside) - never at this project's real GitHub
@@ -542,7 +542,7 @@ def clone_or_pull(
             _command_output(result),
         )
 
-    # REV-002 (P1): carry
+    # carry
     # over the installed checkout's own real local data BEFORE building/
     # promoting - see _carry_over_local_data()'s own docstring for the
     # real gap this closes. Done before the build below (not merely
@@ -580,7 +580,7 @@ def clone_or_pull(
     # leave `path` genuinely missing) - vastly narrower than before,
     # where the unsafe window spanned the entire build.
     #
-    # V07-004 (P1; honest,
+    # (P1; honest,
     # bounded mitigation, not the full transactional journal/rollback
     # the finding's own acceptance criteria describes - that needs
     # designing once, shared with HYDRA-UMC-OPS-AGENT's own
@@ -600,7 +600,7 @@ def clone_or_pull(
     # live checkout nor a clear indication of which path holds the real
     # one.
     backup_path = workspace_root / f"{entry.name}.backup-{uuid4().hex[:8]}"
-    # P01/V07-004: a durable journal entry, written to disk BEFORE the
+    # P01/a durable journal entry, written to disk BEFORE the
     # first real rename, so recover_interrupted_promotions() can heal
     # this promotion even if the process itself dies right here - the
     # in-process self-heal below still runs unconditionally either way,
@@ -640,7 +640,7 @@ def clone_or_pull(
     if journal:
         journal.advance(promotion_id, PromotionPhase.PROMOTED)
     sha_label = candidate_sha[:12]
-    # I13: a promotion that finishes its 2 renames is not yet a HEALTHY
+    # a promotion that finishes its 2 renames is not yet a HEALTHY
     # promotion when the project itself declares a real health endpoint -
     # check it for real before ever calling this a success, rather than
     # treating "the files moved" as the whole postcondition. Skipped
@@ -694,7 +694,7 @@ def run_build_script(
 def _run_build_script_at(path: Path, *, progress: ProgressCallback | None = None) -> InstallResult:
     """The real work behind run_build_script(), taking an explicit path
     instead of deriving one from workspace_root/entry.name - shared with
-    clone_or_pull's own staging-clone build verification (UPD-01), which
+    clone_or_pull's own staging-clone build verification, which
     needs to build a candidate sitting in a temporary staging directory,
     not (yet) the real installed checkout."""
     script = find_build_test_script(path)
@@ -730,7 +730,7 @@ def install_or_update(
     this project's own README for why that is a deliberate, non-optional
     design choice: explicit operator approval keeps deployment safe).
 
-    UPD-01: updating an EXISTING checkout now builds/verifies the
+    updating an EXISTING checkout now builds/verifies the
     candidate itself, inside clone_or_pull's own staging clone, BEFORE
     ever promoting it into the real installation - see that function's
     own docstring. A brand-new clone has no previous installation to
