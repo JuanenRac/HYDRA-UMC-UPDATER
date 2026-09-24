@@ -44,6 +44,17 @@ def test_parse_version_reads_the_optional_fourth_group():
     assert str(parse_version('version = "0.7.9"', FOUR_PATTERN)) == "0.7.9"
 
 
+def test_separate_field_patterns_read_the_build_field_only_from_the_threshold():
+    fields = {
+        key: "^version" + name + BACKSLASH + "s*=" + BACKSLASH + "s*(" + BACKSLASH + "d+)"
+        for key, name in (("major", "Major"), ("minor", "Minor"), ("patch", "Patch"), ("build", "Build"))
+    }
+    below = "versionMajor=0\nversionMinor=7\nversionPatch=9\nversionBuild=0\n"
+    above = "versionMajor=0\nversionMinor=8\nversionPatch=0\nversionBuild=4\n"
+    assert str(parse_version(below, fields)) == "0.7.9"
+    assert str(parse_version(above, fields)) == "0.8.0.4"
+
+
 def test_the_manifest_version_pattern_accepts_both_shapes():
     assert VERSION_RE.fullmatch("0.7.9")
     assert VERSION_RE.fullmatch("0.8.0.0")

@@ -71,6 +71,10 @@ def parse_version(text: str, pattern) -> Version | None:
             if not match:
                 return None
             parts[key] = int(match.group(1))
+        if "build" in pattern and (parts["major"], parts["minor"], parts["patch"]) >= (0, 8, 0):
+            build = re.search(pattern["build"], text, re.MULTILINE)
+            if build:
+                return Version(parts["major"], parts["minor"], parts["patch"], int(build.group(1)), has_build=True)
         return Version(parts["major"], parts["minor"], parts["patch"])
 
     match = re.search(pattern, text, re.MULTILINE)

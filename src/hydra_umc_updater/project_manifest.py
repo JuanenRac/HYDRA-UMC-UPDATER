@@ -166,11 +166,11 @@ def parse_manifest(text: str, *, expected_name: str | None = None) -> ProjectMan
         if not native_version_pattern:
             raise ManifestValidationError("native_version.pattern cannot be empty")
     elif isinstance(native_version_pattern, dict):
-        if set(native_version_pattern) != {"major", "minor", "patch"} or any(
+        if not {"major", "minor", "patch"} <= set(native_version_pattern) <= {"major", "minor", "patch", "build"} or any(
             not isinstance(value, str) or not value for value in native_version_pattern.values()
         ):
             raise ManifestValidationError(
-                "native_version.pattern mapping must contain non-empty major, minor and patch regexes"
+                "native_version.pattern mapping must contain non-empty major, minor and patch regexes (and optionally build)"
             )
     else:
         raise ManifestValidationError("native_version.pattern must be a regex string or component mapping")
