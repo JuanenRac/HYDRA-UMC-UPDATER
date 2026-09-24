@@ -65,13 +65,12 @@ def discover_workspace(workspace_root: Path) -> LocalDiscovery:
         if manifest.ecosystem != ECOSYSTEM_ID:
             continue
         entry = entry_from_manifest(manifest)
-        major, minor, patch = (int(part) for part in manifest.version.split("."))
         projects.append(
             LocalStatus(
                 entry=entry,
                 path=project_path,
                 installed=True,
-                version=Version(major, minor, patch),
+                version=Version.from_string(manifest.version),
             )
         )
 

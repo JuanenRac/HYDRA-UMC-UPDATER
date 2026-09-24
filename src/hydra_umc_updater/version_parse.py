@@ -16,23 +16,44 @@
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 
 @dataclass(frozen=True)
 class Version:
+    """MAJOR.MINOR.PATCH, with an optional fourth BUILD component.
+
+    A missing fourth component compares as 0 (0.8.0 == 0.8.0.0) but is printed
+    as it was written, so a manifest that says 0.8.0.0 is shown as 0.8.0.0.
+    """
+
     major: int
     minor: int
     patch: int
+    build: int = 0
+    has_build: bool = field(default=False, compare=False)
+
+    @classmethod
+    def from_string(cls, text: str) -> "Version":
+        parts = [int(part) for part in text.split(".")]
+        if len(parts) == 3:
+            return cls(parts[0], parts[1], parts[2])
+        if len(parts) == 4:
+            return cls(parts[0], parts[1], parts[2], parts[3], has_build=True)
+        raise ValueError(f"not a MAJOR.MINOR.PATCH[.BUILD] version: {text!r}")
+
+    def _key(self) -> tuple[int, int, int, int]:
+        return (self.major, self.minor, self.patch, self.build)
 
     def __str__(self) -> str:
-        return f"{self.major}.{self.minor}.{self.patch}"
+        base = f"{self.major}.{self.minor}.{self.patch}"
+        return f"{base}.{self.build}" if self.has_build else base
 
     def __lt__(self, other: "Version") -> bool:
-        return (self.major, self.minor, self.patch) < (other.major, other.minor, other.patch)
+        return self._key() < other._key()
 
     def __le__(self, other: "Version") -> bool:
-        return (self.major, self.minor, self.patch) <= (other.major, other.minor, other.patch)
+        return self._key() <= other._key()
 
 
 def parse_version(text: str, pattern) -> Version | None:
@@ -55,4 +76,6 @@ def parse_version(text: str, pattern) -> Version | None:
     match = re.search(pattern, text, re.MULTILINE)
     if not match or len(match.groups()) < 3:
         return None
+    if len(match.groups()) >= 4 and match.group(4) is not None:
+        return Version(int(match.group(1)), int(match.group(2)), int(match.group(3)), int(match.group(4)), has_build=True)
     return Version(int(match.group(1)), int(match.group(2)), int(match.group(3)))
