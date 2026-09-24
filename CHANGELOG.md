@@ -5,6 +5,12 @@ version number follows this ecosystem's "odometer" scheme: PATCH +1 on
 every real build, rolling into MINOR past 9 (`0.0.9` -> `0.1.0`); MAJOR is
 bumped manually only. See `bump_version.py`.
 
+## [0.4.1] - Version parsing accepts an optional fourth component
+
+- Discovery, the GitHub client and the installer read, print and compare a
+  version with an optional fourth numeric component; three-part versions behave
+  as before.
+
 ## [0.4.0] - Stale project counts and an out-of-date contributor guide
 
 - Replaced every hardcoded "44"/"55"/"56 projects" reference across

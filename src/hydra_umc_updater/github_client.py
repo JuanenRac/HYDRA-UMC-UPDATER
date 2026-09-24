@@ -270,10 +270,9 @@ def _fetch_discovered_manifest(owner: str, name: str, branch: str) -> RemoteStat
 
     if manifest.ecosystem != ECOSYSTEM_ID:
         return None
-    major, minor, patch = (int(part) for part in manifest.version.split("."))
     return RemoteStatus(
         entry=entry_from_manifest(manifest),
-        version=Version(major, minor, patch),
+        version=Version.from_string(manifest.version),
         url=url,
         manifest=manifest,
     )
@@ -464,8 +463,7 @@ def _fetch_one(
 
     try:
         manifest = parse_manifest(text, expected_name=entry.name)
-        major, minor, patch = (int(part) for part in manifest.version.split("."))
-        version = Version(major, minor, patch)
+        version = Version.from_string(manifest.version)
     except ManifestValidationError as exc:
         return RemoteStatus(
             entry=entry,

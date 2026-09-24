@@ -320,8 +320,10 @@ def _validated_manifest_text(text: str, entry: ProjectEntry) -> ProjectManifest:
     return parse_manifest(text, expected_name=entry.name)
 
 
-def _version_tuple(manifest: ProjectManifest) -> tuple[int, int, int]:
-    return tuple(int(part) for part in manifest.version.split("."))  # type: ignore[return-value]
+def _version_tuple(manifest: ProjectManifest) -> tuple[int, int, int, int]:
+    parts = [int(part) for part in manifest.version.split(".")]
+    parts += [0] * (4 - len(parts))  # a missing fourth component compares as 0
+    return tuple(parts)  # type: ignore[return-value]
 
 
 def _manifest_from_revision(path: Path, revision: str, entry: ProjectEntry) -> ProjectManifest:
