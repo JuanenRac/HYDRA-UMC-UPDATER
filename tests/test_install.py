@@ -162,7 +162,7 @@ def write_build_script(path: Path, *, ok: bool) -> None:
     that matters) - `ok` controls whether it succeeds or fails, and a
     successful run also drops a real marker file (built.txt) so a test
     can confirm the STAGING build's own artifacts - not just its source -
-    made it into the promoted checkout (UPD-01)."""
+    made it into the promoted checkout."""
     if ok:
         (path / "build-test.sh").write_text("#!/usr/bin/env bash\necho built > built.txt\nexit 0\n", encoding="utf-8")
         (path / "build-test.bat").write_text("@echo off\r\necho built> built.txt\r\nexit /b 0\r\n", encoding="utf-8")
@@ -204,7 +204,7 @@ def test_update_verifies_build_in_staging_before_promoting_and_keeps_a_backup(tm
     # the same directory it verified, rather than rebuilding blind.
     assert (local / "built.txt").exists()
 
-    # V07-004: unique per attempt (`.backup-<uuid>`), not a single fixed
+    # unique per attempt (`.backup-<uuid>`), not a single fixed
     # name - see clone_or_pull()'s own comment for the real data-loss gap
     # a fixed, reused name left open.
     backups = list(tmp_path.glob(f"{entry().name}.backup-*"))
@@ -217,7 +217,7 @@ def test_update_verifies_build_in_staging_before_promoting_and_keeps_a_backup(tm
 
 
 def test_two_successive_updates_never_overwrite_the_earlier_backup(tmp_path: Path, monkeypatch):
-    # V07-004 (P1): the
+    # the
     # previous fixed `<name>.backup` path was `rmtree`'d and overwritten
     # on every single promotion - a second real update after a first one
     # already succeeded silently destroyed the ONLY other recoverable
@@ -236,7 +236,7 @@ def test_two_successive_updates_never_overwrite_the_earlier_backup(tmp_path: Pat
 
     local = tmp_path / entry().name
     git("clone", str(remote), str(local), cwd=tmp_path)
-    # This test's own real upstream IS the bare repo above (REV-001's own
+    # This test's own real upstream IS the bare repo above (this project's own
     # promotion-time reset would otherwise point a promoted checkout at a
     # real, nonexistent GitHub URL, breaking the SECOND update's own
     # `git fetch` here - see test_update_restores_the_real_upstream_...
@@ -271,7 +271,7 @@ def test_two_successive_updates_never_overwrite_the_earlier_backup(tmp_path: Pat
 
 
 def test_promotion_self_heals_when_the_second_rename_fails(tmp_path: Path, monkeypatch):
-    # V07-004: a crash or exception in the narrow gap between the two
+    # a crash or exception in the narrow gap between the two
     # promotion renames used to leave NO active checkout at all. Inject
     # a real failure into exactly that second rename (staging -> path)
     # and confirm the previous installation is restored rather than
@@ -321,7 +321,7 @@ def test_promotion_self_heals_when_the_second_rename_fails(tmp_path: Path, monke
 
 
 def test_update_restores_the_real_upstream_remote_on_the_promoted_checkout(tmp_path: Path, monkeypatch):
-    # REV-001 (P1): the
+    # the
     # staging clone `git clone --local ...` creates is a clone OF the
     # local installation path, so its own `origin` remote used to end up
     # pointing at that local path - never this project's real upstream -
@@ -361,7 +361,7 @@ def test_update_restores_the_real_upstream_remote_on_the_promoted_checkout(tmp_p
 
 
 def test_update_carries_over_real_local_data_never_tracked_by_git(tmp_path: Path):
-    # REV-002 (P1): `git
+    # `git
     # clone --local` only ever copies the committed object database - a
     # project's own real local data (config, accounts, generated
     # certificates, ...) living untracked inside its checkout used to be
@@ -408,8 +408,8 @@ def test_update_carries_over_real_local_data_never_tracked_by_git(tmp_path: Path
 
 
 def test_update_refuses_when_a_real_tracked_file_has_an_uncommitted_edit(tmp_path: Path):
-    # V07-001 (P1, a real
-    # gap this module's own docstring did not actually close once UPD-01
+    # (P1, a real
+    # gap this module's own docstring did not actually close once 
     # switched to the staging-clone flow): `git clone --local` only ever
     # copies the COMMITTED object database - a genuinely dirty edit to a
     # TRACKED file lives only in the installed checkout's own working
@@ -464,7 +464,7 @@ def test_update_refuses_when_a_real_tracked_file_has_an_uncommitted_edit(tmp_pat
 
 
 def test_tracked_dirty_paths_raises_when_git_status_itself_fails(tmp_path: Path):
-    # H049 (P0, shared with HYDRA-UMC-OPS-AGENT's own sibling helper): a
+    # (P0, shared with HYDRA-UMC-OPS-AGENT's own sibling helper): a
     # `git status` that fails to even run (here: not a git repository at
     # all, exit 128) used to be treated exactly like "ran fine, found
     # nothing dirty" - the one real uncommitted edit this function exists
@@ -497,7 +497,7 @@ def test_update_build_failure_leaves_the_previous_installation_completely_untouc
     git("clone", str(remote), str(local), cwd=tmp_path)
     old_head = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=local, text=True).strip()
 
-    # UPD-01's own exact reproduction: the candidate's manifest is real
+    # this project's own exact reproduction: the candidate's manifest is real
     # and newer, but its build is broken.
     write_manifest(seed, "1.1.0")
     write_build_script(seed, ok=False)
@@ -730,7 +730,7 @@ def test_i13_promotion_stays_pending_when_the_health_check_fails(tmp_path: Path)
 
         result = reloaded.clone_or_pull(_entry_with_health(port=closed_port), tmp_path)
 
-        # I13's own real acceptance test, end to end: the files DID
+        # this project's own real acceptance test, end to end: the files DID
         # promote (the checkout really is the new version), but a
         # failing health check must never be reported as success, and
         # must never be silently pruned from the journal either.
