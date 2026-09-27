@@ -6,7 +6,7 @@
 
 <p align="center">🇺🇸 <b>English</b> | <a href="README_spa.md">🇪🇸 Español</a> | <a href="README_fra.md">🇫🇷 Français</a> | <a href="README_ita.md">🇮🇹 Italiano</a> | <a href="README_deu.md">🇩🇪 Deutsch</a> | <a href="README_zho.md">🇨🇳 简体中文</a> | <a href="README_jpn.md">🇯🇵 日本語</a></p>
 
-### 📦 Detect, Install, and Manually Update the Whole HYDRA-UMC/URTC Ecosystem
+### 📦 Detect, Install, and Manually Update the Whole HYDRA-UMC Ecosystem
 
 <p align="center">
   <img src="https://img.shields.io/badge/Licencia-GPL%203.0-blue.svg" alt="GPL 3.0">
@@ -196,13 +196,13 @@ continues to be written to the launch terminal.
   `subprocess` for git/build-script calls (`install.py`), nothing else -
   a tool responsible for keeping every OTHER project's dependencies sane
   staying dependency-free itself is deliberate.
-- **Known simplification**: HYDRA-UMC and URTC are real multi-component
-  firmware repos (6 and 4 independently-versioned binaries each - see
-  their own `VERSION_CHECKLIST.txt`/`build_firmware.sh`) with no single
-  "the" version number. `registry.py` tracks ONE representative
-  component per repo - good enough to answer "is this repo roughly up to
-  date", not a replacement for `build_firmware.sh`'s own
-  `firmware_manifest.json` for a real flash.
+- **Known simplification**: HYDRA-UMC is a real multi-component firmware
+  repo (6 independently-versioned binaries - see its own
+  `VERSION_CHECKLIST.txt`/`build_firmware.sh`) with no single "the"
+  version number. `registry.py` tracks ONE representative component per
+  repo - good enough to answer "is this repo roughly up to date", not a
+  replacement for `build_firmware.sh`'s own `firmware_manifest.json` for
+  a real flash.
 
 ## 📂 DIRECTORY STRUCTURE
 
@@ -288,7 +288,7 @@ older Tkinter shell is only a compatibility fallback.
   no Rust/Go/Android SDK/Flutter installed - before an `install` fails
   partway through).
 - A `--json` output mode for `status`, for scripting against it.
-- Per-component tracking for HYDRA-UMC/URTC's own multi-binary firmware
+- Per-component tracking for HYDRA-UMC's own multi-binary firmware
   (see the "known simplification" in section 3), once there's a real
   need beyond the single representative component this tracks today.
 
@@ -327,11 +327,6 @@ This project is part of the HYDRA-UMC robotics ecosystem by the same author (Jua
 - **[HYDRA-UMC-BRIDGE-ROS2](https://github.com/JuanenRac/HYDRA-UMC-BRIDGE-ROS2)** — safety coordinator with a real, lazily-imported rclpy ROS 2 transport.
 - **[HYDRA-UMC-BRIDGE-UAV](https://github.com/JuanenRac/HYDRA-UMC-BRIDGE-UAV)** — coordination boundary for camera-equipped UAVs, with a real MAVLink command sender.
 
-*URTC Tool Platform*
-- **[URTC](https://github.com/JuanenRac/URTC)** — firmware for the physical Universal Robot Tool Controller PCB, 25+ tool profiles over CAN bus.
-- **[URTC-FLASHER](https://github.com/JuanenRac/URTC-FLASHER)** — desktop GUI flashing tool for URTC boards, CAN-OTA plus full-chip SWD/JTAG.
-- **[URTC-TESTER](https://github.com/JuanenRac/URTC-TESTER)** — desktop live CAN-bus diagnostic tool for URTC boards, one panel per tool profile.
-- **[URTC-WEB-STUDIO](https://github.com/JuanenRac/URTC-WEB-STUDIO)** — browser-based alternative to URTC-TESTER via the Web Serial API, no local install needed.
 
 *Vision AI Node (Hailo-8)*
 - **[HYDRA-UMC-VISION-NODE](https://github.com/JuanenRac/HYDRA-UMC-VISION-NODE)** — integration hub for the Hailo-8 vision pipeline, with a real per-stage hardware-readiness check.
@@ -377,8 +372,6 @@ This project is part of the HYDRA-UMC robotics ecosystem by the same author (Jua
 - **[HYDRA-UMC-DASHBOARD-AI](https://github.com/JuanenRac/HYDRA-UMC-DASHBOARD-AI)** — Smart Summaries and Anomaly Highlighting panels over DATALAKE/ANOMALY-DETECTOR, with an honest statistical fallback.
 - **[HYDRA-UMC-TOOL-CLI](https://github.com/JuanenRac/HYDRA-UMC-TOOL-CLI)** — fleet CLI with a real, stable exit-code contract, a genuine live client of HYDRA-UMC-SERVER's own API.
 - **[HYDRA-UMC-WATCH](https://github.com/JuanenRac/HYDRA-UMC-WATCH)** — WearOS companion app with real haptic alerts and a paired-phone voice relay.
-- **[URTC-SMART-RACK](https://github.com/JuanenRac/URTC-SMART-RACK)** — firmware for a board-mounting rack with real tool-ID decoding and Smart Idle pre-heating logic.
-- **[URTC-VISION-TOOL](https://github.com/JuanenRac/URTC-VISION-TOOL)** — firmware plus a real Python vision companion for a thermal/RGB inspection tool head.
 
 ---
 

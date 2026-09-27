@@ -12,8 +12,8 @@ run of the installed CLI — not written from memory.
 $ hydra-umc-updater --cli -h
 usage: hydra-umc-updater --cli [-h] [--version] {status,install,update} ...
 
-Detects, installs, and manually updates the HYDRA-UMC/URTC ecosystem's
-projects on this machine.
+Detects, installs, and manually updates the HYDRA-UMC ecosystem's own projects
+on this machine.
 
 positional arguments:
   {status,install,update}

@@ -242,7 +242,7 @@ def _install_or_update(args: argparse.Namespace, *, expect_installed: bool) -> i
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="hydra-umc-updater --cli",
-        description="Detects, installs, and manually updates the HYDRA-UMC/URTC ecosystem's 56 projects on this machine.",
+        description="Detects, installs, and manually updates the HYDRA-UMC ecosystem's own projects on this machine.",
     )
     parser.add_argument("--version", action="version", version=f"hydra-umc-updater {__version__}")
     subparsers = parser.add_subparsers(dest="command")
