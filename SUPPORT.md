@@ -5,7 +5,7 @@ Thank you for using HYDRA-UMC-UPDATER! Here is how you can get help:
 ## 📺 Video Tutorials & Demos
 
 The best way to see how this tool detects, installs, and updates the
-HYDRA-UMC/URTC ecosystem is through our official YouTube channel:
+HYDRA-UMC ecosystem is through our official YouTube channel:
 [youtube.com/@electrohobby3d](https://youtube.com/@electrohobby3d)
 
 ## ✉️ Direct Technical Inquiries

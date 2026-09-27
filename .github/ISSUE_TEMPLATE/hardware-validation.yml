@@ -1,5 +1,5 @@
 # =============================================================================
-# HYDRA-UMC / URTC Ecosystem - Hardware validation form
+# HYDRA-UMC Ecosystem - Hardware validation form
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
 # GPL-3.0 - see LICENSE.md
 # =============================================================================
@@ -19,7 +19,7 @@ body:
     id: target
     attributes:
       label: Validation target
-      options: [CM5/Raspberry Pi OS, STM32/URTC, Camera/Hailo, Robot/actuator, CNC/laser/PnP/3D machine, Watch/mobile, Other]
+      options: [CM5/Raspberry Pi OS, STM32 motherboard, Camera/Hailo, Robot/actuator, CNC/laser/PnP/3D machine, Watch/mobile, Other]
     validations:
       required: true
   - type: textarea

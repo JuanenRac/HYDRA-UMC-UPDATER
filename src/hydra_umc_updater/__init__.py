@@ -1,5 +1,5 @@
 """HYDRA-UMC-UPDATER - detects, installs, and manually updates every one of
-the HYDRA-UMC/URTC ecosystem's projects on the machine it runs on (the real
+the HYDRA-UMC ecosystem's own projects on the machine it runs on (the real
 CM5, or a dev machine with the same sibling-directory checkout layout).
 
 pyproject.toml's own `version` field is the real source of truth -
