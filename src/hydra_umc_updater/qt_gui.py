@@ -620,10 +620,11 @@ def launch_qt_gui(workspace_root: Path) -> int:
     # Windows receives a native .ico rendered from the official SVG identity
     # asset. The SVG is a safe fallback for a fresh source checkout where the
     # generated ICO has not yet been produced.
-    project_root = Path(__file__).resolve().parents[2]
-    icon = project_root / "images" / "HYDRA_UMC_ICON.ico"
+    # The icons live inside the package, so they are there also when it is installed (by another tool, from git) and not run from its own folder.
+    assets = Path(__file__).with_name("assets")
+    icon = assets / "HYDRA_UMC_ICON.ico"
     if not icon.is_file():
-        icon = project_root / "images" / "HYDRA_UMC_ICON.svg"
+        icon = assets / "HYDRA_UMC_ICON.svg"
     app.setWindowIcon(QIcon(str(icon)))
     engine = QQmlApplicationEngine()
     bridge = UpdaterBridge(workspace_root, log_path)
