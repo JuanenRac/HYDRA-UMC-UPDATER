@@ -12,6 +12,7 @@ writing the record must not turn a good update into a failed one."""
 from __future__ import annotations
 
 import json
+import logging
 import subprocess
 from pathlib import Path
 from typing import Any
@@ -66,7 +67,9 @@ def record_attempt(
         with path.open("a", encoding="utf-8") as stream:
             stream.write(json.dumps(line, sort_keys=True) + "\n")
         return path
-    except OSError:
+    except OSError as error:
+        # The attempt is still reported to the person; only the evidence file could not be written, and that is said instead of passing unnoticed.
+        logging.getLogger(__name__).warning("the evidence of the attempt on %s could not be written: %s", project, error)
         return None
 
 
