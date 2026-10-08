@@ -5,6 +5,15 @@ version number follows this ecosystem's "odometer" scheme: PATCH +1 on
 every real build, rolling into MINOR past 9 (`0.0.9` -> `0.1.0`); MAJOR is
 bumped manually only. See `bump_version.py`.
 
+## [0.4.6] - A failed write of the evidence is said
+
+- **The evidence file:** when the line of evidence of an install or update attempt cannot be written, the log now says so (it used to return nothing without a word).
+
+
+## [0.4.6]
+
+- Build version synchronized with `hydra-umc.project.json` and the repository-native version source.
+
 ## [0.4.5] - The logo shows when the updater is opened from Electro Hobby 3D Updater
 
 - **Real bug, reported by the user:** the window icon and the logo at the top of the window were looked for next to the project's folder, which does not exist when the updater is installed as a package (as Electro Hobby 3D Updater installs it) - so they never showed when opened from there. The icons now live inside the package (`assets/`) and are shipped with it.
