@@ -16,6 +16,7 @@ stdlib-only and continues to work on a headless CM5 without Qt installed.
 """
 from __future__ import annotations
 
+import ctypes
 import logging
 import sys
 import threading
@@ -600,9 +601,19 @@ class UpdaterBridge(QObject):
         return next((item for item in self._locals if item.entry.name == self._selected), None)
 
 
+def _set_windows_app_id() -> None:
+    """Gives the process its own identity on Windows, so the taskbar shows this window's icon and not the one of Python."""
+    if sys.platform == "win32":
+        try:
+            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("ElectroHobby3D.HYDRA-UMC.Updater")
+        except (AttributeError, OSError):
+            pass
+
+
 def launch_qt_gui(workspace_root: Path) -> int:
     """Launch the QML desktop application and return its Qt event-loop code."""
     log_path = _setup_file_logging()
+    _set_windows_app_id()
     app = QGuiApplication.instance() or QGuiApplication(sys.argv)
     app.setApplicationName("HYDRA-UMC-UPDATER")
     app.setApplicationDisplayName("HYDRA-UMC Updater")
@@ -621,4 +632,8 @@ def launch_qt_gui(workspace_root: Path) -> int:
     engine.load(QUrl.fromLocalFile(str(qml_path)))
     if not engine.rootObjects():
         return 1
+    # The window is given the icon itself as well, so it does not depend on the application-wide one being picked up.
+    for window in engine.rootObjects():
+        if hasattr(window, "setIcon"):
+            window.setIcon(app.windowIcon())
     return app.exec()
