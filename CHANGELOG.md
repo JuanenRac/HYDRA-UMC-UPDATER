@@ -9,28 +9,13 @@ bumped manually only. See `bump_version.py`.
 
 - **The evidence file:** when the line of evidence of an install or update attempt cannot be written, the log now says so (it used to return nothing without a word).
 
-
-## [0.4.6]
-
-- Build version synchronized with `hydra-umc.project.json` and the repository-native version source.
-
 ## [0.4.5] - The logo shows when the updater is opened from Electro Hobby 3D Updater
 
 - **Real bug, reported by the user:** the window icon and the logo at the top of the window were looked for next to the project's folder, which does not exist when the updater is installed as a package (as Electro Hobby 3D Updater installs it) - so they never showed when opened from there. The icons now live inside the package (`assets/`) and are shipped with it.
 
-
-## [0.4.5]
-
-- Build version synchronized with `hydra-umc.project.json` and the repository-native version source.
-
 ## [0.4.4] - The window icon shows reliably
 
 - **Window and taskbar icon:** the `.ico` now has seven sizes (16 to 256, made from the SVG) instead of a single large one, the window is given its icon itself, and on Windows the process gets its own identity so the taskbar shows it and not the one of Python.
-
-
-## [0.4.4]
-
-- Build version synchronized with `hydra-umc.project.json` and the repository-native version source.
 
 ## [0.4.3] - Every install or update attempt leaves evidence
 
@@ -333,7 +318,7 @@ Also includes prior unreleased work:
 
 - **`github_client.py` distinguishes a real GitHub rate limit from any
   other HTTP error** (new `describe_http_error()`/`_retry_after_seconds()`)
-  - found while auditing the code: every
+  - found on code review: every
   `HTTPError` used to become the same opaque `"HTTP {code}"`, including a
   GitHub 403/429 primary rate limit, which carries a real
   `X-RateLimit-Reset` and is genuinely transient - a real failure mode
@@ -353,7 +338,7 @@ Also includes prior unreleased work:
 
 ## [0.2.9] - Updating an existing checkout is now atomic-by-verification
 
-Found while auditing the code:
+Found on code review:
 
 - **The bug.** Updating an existing checkout merged the candidate
   straight into the live installation with `git merge --ff-only`, then
