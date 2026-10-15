@@ -5,6 +5,10 @@ version number follows this ecosystem's "odometer" scheme: PATCH +1 on
 every real build, rolling into MINOR past 9 (`0.0.9` -> `0.1.0`); MAJOR is
 bumped manually only. See `bump_version.py`.
 
+## Unreleased
+
+- The button that copies the log is a small icon (two sheets) instead of words, and turns green for a moment when it has copied.
+
 ## [0.4.6] - A failed write of the evidence is said
 
 - **The evidence file:** when the line of evidence of an install or update attempt cannot be written, the log now says so (it used to return nothing without a word).
