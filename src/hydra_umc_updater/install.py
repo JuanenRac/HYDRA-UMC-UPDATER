@@ -69,6 +69,34 @@ except ImportError:
 _JOURNAL_FILENAME = ".hydra_umc_updater_promotion_journal.json"
 
 
+# Opt-in: refuse to run a candidate's build-test script unless the commit that
+# would be built carries a signature `git verify-commit` accepts. A build-test
+# script is code the candidate brings with it, run on this machine before
+# anything has proven the commit is the maintainer's, so a signature is the
+# only thing that stands between a rewritten upstream and a shell. Off by
+# default because verifying needs a keyring that trusts the maintainer's key
+# (gpg or ssh `allowedSignersFile`) configured on this machine.
+REQUIRE_SIGNED_ENV = "HYDRA_UMC_UPDATER_REQUIRE_SIGNED"
+
+
+def signature_required() -> bool:
+    return os.environ.get(REQUIRE_SIGNED_ENV, "").strip().lower() in {"1", "true", "yes", "on"}
+
+
+def verify_candidate_signature(staging_path: Path) -> tuple[bool, str]:
+    """Asks git whether HEAD of the staging clone (the accepted candidate) has a
+    valid signature. Returns (ok, detail); a missing gpg/ssh tool, an unsigned
+    commit and a signature by an unknown key all come back as not ok."""
+    try:
+        result = _run(["git", "verify-commit", "HEAD"], cwd=staging_path, capture_output=True)
+    except OSError as exc:
+        return False, f"could not run git verify-commit: {exc}"
+    detail = _command_output(result).strip()
+    if result.returncode != 0:
+        return False, detail or f"git verify-commit exited {result.returncode}"
+    return True, detail
+
+
 def _health_check_url_for(entry: ProjectEntry) -> str | None:
     """this project's own real 'servicio comprobado' target - only ever built when
     the project's own manifest declares BOTH `service_port` and
@@ -564,6 +592,17 @@ def clone_or_pull(
             _command_output(result),
         )
 
+    if signature_required():
+        _checkpoint(progress, "signature", "Verifying the signature of the candidate commit before running anything it brings.")
+        signed, signature_detail = verify_candidate_signature(staging_path)
+        if not signed:
+            _rmtree_best_effort(staging_path)
+            return InstallResult(
+                False,
+                f"candidate commit {candidate_sha[:12]} has no valid signature ({REQUIRE_SIGNED_ENV} is set) - "
+                f"nothing was built or run, and {path} was left completely untouched",
+                signature_detail,
+            )
     _checkpoint(progress, "build", "Building and verifying the candidate in isolation before touching the live installation.")
     build_result = _run_build_script_at(staging_path, progress=progress)
     if not build_result.ok:

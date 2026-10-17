@@ -108,3 +108,20 @@ def test_resolve_initial_lang_falls_back_to_locale_when_nothing_saved(isolated_c
 def test_resolve_initial_lang_falls_back_to_english_for_an_unsupported_locale(isolated_config, monkeypatch):
     monkeypatch.setattr(i18n.locale, "getlocale", lambda: ("ko_KR", "UTF-8"))
     assert i18n.resolve_initial_lang() == "en"
+
+
+def test_portuguese_is_offered_and_complete():
+    import re
+
+    assert "pt" in {code for code, _label in i18n.LANGUAGES}
+    placeholder = re.compile(r"\{[a-z_]+\}")
+    for key, english in i18n.TRANSLATIONS["en"].items():
+        assert sorted(placeholder.findall(i18n.TRANSLATIONS["pt"][key])) == sorted(placeholder.findall(english)), key
+
+
+def test_the_qml_language_menu_offers_every_language():
+    from pathlib import Path
+
+    qml = (Path(i18n.__file__).parent / "qml" / "Main.qml").read_text(encoding="utf-8")
+    for code, _label in i18n.LANGUAGES:
+        assert f'code: "{code}"' in qml, code

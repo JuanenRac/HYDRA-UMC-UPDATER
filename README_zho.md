@@ -4,7 +4,7 @@
 
 # 🛠️ HYDRA-UMC-UPDATER
 
-<p align="center"><a href="README.md">🇺🇸 English</a> | <a href="README_spa.md">🇪🇸 Español</a> | <a href="README_fra.md">🇫🇷 Français</a> | <a href="README_ita.md">🇮🇹 Italiano</a> | <a href="README_deu.md">🇩🇪 Deutsch</a> | 🇨🇳 <b>简体中文</b> | <a href="README_jpn.md">🇯🇵 日本語</a></p>
+<p align="center"><a href="README.md">🇺🇸 English</a> | <a href="README_spa.md">🇪🇸 Español</a> | <a href="README_fra.md">🇫🇷 Français</a> | <a href="README_ita.md">🇮🇹 Italiano</a> | <a href="README_deu.md">🇩🇪 Deutsch</a> | 🇨🇳 <b>简体中文</b> | <a href="README_jpn.md">🇯🇵 日本語</a> | <a href="README_por.md">🇵🇹 Português</a></p>
 
 ### 📦 检测、安装并手动更新整个 HYDRA-UMC 生态系统
 
@@ -26,7 +26,7 @@
 > **安装全部缺失项目**和**更新全部过期项目**是分别确认的顺序批量操作，使用相同的
 > 实时状态和安全流程。
 
-**诚实核查 - 今天真正能运行的部分：** 整个生态系统的发现/版本逻辑（`registry.py`、`project_manifest.py`、`ecosystem_catalog.py`、`version_parse.py`、`detect.py`）、带重试/退避的真实 GitHub 原始内容客户端（`github_client.py`），以及安装/更新流水线中"克隆-暂存-验证-提升"的真实逻辑（`install.py`）都是真实且经过测试的——64 个通过的测试（`pytest tests/`），包括一个证明"目录损坏"与"单个项目清单损坏"相互隔离的模拟 HTTP 服务器，以及在临时目录中进行的真实 git 克隆/构建往返测试。`--cli status`/`install`/`update` 在你真正运行它们时，会端到端地驱动这同一套经过测试的核心逻辑，访问真实、在线的 GitHub 原始内容服务器（而非模拟）。Qt Quick 桌面 GUI（`qt_gui.py`、`qml/Main.qml`）和旧版 Tkinter 后备方案（`gui.py`）把同一套经过测试的核心接入一个真实窗口，并已经在真实的生态系统检出目录上运行过，但两者都没有自己的自动化测试——不存在 `test_gui.py`/`test_qt_gui.py`，因为这里没有尝试去驱动真实的 Qt/Tk 事件循环。`i18n.py` 的 7 语言覆盖由测试强制保证（`test_i18n.py`），但仅保证各语言间的键一致性，不保证翻译质量。具体已经交付了什么，请参见 `CHANGELOG.md`。
+**诚实核查 - 今天真正能运行的部分：** 整个生态系统的发现/版本逻辑（`registry.py`、`project_manifest.py`、`ecosystem_catalog.py`、`version_parse.py`、`detect.py`）、带重试/退避的真实 GitHub 原始内容客户端（`github_client.py`），以及安装/更新流水线中"克隆-暂存-验证-提升"的真实逻辑（`install.py`）都是真实且经过测试的——113 个通过的测试（`pytest tests/`），包括一个证明"目录损坏"与"单个项目清单损坏"相互隔离的模拟 HTTP 服务器，以及在临时目录中进行的真实 git 克隆/构建往返测试。`--cli status`/`install`/`update` 在你真正运行它们时，会端到端地驱动这同一套经过测试的核心逻辑，访问真实、在线的 GitHub 原始内容服务器（而非模拟）。Qt Quick 桌面 GUI（`qt_gui.py`、`qml/Main.qml`）和旧版 Tkinter 后备方案（`gui.py`）把同一套经过测试的核心接入一个真实窗口，并已经在真实的生态系统检出目录上运行过，但两者都没有自己的自动化测试——不存在 `test_gui.py`/`test_qt_gui.py`，因为这里没有尝试去驱动真实的 Qt/Tk 事件循环。`i18n.py` 的 8 语言覆盖由测试强制保证（`test_i18n.py`），但仅保证各语言间的键一致性，不保证翻译质量。具体已经交付了什么，请参见 `CHANGELOG.md`。
 
 ---
 
@@ -92,6 +92,8 @@ OK  build.sh completed successfully.
 - **单一解析实现**（`version_parse.py`）在本地读取和 GitHub 抓取之间共享，因此本地检出和 GitHub 抓取绝不会被两个独立漂移的正则表达式分别解读。
 - **安装/更新**：`git clone`（安装）之后作为单独的一步再编译。更新一个已存在的检出则改为「通过验证实现原子性」：候选版本先被克隆、进行快进合并（绝不使用强制重置，因此真实的本地修改会明确失败，而非被丢弃），然后首先在一个完全独立的暂存克隆中编译/验证——只有当那次暂存编译真正成功时，实际安装才会被触碰（通过两次连续的目录重命名，之前的安装会被保留在 `<name>.backup` 中，而不是被删除）。在最终提升之前的任何时刻发生编译失败、检出分叉/存在未提交修改、崩溃或磁盘写满，都会让之前的安装完全不受影响、继续保持可运行——详见 `install.py` 自身 `clone_or_pull` 的 docstring。暂存克隆自身的 git 远程仓库会在创建后立即恢复为真实的 GitHub 上游（否则一个普通的本地克隆会指向旧的安装路径，一旦被提升就会在不知不觉中终止所有未来的更新），并且已安装检出自身真实的本地数据（任何 git 视为未跟踪或被忽略的内容——`data/settings.json` 及类似文件，不包括可重新生成的构建产物）会在编译前被带入暂存克隆，这样一个项目自身真实的运行状态就能在更新后保留下来，而不是被困在保留的 `.backup` 检出中。无论哪种情况，只要该项目自身实际拥有 `build-test.sh`/`build-test.bat`（不递增版本号的检查——见第 3 节），就会运行它。本工具从不重新实现某个项目自身的构建步骤。
 
+- **可选的签名检查**：候选版本的 `build-test` 脚本是候选版本自带的代码，会在任何东西证明该提交确属维护者之前就在本机运行。设置 `HYDRA_UMC_UPDATER_REQUIRE_SIGNED=1` 后，更新器会先在暂存克隆中对已接受的候选版本执行 `git verify-commit`；若该提交没有本机信任的签名（密钥环中的 gpg 密钥，或 `gpg.ssh.allowedSignersFile` 中的 ssh 签名者），就在此停止：不会构建也不会运行任何内容，正在使用的安装保持原样。默认关闭，因为它需要本机上有信任维护者密钥的密钥环。
+
 <p align="center">
   <img src="images/HYDRA_UMC_UPDATER_INTERFACE_2.png" alt="HYDRA-UMC-UPDATER 安装或更新期间的真实检查点" width="100%">
 </p>
@@ -101,7 +103,7 @@ OK  build.sh completed successfully.
 - **默认 Qt Quick GUI，`--cli` 用于无桌面环境。** `main.py` 会在导入可选 PySide6
   运行时之前检查 `--cli`。CLI 可在没有显示器或桌面依赖的 CM5 上工作；无参数时会在
   可用条件下启动 QML，Tkinter 仅保留为临时兼容回退。
-- **带窗口的 GUI 是真实的,支持 7 种语言的多语言(`i18n.py`)—— `--cli` 则刻意不支持。** 每个真实的控件都会根据保存的偏好或操作系统自身的区域设置,从语言 `Combobox`(en/es/fr/it/de/zh/ja,与公开仪表盘和每份 README 提供的相同 7 种语言)实时重新标注。项目/家族名称以及每个项目自身真实的 `notes`/`tech` 文本保持未翻译——`registry.py` 是它们唯一的真相来源,而 7 份并行的真实工程文档副本会破坏这一点。`--cli` 的输出刻意只保留英文:它是为脚本化/管道化设计的,在这种场景下,稳定、可 grep 的文本比本地化更重要。
+- **带窗口的 GUI 是真实的,支持 8 种语言的多语言(`i18n.py`)—— `--cli` 则刻意不支持。** 每个真实的控件都会根据保存的偏好或操作系统自身的区域设置,从语言 `Combobox`(en/es/fr/it/de/zh/ja/pt,与公开仪表盘和每份 README 提供的相同 8 种语言)实时重新标注。项目/家族名称以及每个项目自身真实的 `notes`/`tech` 文本保持未翻译——`registry.py` 是它们唯一的真相来源,而 8 份并行的真实工程文档副本会破坏这一点。`--cli` 的输出刻意只保留英文:它是为脚本化/管道化设计的,在这种场景下,稳定、可 grep 的文本比本地化更重要。
 - **`deploy` 是一种分类，而非一种限制。** 把每一个发现的项目都当作"属于 CM5 的东西"是错误的——固件仓库是从 PC 编译并刷写的（CM5 只需要通过 CAN-OTA 得到最终的二进制文件，从不需要本仓库自身的源代码），而若干工具（URTC-FLASHER、HYDRA-UMC-SUITE、HYDRA-UMC-TOOL-CLI……）本应运行在操作员自己的工作站上，而非单元本机内部。`registry.py` 的 `deploy` 字段（"cm5" / "user-pc" / "mobile" / "wearable" / "dev-server"）记录了这一点，GUI 的筛选器将其作为一个合理的起点使用——而非硬性限制，因为这个同一工具也可以运行在开发者自己的 PC 上，此时每一个发现的项目都可以被检查。
 - **本工具中不包含针对特定技术栈的构建逻辑。** 本生态系统横跨 7 种工具链（Python、Rust、Go、Node/TS、Android/Kotlin、Flutter、ARM 固件）。在*这里*重新实现 `npm install && npm run build` / `cargo build --release` / `./gradlew assembleDebug` 等，会制造出第二个声称知道如何构建每个项目的地方，注定会与该项目自身真实的（且已经正确的）`build.sh`/`.bat` 逐渐脱节。`install.py` 转而探测一个已知的构建脚本名称（`build.sh`、`build_firmware.sh`、`build_exe.sh`、`build-android.sh` 及其 `.bat` 等效版本——这些是横跨生态系统自身发现的项目实际使用的真实名称），并运行其中实际存在的那一个。
 - **使用 GitHub 原始内容，而非 Releases API。** 见上方第 2 节——本生态系统的版本控制惯例从不创建标签/发布，因此在这里使用 Releases API 不仅不够方便，而且是彻底错误的做法。
@@ -126,7 +128,7 @@ HYDRA-UMC-UPDATER/
 │   ├── detect.py          # 扫描工作区根目录，检测已安装的内容
 │   ├── github_client.py   # 并发抓取原始内容 + 针对临时性网络错误的真实重试/退避机制
 │   ├── install.py         # git clone/pull + 委托给项目自身的构建脚本
-│   ├── i18n.py             # 真实、完整的 GUI 翻译（7 种语言）
+│   ├── i18n.py             # 真实、完整的 GUI 翻译（8 种语言）
 │   ├── qt_gui.py           # 通向真实发现/更新服务的 Qt Quick 桥接层
 │   ├── qml/Main.qml        # 带主题、检查点和 About 的桌面界面
 │   ├── gui.py              # PySide6 不可用时的 Tkinter 兼容回退

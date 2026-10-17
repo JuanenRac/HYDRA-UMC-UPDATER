@@ -9,6 +9,12 @@ bumped manually only. See `bump_version.py`.
 
 - The button that copies the log is a small icon (two sheets) instead of words, and turns green for a moment when it has copied.
 
+## [0.4.7] - Optional signature gate; Portuguese interface; the SDK test no longer depends on the environment
+
+- **Optional signature gate:** with `HYDRA_UMC_UPDATER_REQUIRE_SIGNED=1` the accepted candidate is checked with `git verify-commit` in the staging clone before its `build-test` script runs. A build-test script is code the candidate brings with it, so without this nothing proved the commit was the maintainer's before it ran. An unsigned commit, or one signed by a key this machine does not trust, stops the update with nothing built or run, the staging clone removed and the live installation untouched. Off by default: it needs a keyring that trusts the maintainer's key (gpg, or an ssh `allowedSignersFile`).
+- **Portuguese interface:** `i18n_pt.py` covers all 130 keys of the merged English table with the same placeholders, the language menus (Qt Quick and the Tkinter fallback) offer `Português`, and a README_por.md joins the other seven.
+- **Test fixed:** `test_recover_interrupted_promotions_is_a_real_noop_without_the_sdk_installed` asserted that the SDK was not importable, so it failed whenever the SDK was on the path (a sibling checkout, a pip install, or another test running first). It now makes the SDK unimportable for the block and restores the environment afterwards. 7 new tests (113 in all): the signature requirement switch, an unsigned candidate refused before the build runs, a verified one going through, no check when not required, `git verify-commit` failing on an unsigned commit, Portuguese placeholders, and the QML menu listing every language.
+
 ## [0.4.6] - A failed write of the evidence is said
 
 - **The evidence file:** when the line of evidence of an install or update attempt cannot be written, the log now says so (it used to return nothing without a word).

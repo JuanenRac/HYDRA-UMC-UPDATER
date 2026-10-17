@@ -440,7 +440,7 @@ ApplicationWindow {
                     { code: "en", label: "English" }, { code: "es", label: "Español" },
                     { code: "fr", label: "Français" }, { code: "it", label: "Italiano" },
                     { code: "de", label: "Deutsch" }, { code: "zh", label: "简体中文" },
-                    { code: "ja", label: "日本語" }
+                    { code: "ja", label: "日本語" }, { code: "pt", label: "Português" }
                 ]
                 textRole: "label"
                 Component.onCompleted: {

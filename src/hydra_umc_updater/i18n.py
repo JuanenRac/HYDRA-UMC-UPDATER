@@ -5,7 +5,7 @@
 #
 # Real, complete translations (not machine-generated placeholders) for the
 # windowed GUI's own UI chrome and closed vocabulary (maturity/role/deploy
-# labels, install-state labels), in the same 7 languages this ecosystem's
+# labels, install-state labels), in the same 8 languages this ecosystem's
 # own READMEs and JuanenRac/scripts/generate_dashboard.py's own dashboard
 # already ship. Deliberately does NOT translate project names, family
 # names, or the free-text `notes`/`tech` content that comes straight from
@@ -36,6 +36,7 @@ LANGUAGES: list[tuple[str, str]] = [
     ("de", "🇩🇪 Deutsch"),
     ("zh", "🇨🇳 简体中文"),
     ("ja", "🇯🇵 日本語"),
+    ("pt", "🇵🇹 Português"),
 ]
 
 _LANG_CODES = {code for code, _ in LANGUAGES}
@@ -822,6 +823,12 @@ _LOG_COPY: dict[str, dict[str, str]] = {
 
 for _language, _log_copy in _LOG_COPY.items():
     TRANSLATIONS[_language].update(_log_copy)
+
+
+# The eighth language lives in its own module (see i18n_pt.py's header).
+from .i18n_pt import PT as _PORTUGUESE  # noqa: E402
+
+TRANSLATIONS["pt"] = _PORTUGUESE
 
 
 def t(lang: str, key: str, **kwargs: object) -> str:

@@ -4,7 +4,7 @@
 
 # 🛠️ HYDRA-UMC-UPDATER
 
-<p align="center"><a href="README.md">🇺🇸 English</a> | 🇪🇸 <b>Español</b> | <a href="README_fra.md">🇫🇷 Français</a> | <a href="README_ita.md">🇮🇹 Italiano</a> | <a href="README_deu.md">🇩🇪 Deutsch</a> | <a href="README_zho.md">🇨🇳 简体中文</a> | <a href="README_jpn.md">🇯🇵 日本語</a></p>
+<p align="center"><a href="README.md">🇺🇸 English</a> | 🇪🇸 <b>Español</b> | <a href="README_fra.md">🇫🇷 Français</a> | <a href="README_ita.md">🇮🇹 Italiano</a> | <a href="README_deu.md">🇩🇪 Deutsch</a> | <a href="README_zho.md">🇨🇳 简体中文</a> | <a href="README_jpn.md">🇯🇵 日本語</a> | <a href="README_por.md">🇵🇹 Português</a></p>
 
 ### 📦 Detecta, instala y actualiza a mano todo el ecosistema HYDRA-UMC
 
@@ -31,7 +31,7 @@
 > acciones de lote secuenciales, confirmadas por separado y basadas en el mismo
 > estado real y flujo de seguridad.
 
-**Comprobación de honestidad - lo que realmente funciona hoy:** la lógica de descubrimiento/versión de todo el ecosistema (`registry.py`, `project_manifest.py`, `ecosystem_catalog.py`, `version_parse.py`, `detect.py`), el cliente real de GitHub raw-content con reintento/backoff (`github_client.py`) y la lógica del pipeline de instalación/actualización de clonar-preparar-verificar-promover (`install.py`) son reales y están probados - 64 tests que pasan (`pytest tests/`), incluido un servidor HTTP de fixture que demuestra el aislamiento entre un catálogo malformado y un solo proyecto malformado, además de round-trips reales de clonado/build de git en directorios temporales. `--cli status`/`install`/`update` ejercitan ese mismo núcleo probado de extremo a extremo contra el host real y en vivo de GitHub raw-content (no un mock) cada vez que realmente los ejecutas. La GUI de escritorio Qt Quick (`qt_gui.py`, `qml/Main.qml`) y el respaldo heredado en Tkinter (`gui.py`) conectan ese mismo núcleo probado a una ventana real y se han ejecutado en checkouts reales del ecosistema, pero ninguna de las dos tiene un test automatizado propio - no existe `test_gui.py`/`test_qt_gui.py`, ya que aquí no se intenta manejar un bucle de eventos real de Qt/Tk. La cobertura de 7 idiomas de `i18n.py` está reforzada por test (`test_i18n.py`), pero solo para la paridad de claves entre idiomas, no para la calidad de la traducción. Consulta `CHANGELOG.md` para ver exactamente qué se ha entregado hasta ahora.
+**Comprobación de honestidad - lo que realmente funciona hoy:** la lógica de descubrimiento/versión de todo el ecosistema (`registry.py`, `project_manifest.py`, `ecosystem_catalog.py`, `version_parse.py`, `detect.py`), el cliente real de GitHub raw-content con reintento/backoff (`github_client.py`) y la lógica del pipeline de instalación/actualización de clonar-preparar-verificar-promover (`install.py`) son reales y están probados - 113 tests que pasan (`pytest tests/`), incluido un servidor HTTP de fixture que demuestra el aislamiento entre un catálogo malformado y un solo proyecto malformado, además de round-trips reales de clonado/build de git en directorios temporales. `--cli status`/`install`/`update` ejercitan ese mismo núcleo probado de extremo a extremo contra el host real y en vivo de GitHub raw-content (no un mock) cada vez que realmente los ejecutas. La GUI de escritorio Qt Quick (`qt_gui.py`, `qml/Main.qml`) y el respaldo heredado en Tkinter (`gui.py`) conectan ese mismo núcleo probado a una ventana real y se han ejecutado en checkouts reales del ecosistema, pero ninguna de las dos tiene un test automatizado propio - no existe `test_gui.py`/`test_qt_gui.py`, ya que aquí no se intenta manejar un bucle de eventos real de Qt/Tk. La cobertura de 8 idiomas de `i18n.py` está reforzada por test (`test_i18n.py`), pero solo para la paridad de claves entre idiomas, no para la calidad de la traducción. Consulta `CHANGELOG.md` para ver exactamente qué se ha entregado hasta ahora.
 
 ---
 
@@ -151,6 +151,8 @@ seleccionada.
   - ver sección 3) si lo tiene. Esta herramienta nunca reimplementa los
   pasos de build propios de un proyecto.
 
+- **Puerta opcional de firma**: el script `build-test` de un candidato es código que el propio candidato trae consigo y que se ejecuta aquí antes de que nada haya demostrado que el commit es del mantenedor. Con `HYDRA_UMC_UPDATER_REQUIRE_SIGNED=1` el actualizador ejecuta primero `git verify-commit` sobre el candidato aceptado en el clon de staging y, si el commit no tiene una firma en la que esta máquina confíe (una clave gpg en el llavero, o un firmante ssh en `gpg.ssh.allowedSignersFile`), se detiene ahí: no se compila ni se ejecuta nada y la instalación en uso queda intacta. Desactivada por defecto, porque necesita un llavero en la máquina que confíe en la clave del mantenedor.
+
 <p align="center">
   <img src="images/HYDRA_UMC_UPDATER_INTERFACE_2.png" alt="Checkpoints reales durante la instalación o actualización de HYDRA-UMC-UPDATER" width="100%">
 </p>
@@ -161,7 +163,7 @@ seleccionada.
   `--cli` antes de importar el runtime opcional PySide6. La CLI funciona en
   una CM5 sin pantalla ni dependencia de escritorio; sin argumentos inicia
   QML cuando esta disponible y Tkinter queda solo como fallback temporal.
-- **La GUI con ventana es real, multilingüe en 7 idiomas (`i18n.py`) - `--cli` deliberadamente no lo es.** Cada widget real se reetiqueta en vivo desde un `Combobox` de idioma (en/es/fr/it/de/zh/ja, los mismos 7 que publican el dashboard público y todos los README), detectado a partir de una preferencia guardada o del propio locale del sistema operativo. Los nombres de proyectos/familias y el propio texto real de `notes`/`tech` de cada proyecto permanecen sin traducir - `registry.py` es su única fuente de verdad, y 7 copias paralelas de documentación de ingeniería real dejarían de serlo. La salida de `--cli` permanece solo en inglés a propósito: está pensada para ser scripteada/canalizada, donde un texto estable y buscable con grep importa más que la localización.
+- **La GUI con ventana es real, multilingüe en 8 idiomas (`i18n.py`) - `--cli` deliberadamente no lo es.** Cada widget real se reetiqueta en vivo desde un `Combobox` de idioma (en/es/fr/it/de/zh/ja/pt, los mismos 8 que publican el dashboard público y todos los README), detectado a partir de una preferencia guardada o del propio locale del sistema operativo. Los nombres de proyectos/familias y el propio texto real de `notes`/`tech` de cada proyecto permanecen sin traducir - `registry.py` es su única fuente de verdad, y 8 copias paralelas de documentación de ingeniería real dejarían de serlo. La salida de `--cli` permanece solo en inglés a propósito: está pensada para ser scripteada/canalizada, donde un texto estable y buscable con grep importa más que la localización.
 - **`deploy` es una clasificación, no una restricción.** Tratar todo
   proyecto descubierto como "algo que pertenece a la CM5" era un error - los repos
   de firmware se compilan y se flashean DESDE un PC (la CM5 solo necesita
@@ -237,7 +239,7 @@ HYDRA-UMC-UPDATER/
 │   ├── detect.py          # Escanea una raíz de workspace para ver qué está instalado
 │   ├── github_client.py   # Descarga concurrente del contenido raw + reintento/backoff real ante errores de red transitorios
 │   ├── install.py         # git clone/pull + delega en el script de build propio
-│   ├── i18n.py             # Traducciones reales y completas de la GUI (7 idiomas)
+│   ├── i18n.py             # Traducciones reales y completas de la GUI (8 idiomas)
 │   ├── qt_gui.py           # Puente Qt Quick hacia los servicios reales de descubrimiento/actualizacion
 │   ├── qml/Main.qml        # Shell de escritorio con tema, checkpoints y About
 │   ├── gui.py              # Fallback Tkinter si PySide6 no esta disponible

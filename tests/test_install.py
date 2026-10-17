@@ -50,6 +50,29 @@ def _reload_install_without_sdk():
     return importlib.reload(install)
 
 
+class _SdkAbsent:
+    """Makes hydra_umc_sdk unimportable for the duration of a block, whatever the
+    environment has (a sibling checkout on sys.path, a pip install, a test that
+    ran earlier), then restores the module exactly as the environment has it."""
+
+    _NAMES = ("hydra_umc_sdk", "hydra_umc_sdk.promotion_journal")
+
+    def __enter__(self):
+        self._saved = {name: sys.modules.get(name) for name in self._NAMES}
+        for name in self._NAMES:
+            sys.modules[name] = None  # an import of a None entry raises ImportError
+        return importlib.reload(install)
+
+    def __exit__(self, *exc_info):
+        for name, module in self._saved.items():
+            if module is None:
+                sys.modules.pop(name, None)
+            else:
+                sys.modules[name] = module
+        importlib.reload(install)
+        return False
+
+
 def entry() -> ProjectEntry:
     return ProjectEntry("HYDRA-UMC-EXAMPLE", "python", "pyproject.toml", r"(\d+)\.(\d+)\.(\d+)")
 
@@ -586,12 +609,14 @@ def test_refuses_a_remote_manifest_version_lower_than_the_installed_version(tmp_
 # ---------------------------------------------------------------------------
 
 def test_recover_interrupted_promotions_is_a_real_noop_without_the_sdk_installed():
-    # The default state for this whole test file: hydra-umc-sdk is not on
-    # sys.path, so install.py's own top-level try/except left
-    # _HAS_DURABLE_JOURNAL False - the honest, documented fallback for a
-    # standalone checkout, not a crash or a hidden dependency error.
-    assert install._HAS_DURABLE_JOURNAL is False
-    assert install.recover_interrupted_promotions(Path("/does/not/matter")) == []
+    # hydra-umc-sdk is made unimportable here instead of assuming the
+    # environment lacks it (it is on sys.path whenever a sibling checkout or
+    # a pip install is around): install.py's own top-level try/except then
+    # leaves _HAS_DURABLE_JOURNAL False - the honest, documented fallback for
+    # a standalone checkout, not a crash or a hidden dependency error.
+    with _SdkAbsent() as without_sdk:
+        assert without_sdk._HAS_DURABLE_JOURNAL is False
+        assert without_sdk.recover_interrupted_promotions(Path("/does/not/matter")) == []
 
 
 def test_promotion_journal_records_and_completes_a_real_successful_update(tmp_path: Path):
@@ -790,3 +815,91 @@ def test_install_or_update_calls_recovery_before_its_own_work(tmp_path: Path, mo
     install.install_or_update(entry(), tmp_path)
 
     assert calls == [tmp_path]
+
+
+# ---------------------------------------------------------------------------
+# opt-in signature check of the candidate commit before its build-test runs
+# ---------------------------------------------------------------------------
+
+def _two_commit_checkout(tmp_path: Path) -> tuple[Path, str]:
+    remote = tmp_path / "remote.git"
+    git("init", "--bare", str(remote), cwd=tmp_path)
+    seed = tmp_path / "seed"
+    git("clone", str(remote), str(seed), cwd=tmp_path)
+    git("config", "user.email", "contract@example.invalid", cwd=seed)
+    git("config", "user.name", "Contract", cwd=seed)
+    write_manifest(seed, "1.0.0")
+    write_build_script(seed, ok=True)
+    git("add", "-A", cwd=seed)
+    git("commit", "-m", "base", cwd=seed)
+    git("push", "origin", "HEAD", cwd=seed)
+    local = tmp_path / entry().name
+    git("clone", str(remote), str(local), cwd=tmp_path)
+    old_head = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=local, text=True).strip()
+    write_manifest(seed, "1.1.0")
+    git("add", "-A", cwd=seed)
+    git("commit", "-m", "new release", cwd=seed)
+    git("push", "origin", "HEAD", cwd=seed)
+    return local, old_head
+
+
+def test_signature_is_not_required_unless_asked_for(monkeypatch):
+    monkeypatch.delenv(install.REQUIRE_SIGNED_ENV, raising=False)
+    assert install.signature_required() is False
+    for value in ("1", "true", "YES", " on "):
+        monkeypatch.setenv(install.REQUIRE_SIGNED_ENV, value)
+        assert install.signature_required() is True, value
+    for value in ("", "0", "false", "no"):
+        monkeypatch.setenv(install.REQUIRE_SIGNED_ENV, value)
+        assert install.signature_required() is False, value
+
+
+def test_an_unsigned_candidate_is_refused_before_its_build_script_runs(tmp_path: Path, monkeypatch):
+    local, old_head = _two_commit_checkout(tmp_path)
+    monkeypatch.setenv(install.REQUIRE_SIGNED_ENV, "1")  # the commits made above carry no signature
+
+    result = clone_or_pull(entry(), tmp_path)
+
+    assert not result.ok
+    assert "no valid signature" in result.message
+    assert "nothing was built or run" in result.message
+    assert subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=local, text=True).strip() == old_head
+    assert not (local / "built.txt").exists()
+    assert not list(tmp_path.glob(f".{entry().name}.update-*")), "the staging clone must be removed"
+    assert not list(tmp_path.glob(f"{entry().name}.backup-*")), "nothing may have been promoted"
+
+
+def test_a_candidate_whose_signature_verifies_goes_through(tmp_path: Path, monkeypatch):
+    local, _ = _two_commit_checkout(tmp_path)
+    monkeypatch.setenv(install.REQUIRE_SIGNED_ENV, "1")
+    seen = []
+
+    def accept(staging: Path):
+        seen.append(staging)
+        return True, "Good signature"
+
+    monkeypatch.setattr(install, "verify_candidate_signature", accept)
+
+    result = clone_or_pull(entry(), tmp_path)
+
+    assert result.ok, result.message
+    assert len(seen) == 1 and seen[0].name.startswith(f".{entry().name}.update-")
+    assert (local / "built.txt").exists()
+
+
+def test_without_the_requirement_no_signature_is_ever_asked_for(tmp_path: Path, monkeypatch):
+    _two_commit_checkout(tmp_path)
+    monkeypatch.delenv(install.REQUIRE_SIGNED_ENV, raising=False)
+    monkeypatch.setattr(install, "verify_candidate_signature", lambda staging: pytest_fail())
+    assert clone_or_pull(entry(), tmp_path).ok
+
+
+def pytest_fail():
+    raise AssertionError("verify_candidate_signature must not run when no signature is required")
+
+
+def test_git_verify_commit_failing_on_an_unsigned_commit_is_reported_as_not_ok(tmp_path: Path):
+    local, _ = _two_commit_checkout(tmp_path)
+    ok, detail = install.verify_candidate_signature(local)
+    assert ok is False
+    assert detail  # git's own explanation, not an empty string
