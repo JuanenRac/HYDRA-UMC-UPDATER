@@ -38,6 +38,17 @@
 
 ---
 
+## 📋 Num relance
+
+| | |
+|---|---|
+| Versão | `0.4.8` |
+| Maturidade | Estabelecido |
+| Testes | 140 (`pytest tests/`) |
+| Tecnologia | Python 3.10+ / PySide6 / Qt Quick (QML) / Tkinter (legacy fallback) / Git / GitHub raw content |
+| Destino | O PC de quem o usa |
+| Em hardware real | Não aplicável: nada aqui corre em hardware |
+
 ## 1. 🛠️ VISÃO TÉCNICA GERAL
 
 O HYDRA-UMC-UPDATER é uma pequena ferramenta - GUI com janela por defeito,
