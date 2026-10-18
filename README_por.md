@@ -34,7 +34,7 @@
 > ações em lote sequenciais, confirmadas em separado, construídas a partir do
 > mesmo estado em direto e do mesmo caminho de segurança.
 
-**Verificação de honestidade - o que realmente funciona hoje:** a lógica de descoberta/versões de todo o ecossistema (`registry.py`, `project_manifest.py`, `ecosystem_catalog.py`, `version_parse.py`, `detect.py`), o cliente real de conteúdo bruto do GitHub com repetição/backoff (`github_client.py`) e a lógica de clonar-preparar-verificar-promover do pipeline de instalação/atualização (`install.py`) são reais e testados - 113 testes a passar (`pytest tests/`), incluindo um servidor HTTP de fixture que prova o isolamento entre catálogo malformado e projeto malformado e idas e voltas reais de git clone/build em diretorias temporárias. `--cli status`/`install`/`update` exercitam este mesmo núcleo testado de ponta a ponta contra o anfitrião real e em direto de conteúdo bruto do GitHub (não uma simulação) sempre que os executa de facto. A GUI de desktop Qt Quick (`qt_gui.py`, `qml/Main.qml`) e o recurso Tkinter legado (`gui.py`) ligam esse mesmo núcleo testado a uma janela real e foram executados em cópias reais do ecossistema, mas nenhum tem teste automático próprio - não existe `test_gui.py`/`test_qt_gui.py`, já que não se tenta conduzir um ciclo de eventos Qt/Tk real. A cobertura de 8 idiomas do `i18n.py` é imposta por teste (`test_i18n.py`), mas apenas quanto à paridade de chaves e de `{marcadores}` entre idiomas, não quanto à qualidade da tradução. Consulte o `CHANGELOG.md` para saber exatamente o que já foi entregue.
+**Verificação de honestidade - o que realmente funciona hoje:** a lógica de descoberta/versões de todo o ecossistema (`registry.py`, `project_manifest.py`, `ecosystem_catalog.py`, `version_parse.py`, `detect.py`), o cliente real de conteúdo bruto do GitHub com repetição/backoff (`github_client.py`) e a lógica de clonar-preparar-verificar-promover do pipeline de instalação/atualização (`install.py`) são reais e testados - 140 testes a passar (`pytest tests/`), incluindo um servidor HTTP de fixture que prova o isolamento entre catálogo malformado e projeto malformado e idas e voltas reais de git clone/build em diretorias temporárias. `--cli status`/`install`/`update` exercitam este mesmo núcleo testado de ponta a ponta contra o anfitrião real e em direto de conteúdo bruto do GitHub (não uma simulação) sempre que os executa de facto. A GUI de desktop Qt Quick (`qt_gui.py`, `qml/Main.qml`) e o recurso Tkinter legado (`gui.py`) ligam esse mesmo núcleo testado a uma janela real e foram executados em cópias reais do ecossistema, mas nenhum tem teste automático próprio - não existe `test_gui.py`/`test_qt_gui.py`, já que não se tenta conduzir um ciclo de eventos Qt/Tk real. A cobertura de 8 idiomas do `i18n.py` é imposta por teste (`test_i18n.py`), mas apenas quanto à paridade de chaves e de `{marcadores}` entre idiomas, não quanto à qualidade da tradução. Consulte o `CHANGELOG.md` para saber exatamente o que já foi entregue.
 
 ---
 
@@ -60,14 +60,7 @@ portas de manifesto, versão e segurança. Uma célula de controlo de robôs
 nunca deve atualizar-se automaticamente de um dia para o outro sem que uma
 pessoa aprove a ação exata.
 
-Nem todo o projeto descoberto pertence à própria CM5, aliás - a maioria dos
-repositórios com prefixo URTC e alguns do HYDRA-UMC são ferramentas que um
-programador executa no seu próprio PC (o firmware compila-se e grava-se A
-PARTIR de uma estação de trabalho, não é compilado NA célula) ou aplicações
-instaladas num telemóvel/relógio. O campo `deploy` do próprio `registry.py`
-regista qual é qual (ver a secção 3), e a tabela de projetos da GUI filtra por
-ele - por defeito «Só CM5» quando deteta que corre em Linux (o próprio SO da
-CM5 real) e «mostrar tudo» no Windows/macOS.
+Nem todos os projetos descobertos pertencem à própria CM5 - alguns são ferramentas que um programador executa a partir do seu próprio PC (o firmware é compilado e gravado A PARTIR de um posto de trabalho, não compilado NA célula) ou aplicações instaladas num telemóvel/relógio. O manifesto de cada projeto regista qual é o caso (ver secção 3) e a tabela de projetos da GUI pode filtrar por ele - por omissão são mostrados todos os projetos, pelo que nem o próprio atualizador nem o SDK ficam escondidos.
 
 Exemplo ilustrativo (o número exato de projetos e todos os números de versão
 abaixo são inventados para dar a forma da saída, não uma execução real
@@ -77,19 +70,18 @@ número fixo escrito neste documento):
 ```
 $ hydra-umc-updater --cli status
 Workspace root: /home/pi/HYDRA-UMC
-Checking GitHub... 59/59
-PROJECT                        STACK       LOCAL     GITHUB    STATE
---------------------------------------------------------------------
-HYDRA-UMC                      firmware-c  0.0.7     0.0.7     up to date
-HYDRA-UMC-SERVER               node        0.0.5     0.0.9     OUTDATED
-HYDRA-UMC-STUDIO               node        0.0.8     0.1.3     OUTDATED
+PROJECT           MATURITY     ROLE      STACK       LOCAL     GITHUB    STATE
+-----------------------------------------------------------------------------
+HYDRA-UMC         functional   firmware  firmware-c  0.0.7     0.0.7     up to date
+HYDRA-UMC-SERVER  functional   service   node        0.0.5     0.0.9     OUTDATED
+HYDRA-UMC-STUDIO  functional   client    node        0.0.8     0.1.3     OUTDATED
 ...
 59/59 installed, 2 outdated
+Run `hydra-umc-updater update <project>` to update one by hand - never automatic, see this tool's own README.
 
 $ hydra-umc-updater --cli update HYDRA-UMC-SERVER
 Updating HYDRA-UMC-SERVER into /home/pi/HYDRA-UMC ...
-OK  Pulled latest into /home/pi/HYDRA-UMC/HYDRA-UMC-SERVER
-OK  build.sh completed successfully.
+OK  Updated /home/pi/HYDRA-UMC/HYDRA-UMC-SERVER to v0.0.9 (commit 1a2b3c4d5e6f) after a verified build; previous installation kept at /home/pi/HYDRA-UMC/HYDRA-UMC-SERVER.backup-9f3c2d1a
 ```
 
 Executar `hydra-umc-updater` sem argumentos (ou fazer duplo clique) abre antes
@@ -134,7 +126,7 @@ escrita no terminal de arranque.
   de serem descartadas) e compilado/verificado primeiro num clone de staging
   totalmente independente - a instalação em uso só é tocada (através de duas
   mudanças de nome de diretoria consecutivas, ficando a instalação anterior
-  em `<name>.backup`, não apagada) se essa compilação de staging realmente
+  em `<name>.backup-xxxxxxxx`, não apagada) se essa compilação de staging realmente
   tiver êxito. Uma falha de compilação, uma cópia divergente/suja, uma falha
   ou um disco cheio em qualquer ponto antes dessa promoção final deixam a
   instalação anterior completamente intacta e ainda operativa - ver o
@@ -163,6 +155,8 @@ escrita no terminal de arranque.
   Desativada por defeito, porque exige na máquina um porta-chaves que confie
   na chave do mantenedor.
 
+- **Mais redes de segurança**: uma só instalação ou atualização de cada vez por área de trabalho (ficheiro de bloqueio); limite de tempo em cada comando git e em cada build-test, sem nunca pedir credenciais; um erro inesperado é um resultado falhado na janela e no ficheiro de evidências, nunca uma janela presa em "a trabalhar"; a barreira de assinatura abrange também uma primeira instalação e pode ser ativada nas definições guardadas (`require_signed_commits`; um ficheiro de definições ilegível conta como ativada), com um aviso vermelho na janela enquanto estiver desativada; um commit local que impede o avanço rápido é indicado na recusa; uma instalação nova cuja compilação falha é removida de novo; as pastas de staging antigas são limpas no início de uma execução, e `--cli prune-backups [--keep N] [--dry-run]` remove as pastas `<nome>.backup-xxxxxxxx` antigas apenas a pedido.
+
 <p align="center">
   <img src="images/HYDRA_UMC_UPDATER_INTERFACE_2.png" alt="HYDRA-UMC-UPDATER installation or update checkpoints in progress" width="100%">
 </p>
@@ -187,17 +181,7 @@ escrita no terminal de arranque.
   como ponto de partida sensato - nunca uma restrição rígida, já que esta
   mesma ferramenta se destina também a correr no PC de um programador, onde
   todo o projeto descoberto é legítimo de inspecionar.
-- **Nenhuma lógica de compilação por stack nesta ferramenta.** O ecossistema
-  abrange 7 cadeias de ferramentas (Python, Rust, Go, Node/TS,
-  Android/Kotlin, Flutter, firmware ARM). Reimplementar
-  `npm install && npm run build` / `cargo build --release` /
-  `./gradlew assembleDebug` / etc. AQUI criaria um segundo sítio que afirma
-  saber compilar cada projeto, garantidamente a divergir do `build.sh`/`.bat`
-  real (e já correto) desse projeto. O `install.py` procura, em vez disso, um
-  nome de script de compilação conhecido (`build.sh`, `build_firmware.sh`,
-  `build_exe.sh`, `build-android.sh` e os seus equivalentes `.bat` - os nomes
-  reais usados nos projetos descobertos do ecossistema) e executa o que
-  existir.
+- **Esta ferramenta não tem lógica de compilação por stack.** O ecossistema abrange 7 toolchains (Python, Rust, Go, Node/TS, Android/Kotlin, Flutter, firmware ARM). Reimplementar `npm install && npm run build` / `cargo build --release` / `./gradlew assembleDebug` / etc. AQUI criaria um segundo lugar que afirma saber compilar cada projeto, garantidamente a divergir das verificações reais (e já corretas) do próprio projeto. Em vez disso, o `install.py` executa apenas o `build-test.sh` não versionante do próprio projeto (`build-test.bat` no Windows), que verifica sem incrementar nenhuma versão; um projeto que não o tenha é recusado com "No non-versioning build-test.sh/.bat found".
 - **Conteúdo bruto do GitHub, não a API de Releases.** Ver a secção 2 acima -
   a convenção de versionamento deste ecossistema nunca cria uma
   etiqueta/release, pelo que a API de Releases estaria ativamente errada
@@ -264,6 +248,7 @@ chmod +x build.sh   # uma única vez
 ./run.sh --cli status --offline       # o mesmo, saltando a verificação no GitHub
 ./run.sh --cli install <PROJECT-NAME> # clona + compila um projeto ainda não instalado
 ./run.sh --cli update  <PROJECT-NAME> # obtém + recompila um projeto já instalado
+./run.sh --cli prune-backups --keep 2  # remove as pastas <nome>.backup-xxxxxxxx antigas (mantém as 2 mais recentes de cada)
 ```
 
 No Windows: `build.bat` e depois `run.bat` (GUI) / `run.bat --cli status` /
@@ -276,21 +261,12 @@ disponível, o shell Tkinter mais antigo é apenas um recurso de compatibilidade
 
 **Resolução de problemas**
 
-- O `status` mostra `?` para a versão local ou do GitHub de um projeto: o seu
-  ficheiro de versão existe, mas a convenção deste projeto mudou desde que o
-  `registry.py` foi atualizado pela última vez - compare a entrada desse
-  projeto no `registry.py` com o seu ficheiro de versão real e atual.
+- O `status` mostra `?` na versão local ou do GitHub de um projeto: o seu ficheiro de versão existe, mas a entrada `native_version` do `hydra-umc.project.json` desse projeto já não corresponde ao sítio onde a versão realmente está - corrija o manifesto desse projeto.
 - O `status` mostra `-` para o GitHub sem erro visível: execute o `status`
   (sem `--offline`) - o `-` só aparece quando a verificação no GitHub foi
   totalmente saltada.
-- O `install`/`update` falha com «No build.sh/.bat found»: esse projeto usa um
-  nome de script de compilação que esta ferramenta ainda não reconhece -
-  consulte o seu próprio README para o nome real e pondere acrescentá-lo às
-  listas `BUILD_SCRIPT_CANDIDATES_*` do próprio `install.py`.
-- O `git pull --ff-only` falha: a cópia local tem alterações por confirmar ou
-  um histórico divergente - resolva isso manualmente (`git status` na
-  diretoria do próprio projeto) antes de repetir o `update`. Esta ferramenta
-  nunca faz reset forçado de uma cópia.
+- O `install`/`update` falha com "No non-versioning build-test.sh/.bat found": esse projeto ainda não tem `build-test.sh`/`build-test.bat` - acrescente-lhe o padrão do ecossistema (tem de verificar sem aumentar nenhuma versão).
+- O `git merge --ff-only failed`: a cópia local tem um histórico divergente ou commits locais (a mensagem indica-os) - mova-os ou descarte-os (`git status`/`git log` na pasta desse projeto) antes de repetir o `update`. As alterações por confirmar em ficheiros seguidos são recusadas logo de início. Esta ferramenta nunca força o reset de uma cópia.
 
 ## 🚀 ROTEIRO
 
@@ -301,7 +277,6 @@ disponível, o shell Tkinter mais antigo é apenas um recurso de compatibilidade
 - Verificação prévia opcional de dependências por projeto (reportar cadeias
   de ferramentas em falta - sem Rust/Go/Android SDK/Flutter instalados - antes
   de um `install` falhar a meio).
-- Um modo de saída `--json` para o `status`, para o usar em scripts.
 - Acompanhamento por componente para o firmware de vários binários do próprio
   HYDRA-UMC (ver a «simplificação conhecida» na secção 3), quando houver uma
   necessidade real para lá do único componente representativo que hoje se

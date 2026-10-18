@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "hydra-umc-updater"
-version = "0.4.7"
+version = "0.4.8"
 description = "Detects, installs, and manually updates the HYDRA-UMC ecosystem's own projects on the machine it runs on (the real CM5, or a dev machine with the same checkout layout)."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -12,13 +12,13 @@ license = { file = "LICENSE.md" }
 authors = [
     { name = "JuanenRac (Electro Hobby 3D)", email = "electrohobby3d@gmail.com" },
 ]
-keywords = ["hydra-umc", "urtc", "updater", "installer", "fleet-management"]
+keywords = ["hydra-umc", "updater", "installer", "fleet-management"]
 # The CLI and its safety-critical update core remain stdlib-only. The visual
 # desktop shell is optional because a headless CM5 must not need a Qt runtime.
 dependencies = []
 
 [project.optional-dependencies]
-dev = ["pytest>=8.0"]
+dev = ["pytest>=8.0", "ruff>=0.5"]
 gui = ["PySide6>=6.8,<7"]
 # P01: a durable, on-disk promotion journal (HYDRA-UMC-SDK's own
 # promotion_journal.py, shared with HYDRA-UMC-OPS-AGENT's own
@@ -27,7 +27,10 @@ gui = ["PySide6>=6.8,<7"]
 # install.py stays usable with zero external dependencies either way
 # (see that module's own header comment), this only adds real durability
 # when installed.
-durable-journal = ["hydra-umc-sdk @ git+https://github.com/JuanenRac/HYDRA-UMC-SDK.git@main#subdirectory=clients/python"]
+# Pinned to a commit that carries the hardened journal, so a build never
+# depends on whatever the SDK branch holds at that moment; raise the pin on
+# purpose when the SDK releases something this updater should use.
+durable-journal = ["hydra-umc-sdk @ git+https://github.com/JuanenRac/HYDRA-UMC-SDK.git@9d06c7bb535a4beb3f633e2917a03277542e3818#subdirectory=clients/python"]
 
 [project.urls]
 Homepage = "https://github.com/JuanenRac/HYDRA-UMC-UPDATER"

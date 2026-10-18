@@ -32,7 +32,7 @@ from PySide6.QtQml import QQmlApplicationEngine
 from . import __version__, i18n, settings
 from .detect import LocalStatus, discover_workspace
 from .github_client import RemoteStatus, discover_remote_projects, fetch_all
-from .install import install_or_update
+from .install import InstallResult, batch_order_key, install_or_update, signature_required
 from .registry import GITHUB_OWNER
 
 
@@ -65,7 +65,17 @@ def _setup_file_logging() -> Path:
         logger.error("UNHANDLED EXCEPTION:\n%s", "".join(traceback.format_exception(exc_type, exc_value, exc_tb)))
         sys.__excepthook__(exc_type, exc_value, exc_tb)
 
+    def _log_thread_exception(args: threading.ExceptHookArgs) -> None:
+        # sys.excepthook never sees an exception that ends a background
+        # thread; without this hook it would vanish (pythonw has no stderr).
+        logger.error(
+            "UNHANDLED EXCEPTION in thread %s:\n%s",
+            args.thread.name if args.thread else "?",
+            "".join(traceback.format_exception(args.exc_type, args.exc_value, args.exc_traceback)),
+        )
+
     sys.excepthook = _log_unhandled
+    threading.excepthook = _log_thread_exception
     return log_path
 
 
@@ -111,7 +121,9 @@ class UpdaterBridge(QObject):
         self._logFilePath = str(log_file_path) if log_file_path else ""
         self._locals: list[LocalStatus] = []
         self._remotes: dict[str, RemoteStatus] = {}
-        self._deploy = "cm5" if sys.platform.startswith("linux") else "all"
+        # Every project is shown by default: the updater, the SDK and the
+        # rebuilder are not "cm5" projects, and hiding them hides the tool's own updates.
+        self._deploy = "all"
         self._selected = ""
         self._busy = False
         self._status = ""
@@ -164,6 +176,12 @@ class UpdaterBridge(QObject):
         identical fix): a truncated view has no way to show or copy
         anything that already scrolled out of it."""
         return self._activity
+
+    @Property(bool, constant=True)
+    def signatureRequired(self) -> bool:
+        """Whether commits must carry a valid signature before anything they
+        bring is built; the window shows a warning banner when they do not."""
+        return signature_required()
 
     @Property(str, constant=True)
     def logFilePath(self) -> str:
@@ -331,6 +349,8 @@ class UpdaterBridge(QObject):
 
     @Slot(str)
     def setWorkspaceUrl(self, url: str) -> None:
+        if self._busy:
+            return  # the folder must not change under a running install or update
         path = QUrl(url).toLocalFile() if url.startswith("file:") else url
         if not path:
             return
@@ -371,12 +391,17 @@ class UpdaterBridge(QObject):
 
         def worker() -> None:
             try:
-                discovery = discover_remote_projects()
-                remotes = {status.entry.name: status for status in discovery.projects}
-                errors: tuple[str, ...] = discovery.errors
-            except RuntimeError as exc:
-                remotes = fetch_all([status.entry for status in self._locals])
-                errors = (f"Remote discovery unavailable: {exc}",)
+                try:
+                    discovery = discover_remote_projects()
+                    remotes = {status.entry.name: status for status in discovery.projects}
+                    errors: tuple[str, ...] = discovery.errors
+                except RuntimeError as exc:
+                    remotes = fetch_all([status.entry for status in self._locals])
+                    errors = (f"Remote discovery unavailable: {exc}",)
+            except Exception as exc:  # noqa: BLE001 - the window must leave "busy" whatever happens
+                _GUI_LOGGER.exception("GitHub check failed")
+                remotes = {}
+                errors = (f"GitHub check failed: {type(exc).__name__}: {exc}",)
             local_by_name = {status.entry.name: status for status in self._locals}
             entries = {name: status.entry for name, status in local_by_name.items()}
             entries.update({name: status.entry for name, status in remotes.items()})
@@ -406,15 +431,18 @@ class UpdaterBridge(QObject):
         self._start_operation(skip_build)
         self._set_busy(True, self.text("status_action_progress").format(verb=verb, name=selected.entry.name))
         self._append_activity(self.text("log_action_started").format(verb=verb, name=selected.entry.name))
+        workspace_root = self._workspace_root
 
         def worker() -> None:
             def report(phase: str, detail: str) -> None:
                 self._operationCheckpoint.emit(phase, detail)
 
-            self._actionResult.emit(
-                selected.entry.name,
-                install_or_update(selected.entry, self._workspace_root, build=not skip_build, progress=report),
-            )
+            try:
+                results = install_or_update(selected.entry, workspace_root, build=not skip_build, progress=report)
+            except Exception as exc:  # noqa: BLE001 - always hand a result back, or the window stays busy forever
+                _GUI_LOGGER.exception("install or update of %s failed", selected.entry.name)
+                results = [InstallResult(False, f"{type(exc).__name__}: {exc}")]
+            self._actionResult.emit(selected.entry.name, results)
 
         threading.Thread(target=worker, daemon=True, name="hydra-umc-updater-action").start()
 
@@ -444,6 +472,10 @@ class UpdaterBridge(QObject):
         if not targets:
             self._append_activity(self.text("msg_batch_nothing_to_do"))
             return
+        # The SDK first and the updater itself last, so a batch never replaces
+        # the program that is running it halfway through.
+        targets.sort(key=lambda item: batch_order_key(item.entry.name))
+        workspace_root = self._workspace_root
 
         verb = self.text("action_installing" if action == "install" else "action_updating")
         self._start_operation(skip_build, batch_total=len(targets))
@@ -458,14 +490,18 @@ class UpdaterBridge(QObject):
                 def report(phase: str, detail: str, *, position: int = index, total: int = len(targets), name: str = selected.entry.name) -> None:
                     self._operationCheckpoint.emit(phase, f"[{position}/{total}] {name}: {detail}")
 
-                outcome.extend(
-                    install_or_update(
-                        selected.entry,
-                        self._workspace_root,
-                        build=not skip_build,
-                        progress=report,
+                try:
+                    outcome.extend(
+                        install_or_update(
+                            selected.entry,
+                            workspace_root,
+                            build=not skip_build,
+                            progress=report,
+                        )
                     )
-                )
+                except Exception as exc:  # noqa: BLE001 - one broken project must not strand the whole batch
+                    _GUI_LOGGER.exception("install or update of %s failed", selected.entry.name)
+                    outcome.append(InstallResult(False, f"{selected.entry.name}: {type(exc).__name__}: {exc}"))
             self._actionResult.emit(self._t("batch_result_name", total=len(targets)), outcome)
 
         threading.Thread(target=worker, daemon=True, name="hydra-umc-updater-batch").start()
@@ -543,6 +579,7 @@ class UpdaterBridge(QObject):
             ("preflight", "checkpoint_preflight"),
             ("source", "checkpoint_source"),
             ("validation", "checkpoint_validation"),
+            ("signature", "checkpoint_signature"),
             ("build", "checkpoint_build_skipped" if skip_build else "checkpoint_build"),
             ("complete", "checkpoint_complete"),
         ]
@@ -551,7 +588,7 @@ class UpdaterBridge(QObject):
                 "id": phase,
                 "label": self.text(label),
                 "detail": self.text("checkpoint_waiting"),
-                "state": "skipped" if phase == "build" and skip_build else "pending",
+                "state": "skipped" if (phase == "build" and skip_build) or (phase == "signature" and not signature_required()) else "pending",
             }
             for phase, label in steps
         ]

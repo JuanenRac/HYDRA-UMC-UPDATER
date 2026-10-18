@@ -6,7 +6,6 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
 
 from hydra_umc_updater import main as main_module
 from hydra_umc_updater.detect import LocalDiscovery, LocalStatus

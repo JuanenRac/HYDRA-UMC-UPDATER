@@ -10,17 +10,20 @@ run of the installed CLI — not written from memory.
 
 ```
 $ hydra-umc-updater --cli -h
-usage: hydra-umc-updater --cli [-h] [--version] {status,install,update} ...
+usage: hydra-umc-updater --cli [-h] [--version]
+                               {status,install,update,prune-backups} ...
 
 Detects, installs, and manually updates the HYDRA-UMC ecosystem's own projects
 on this machine.
 
 positional arguments:
-  {status,install,update}
+  {status,install,update,prune-backups}
     status              Show what's installed, its version, and the latest
                         GitHub version of every project.
     install             Clone and build ONE project that isn't installed yet.
     update              Pull and rebuild ONE project that's already installed.
+    prune-backups       Remove old '<project>.backup-xxxxxxxx' folders,
+                        keeping the newest few of each project.
 
 options:
   -h, --help            show this help message and exit
@@ -29,7 +32,7 @@ options:
 
 ```
 $ hydra-umc-updater --cli --version
-hydra-umc-updater 0.1.8
+hydra-umc-updater <installed version>
 ```
 
 `install`/`update` are deliberately separate from `status` and always
@@ -40,12 +43,12 @@ actually touch.
 
 ## Commands
 
-### `status [--workspace PATH] [--offline] [--notes]`
+### `status [--workspace PATH] [--offline] [--notes] [--json]`
 
 ```
 $ hydra-umc-updater --cli status -h
 usage: hydra-umc-updater --cli status [-h] [--workspace WORKSPACE] [--offline]
-                                      [--notes]
+                                      [--notes] [--json]
 
 options:
   -h, --help            show this help message and exit
@@ -55,6 +58,8 @@ options:
   --offline             Skip the GitHub check - local state only.
   --notes               Also print each project's real notes (family/parent,
                         what's actually implemented, tech) below the table.
+  --json                Machine-readable JSON instead of the human-readable
+                        table (ignores --notes).
 ```
 
 Scans `--workspace` (or this tool's own parent directory by default) for
@@ -129,20 +134,23 @@ options:
 Fetches the remote candidate, validates its repository-owned
 `hydra-umc.project.json` before modifying the checkout, rejects a candidate
 whose semantic version is lower than the installed manifest, then performs a
-`git merge --ff-only` and runs its own build script unless `--no-build` is
-given. The preflight is deliberately manifest-based: a reachable Git commit is
+`git merge --ff-only` in an independent staging clone, runs the project's own
+`build-test` script there unless `--no-build` is given, and only then swaps the
+verified clone into place (the previous installation stays beside it as
+`<name>.backup-xxxxxxxx`). The preflight is deliberately manifest-based: a reachable Git commit is
 not automatically a safe ecosystem update. `--ff-only` is
 deliberate and load-bearing: **a healthy local checkout is never
 replaced**. A real local edit (this tool is meant to also run on a
 developer machine, not only the CM5) or a diverged branch makes the
-pull fail loudly with git's own error — never a silent reset or a
+update fail loudly — and when the cause is a commit that exists only in
+the local checkout, the message names it — never a silent reset or a
 discarded change:
 
 ```
 $ cd /path/to/workspace/SOME-PROJECT && git log --oneline -1
 a1b2c3d local work in progress
 $ hydra-umc-updater --cli update SOME-PROJECT
-Pulled latest into ... failed (exit 1) - local changes or a diverged branch?
+FAIL git merge --ff-only failed: .../SOME-PROJECT has 1 local commit(s) that the upstream does not have (a1b2c3d local work in progress), so the update cannot be a fast-forward - ...
 $ cd /path/to/workspace/SOME-PROJECT && git log --oneline -1
 a1b2c3d local work in progress   # unchanged
 ```
@@ -154,12 +162,38 @@ diverged git history is built, the fast-forward is proven to fail, and
 `test_refuses_a_remote_manifest_version_lower_than_the_installed_version`
 proves that an otherwise fast-forwardable downgrade leaves `HEAD` unchanged.)
 
+### `prune-backups [--workspace PATH] [--keep N] [--dry-run]`
+
+Every promoted update leaves the previous installation beside the new one as
+`<name>.backup-xxxxxxxx`, and nothing removes those on its own. This command
+keeps the newest `--keep` backups of each project (default 2) and removes the
+rest; `--dry-run` only lists what it would remove. It never runs unless asked,
+and refuses to start while an install or update is running in the workspace.
+
+## Safety limits
+
+- One install or update at a time per workspace (the lock file
+  `.hydra_umc_updater.lock` in the workspace); a second one stops with
+  "another install or update is already running".
+- Every git command is stopped after 300 s and every `build-test` after
+  1800 s, and none of them may stop to ask for credentials.
+- `HYDRA_UMC_UPDATER_REQUIRE_SIGNED=1`, or `require_signed_commits` in
+  `~/.hydra_umc_updater_settings.json` (an unreadable settings file counts as
+  on), requires the candidate commit to carry a signature `git verify-commit`
+  accepts, for a first install as well as for an update. An ssh signature is
+  checked against the file named by `allowed_signers_file` in the same
+  settings, when it is set.
+- `HYDRA_UMC_WORKSPACE` names the workspace when `--workspace` is not given.
+  When the updater is installed as a package inside a Python environment, the
+  current directory is used instead of a folder inside that environment.
+
 ## Exit codes
 
 `status` always exits `0` (even when projects are outdated — that's
 informational, not a failure). `install`/`update` exit `1` on any real
-failure (unknown project, failed clone/pull, failed build script) and
-`0` on success.
+failure (unknown project, failed clone/pull, failed build script, a workspace
+that is busy, an unexpected error) and `0` on success. `prune-backups` exits `0`
+unless the workspace is busy or `--keep` is negative.
 
 ## Network resilience
 
@@ -182,5 +216,5 @@ Running `hydra-umc-updater` with no arguments opens the QML desktop client.
 On Windows, `run-gui.vbs` is the console-free double-click launcher; bare
 `run.bat` delegates to it. The client provides a filterable project table,
 explicit Install/Update actions, real in-window checkpoints and a language
-selector (7 languages; the CLI itself stays English-only, since it's
+selector (8 languages; the CLI itself stays English-only, since it's
 meant to be scripted/piped).

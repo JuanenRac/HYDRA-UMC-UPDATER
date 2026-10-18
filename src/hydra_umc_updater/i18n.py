@@ -9,10 +9,10 @@
 # own READMEs and JuanenRac/scripts/generate_dashboard.py's own dashboard
 # already ship. Deliberately does NOT translate project names, family
 # names, or the free-text `notes`/`tech` content that comes straight from
-# registry.py - same reasoning as the dashboard's own TRANSLATIONS module
-# docstring: that content is real engineering documentation with
-# registry.py as its single source of truth, and maintaining 7 parallel
-# copies of it would stop it being that.
+# each project's own manifest - same reasoning as the dashboard's own
+# TRANSLATIONS module docstring: that content is real engineering
+# documentation with the manifest as its single source of truth, and
+# maintaining 8 parallel copies of it would stop it being that.
 #
 # `--cli` mode (main.py) is intentionally NOT translated - it's meant to
 # be scripted/piped, where a stable, English, greppable output matters
@@ -26,7 +26,7 @@ import locale
 from . import settings
 
 #: (code, native display name with flag) - same order shown in the
-#: language combobox, same 7 codes the dashboard and every README already
+#: language combobox, same 8 codes the dashboard and every README already
 #: use across this ecosystem.
 LANGUAGES: list[tuple[str, str]] = [
     ("en", "🇺🇸 English"),
@@ -823,6 +823,43 @@ _LOG_COPY: dict[str, dict[str, str]] = {
 
 for _language, _log_copy in _LOG_COPY.items():
     TRANSLATIONS[_language].update(_log_copy)
+
+
+# The signature step of the checkpoint panel, and the warning shown while
+# commit signatures are not being checked.
+_SIGNATURE_COPY: dict[str, dict[str, str]] = {
+    "en": {
+        "checkpoint_signature": "Signature check",
+        "signature_off_warning": "Commit signatures are NOT checked: a project's build script runs without proof of who published it. Set HYDRA_UMC_UPDATER_REQUIRE_SIGNED=1 to require them.",
+    },
+    "es": {
+        "checkpoint_signature": "Comprobación de firma",
+        "signature_off_warning": "Las firmas de los commits NO se comprueban: el script de compilación de un proyecto se ejecuta sin prueba de quién lo publicó. Define HYDRA_UMC_UPDATER_REQUIRE_SIGNED=1 para exigirlas.",
+    },
+    "fr": {
+        "checkpoint_signature": "Vérification de la signature",
+        "signature_off_warning": "Les signatures des commits ne sont PAS vérifiées : le script de build d'un projet s'exécute sans preuve de son éditeur. Définissez HYDRA_UMC_UPDATER_REQUIRE_SIGNED=1 pour les exiger.",
+    },
+    "it": {
+        "checkpoint_signature": "Verifica della firma",
+        "signature_off_warning": "Le firme dei commit NON vengono verificate: lo script di build di un progetto viene eseguito senza prova di chi lo ha pubblicato. Imposta HYDRA_UMC_UPDATER_REQUIRE_SIGNED=1 per richiederle.",
+    },
+    "de": {
+        "checkpoint_signature": "Signaturprüfung",
+        "signature_off_warning": "Commit-Signaturen werden NICHT geprüft: Das Build-Skript eines Projekts läuft ohne Nachweis, wer es veröffentlicht hat. Mit HYDRA_UMC_UPDATER_REQUIRE_SIGNED=1 werden sie verlangt.",
+    },
+    "zh": {
+        "checkpoint_signature": "签名检查",
+        "signature_off_warning": "未检查提交签名：项目的构建脚本在无法证明发布者身份的情况下运行。设置 HYDRA_UMC_UPDATER_REQUIRE_SIGNED=1 可强制要求签名。",
+    },
+    "ja": {
+        "checkpoint_signature": "署名の確認",
+        "signature_off_warning": "コミットの署名は確認されていません。プロジェクトのビルドスクリプトは、公開者を証明するものなしに実行されます。HYDRA_UMC_UPDATER_REQUIRE_SIGNED=1 を設定すると署名が必須になります。",
+    },
+}
+
+for _language, _signature_copy in _SIGNATURE_COPY.items():
+    TRANSLATIONS[_language].update(_signature_copy)
 
 
 # The eighth language lives in its own module (see i18n_pt.py's header).

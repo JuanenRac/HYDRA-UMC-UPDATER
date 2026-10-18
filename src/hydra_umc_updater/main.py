@@ -28,24 +28,49 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
 
 from . import __version__, settings
 from .detect import LocalStatus, discover_workspace
 from .github_client import RemoteStatus, discover_remote_projects, fetch_all
-from .install import install_or_update
-from .version_parse import Version
+from .install import (
+    WorkspaceBusyError,
+    WorkspaceLock,
+    install_or_update,
+    list_backups,
+    prune_backups,
+    signature_required,
+)
+
+WORKSPACE_ENV = "HYDRA_UMC_WORKSPACE"
+
+
+def _installed_as_package(module_file: Path) -> bool:
+    """True when this module lives in a Python environment (site-packages or a
+    virtual environment) instead of in a source checkout."""
+    parts = {part.casefold() for part in module_file.parts}
+    return "site-packages" in parts or "dist-packages" in parts or ".venv" in parts or "venv" in parts
 
 
 def default_workspace_root() -> Path:
-    """This project's own parent directory - correct as long as
-    HYDRA-UMC-UPDATER itself was checked out the same way every other
-    ecosystem project is (a sibling of the other 55 under one common
-    parent) - the standard layout this whole tool assumes throughout.
-    Always overridable with --workspace for anything else (a CM5 install
-    under a different path, a CI checkout, ...)."""
-    return Path(__file__).resolve().parents[3]
+    """The workspace to use when none is given: the folder named by the
+    HYDRA_UMC_WORKSPACE environment variable if set; otherwise this project's
+    own parent directory, which is right as long as HYDRA-UMC-UPDATER was
+    checked out like every other ecosystem project (a sibling of the others
+    under one common parent). When the tool is installed as a package in an
+    environment, that parent would be inside the environment itself (a
+    nonsense workspace in which "install all" would clone the whole ecosystem
+    into a virtual environment), so the current directory is used instead.
+    Always overridable with --workspace."""
+    from_env = os.environ.get(WORKSPACE_ENV, "").strip()
+    if from_env:
+        return Path(from_env).expanduser().resolve()
+    module_file = Path(__file__).resolve()
+    if _installed_as_package(module_file):
+        return Path.cwd()
+    return module_file.parents[3]
 
 
 def resolve_workspace_root() -> Path:
@@ -230,6 +255,12 @@ def _install_or_update(args: argparse.Namespace, *, expect_installed: bool) -> i
 
     if entry.note:
         print(f"Note: {entry.note}")
+    if not signature_required():
+        print(
+            "Note: commit signatures are NOT being checked before a project's build script runs "
+            "(set HYDRA_UMC_UPDATER_REQUIRE_SIGNED=1 or save require_signed_commits in the settings).",
+            file=sys.stderr,
+        )
     print(f"{'Updating' if expect_installed else 'Installing'} {entry.name} into {workspace_root} ...")
 
     results = install_or_update(entry, workspace_root, build=not args.no_build)
@@ -237,6 +268,30 @@ def _install_or_update(args: argparse.Namespace, *, expect_installed: bool) -> i
     for r in results:
         print(("OK  " if r.ok else "FAIL ") + r.message)
     return 0 if ok else 1
+
+
+def cmd_prune_backups(args: argparse.Namespace) -> int:
+    workspace_root = Path(args.workspace).resolve() if args.workspace else default_workspace_root()
+    if args.keep < 0:
+        print("--keep must not be negative", file=sys.stderr)
+        return 1
+    lock = WorkspaceLock(workspace_root)
+    try:
+        lock.acquire()
+    except (WorkspaceBusyError, OSError) as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
+        return 1
+    try:
+        groups = list_backups(workspace_root)
+        total = sum(len(paths) for paths in groups.values())
+        removed = prune_backups(workspace_root, keep=args.keep, dry_run=args.dry_run)
+    finally:
+        lock.release()
+    verb = "Would remove" if args.dry_run else "Removed"
+    for path in removed:
+        print(f"{verb} {path}")
+    print(f"{len(removed)} of {total} backup(s) {'would be ' if args.dry_run else ''}removed; kept the newest {args.keep} of each project.")
+    return 0
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -266,7 +321,26 @@ def build_parser() -> argparse.ArgumentParser:
     update_p.add_argument("--no-build", action="store_true", help="Pull only - skip running the project's own build script.")
     update_p.set_defaults(func=cmd_update)
 
+    prune_p = subparsers.add_parser(
+        "prune-backups",
+        help="Remove old '<project>.backup-xxxxxxxx' folders, keeping the newest few of each project.",
+    )
+    prune_p.add_argument("--workspace", help="Workspace root (default: this tool's own parent directory).")
+    prune_p.add_argument("--keep", type=int, default=2, help="How many of the newest backups of each project to keep (default 2).")
+    prune_p.add_argument("--dry-run", action="store_true", help="Only list what would be removed.")
+    prune_p.set_defaults(func=cmd_prune_backups)
+
     return parser
+
+
+def _workspace_from_gui_arguments() -> Path | None:
+    """`--workspace PATH` also works when the window is opened."""
+    parser = argparse.ArgumentParser(add_help=False)
+    parser.add_argument("--workspace")
+    known, _unknown = parser.parse_known_args(sys.argv[1:])
+    if known.workspace:
+        return Path(known.workspace).expanduser().resolve()
+    return None
 
 
 def main() -> int:
@@ -287,9 +361,9 @@ def main() -> int:
                 print("Qt Quick GUI runtime is not installed; starting the legacy "
                       "Tkinter fallback. Run build.bat/build.sh to enable the new "
                       "visual desktop interface.", file=sys.stderr)
-                return launch_gui(resolve_workspace_root())
+                return launch_gui(_workspace_from_gui_arguments() or resolve_workspace_root())
         else:
-            return launch_qt_gui(resolve_workspace_root())
+            return launch_qt_gui(_workspace_from_gui_arguments() or resolve_workspace_root())
 
     argv = [a for a in sys.argv[1:] if a != "--cli"]
     parser = build_parser()

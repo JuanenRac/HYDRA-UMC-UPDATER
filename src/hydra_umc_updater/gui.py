@@ -9,13 +9,11 @@
 # toolkit (PySide6, etc.) that would cost this tool the "dependency-free"
 # property its own README already commits to.
 #
-# This is the DEFAULT way to run this tool now (double-click friendly, on
-# both the CM5 itself over a local desktop/VNC session and a developer's
-# own Windows/Linux/macOS machine) - main.py only falls back to the old
-# argparse CLI when --cli is passed, or when tkinter genuinely isn't
-# available (a headless CM5 with no python3-tk installed), following the
-# exact "if '--cli' not in sys.argv: import tkinter" pattern main.py
-# itself now uses, copied from urtc_flasher.py's own header comment.
+# This is the FALLBACK window: main.py opens the Qt Quick window (qt_gui.py)
+# when PySide6 is installed and comes here only when it is not. It still
+# works double-click friendly on both the CM5 itself over a local
+# desktop/VNC session and a developer's own Windows/Linux/macOS machine;
+# main.py only uses the argparse CLI when --cli is passed.
 #
 # One window, one Treeview table (Project / Maturity / Role / Stack /
 # Deploy / Local / GitHub / State), a deploy-target filter, and
@@ -51,8 +49,8 @@ from tkinter import filedialog, messagebox, ttk
 from . import __version__, i18n, settings
 from .detect import LocalStatus, discover_workspace
 from .github_client import RemoteStatus, discover_remote_projects, fetch_all
-from .install import install_or_update
-from .registry import GITHUB_OWNER, ProjectEntry
+from .install import InstallResult, install_or_update
+from .registry import GITHUB_OWNER
 
 #: Order matters - shown left-to-right in the filter dropdown, "all" first.
 #: Real labels come from i18n.t(lang, f"deploy_{key}") / "deploy_all" at
@@ -64,15 +62,10 @@ MATURITY_KEYS = ("production", "established", "functional", "scaffolding")
 
 
 def _default_deploy_filter() -> str:
-    """Linux is the real CM5's own OS - default to showing only what
-    actually belongs there. Anywhere else (a developer's Windows/macOS
-    machine) defaults to showing everything, since "what am I even
-    supposed to do with each of these 44 repos" is exactly the question
-    the deploy field answers for a dev machine. Always changeable by hand
-    from the dropdown regardless of platform - this is just a starting
-    point, never a restriction (the deployment target comes from each
-    repository manifest)."""
-    return "cm5" if sys.platform.startswith("linux") else "all"
+    """Everything is shown by default: the updater itself, the SDK and the
+    rebuilder are not "cm5" projects, and a filter that hides them also hides
+    the tool's own updates. Changeable by hand from the dropdown."""
+    return "all"
 
 
 def _state_key(local: LocalStatus, remote: RemoteStatus | None) -> str:
@@ -753,8 +746,19 @@ class UpdaterGUI:
         self._append_log(self.t("log_action_started", verb=verb, name=ls.entry.name))
         build = not self.no_build_var.get()
 
+        workspace_root = self.workspace_root
+
+        def progress(_phase: str, message: str) -> None:
+            # A progress callback also keeps the child processes captured, so no
+            # console window opens for each git command and no build script
+            # waits for a keypress when started without a terminal.
+            self._work_queue.put(("progress", message))
+
         def worker():
-            results = install_or_update(ls.entry, self.workspace_root, build=build)
+            try:
+                results = install_or_update(ls.entry, workspace_root, build=build, progress=progress)
+            except Exception as exc:  # noqa: BLE001 - always hand a result back, or the window stays busy forever
+                results = [InstallResult(False, f"{type(exc).__name__}: {exc}")]
             self._work_queue.put(("install_done", (ls.entry.name, results)))
 
         threading.Thread(target=worker, daemon=True).start()

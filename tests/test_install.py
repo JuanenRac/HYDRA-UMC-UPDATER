@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import importlib
+import importlib.util
 import json
 import os
 import subprocess
@@ -27,6 +28,12 @@ from hydra_umc_updater.registry import ProjectEntry
 _SDK_SRC = Path(__file__).resolve().parents[2] / "HYDRA-UMC-SDK" / "clients" / "python" / "src"
 
 
+def _sdk_available() -> bool:
+    """The SDK is usable either as a sibling checkout or as an installed package
+    (the `durable-journal` extra, which is how CI gets it)."""
+    return _SDK_SRC.is_dir() or importlib.util.find_spec("hydra_umc_sdk") is not None
+
+
 def _reload_install_with_sdk_on_path():
     """Adds the sibling SDK's src/ to sys.path and reloads hydra_umc_updater.install
     so its own module-level `_HAS_DURABLE_JOURNAL` try/except re-runs and
@@ -35,7 +42,8 @@ def _reload_install_with_sdk_on_path():
     responsible for restoring the original state via
     `_reload_install_without_sdk()` once done, so later tests in this
     same file see the real, default (no-SDK) behavior again."""
-    sys.path.insert(0, str(_SDK_SRC))
+    if _SDK_SRC.is_dir():
+        sys.path.insert(0, str(_SDK_SRC))
     for name in ("hydra_umc_sdk", "hydra_umc_sdk.promotion_journal"):
         sys.modules.pop(name, None)
     return importlib.reload(install)
@@ -620,9 +628,9 @@ def test_recover_interrupted_promotions_is_a_real_noop_without_the_sdk_installed
 
 
 def test_promotion_journal_records_and_completes_a_real_successful_update(tmp_path: Path):
-    if not _SDK_SRC.is_dir():
+    if not _sdk_available():
         import pytest
-        pytest.skip(f"no sibling HYDRA-UMC-SDK checkout at {_SDK_SRC}")
+        pytest.skip("hydra-umc-sdk is neither a sibling checkout nor installed")
     reloaded = _reload_install_with_sdk_on_path()
     try:
         assert reloaded._HAS_DURABLE_JOURNAL is True
@@ -666,9 +674,9 @@ def _entry_with_health(*, port: int) -> ProjectEntry:
 
 
 def test_i13_promotion_completes_only_after_a_real_passing_health_check(tmp_path: Path):
-    if not _SDK_SRC.is_dir():
+    if not _sdk_available():
         import pytest
-        pytest.skip(f"no sibling HYDRA-UMC-SDK checkout at {_SDK_SRC}")
+        pytest.skip("hydra-umc-sdk is neither a sibling checkout nor installed")
     import threading
     from http.server import BaseHTTPRequestHandler, HTTPServer
 
@@ -719,9 +727,9 @@ def test_i13_promotion_completes_only_after_a_real_passing_health_check(tmp_path
 
 
 def test_i13_promotion_stays_pending_when_the_health_check_fails(tmp_path: Path):
-    if not _SDK_SRC.is_dir():
+    if not _sdk_available():
         import pytest
-        pytest.skip(f"no sibling HYDRA-UMC-SDK checkout at {_SDK_SRC}")
+        pytest.skip("hydra-umc-sdk is neither a sibling checkout nor installed")
     import socket
 
     # A real, guaranteed-closed local port - nothing is listening, so the
@@ -769,9 +777,9 @@ def test_i13_promotion_stays_pending_when_the_health_check_fails(tmp_path: Path)
 
 
 def test_recover_interrupted_promotions_heals_a_real_crash_left_backed_up(tmp_path: Path):
-    if not _SDK_SRC.is_dir():
+    if not _sdk_available():
         import pytest
-        pytest.skip(f"no sibling HYDRA-UMC-SDK checkout at {_SDK_SRC}")
+        pytest.skip("hydra-umc-sdk is neither a sibling checkout nor installed")
     reloaded = _reload_install_with_sdk_on_path()
     try:
         # Simulates exactly the real gap clone_or_pull()'s own promotion

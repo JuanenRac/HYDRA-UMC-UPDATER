@@ -48,7 +48,7 @@ from concurrent.futures import (
     ThreadPoolExecutor,
     as_completed,
 )
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 from .project_manifest import (
     ECOSYSTEM_ID,
@@ -271,7 +271,7 @@ def _fetch_discovered_manifest(owner: str, name: str, branch: str) -> RemoteStat
     if manifest.ecosystem != ECOSYSTEM_ID:
         return None
     return RemoteStatus(
-        entry=entry_from_manifest(manifest),
+        entry=replace(entry_from_manifest(manifest), branch=branch),
         version=Version.from_string(manifest.version),
         url=url,
         manifest=manifest,
@@ -320,7 +320,9 @@ def discover_remote_projects(
         if not isinstance(payload, list):
             raise RuntimeError(f"unexpected GitHub repository-list response for {owner}")
         for item in payload:
-            if isinstance(item, dict) and isinstance(item.get("name"), str):
+            # A fork is somebody else's copy of a repository, never one of the
+            # ecosystem's own projects.
+            if isinstance(item, dict) and isinstance(item.get("name"), str) and item.get("fork") is not True:
                 branch = item.get("default_branch")
                 candidates.append((item["name"], branch if isinstance(branch, str) and branch else "main"))
         if len(payload) < 100:
@@ -332,7 +334,6 @@ def discover_remote_projects(
     with ThreadPoolExecutor(max_workers=MAX_CONCURRENT_REQUESTS, thread_name_prefix="hydra-discovery") as pool:
         futures = {pool.submit(_fetch_discovered_manifest, owner, name, branch): name for name, branch in candidates}
         for future in as_completed(futures):
-            name = futures[future]
             try:
                 status = future.result()
             except RuntimeError as exc:

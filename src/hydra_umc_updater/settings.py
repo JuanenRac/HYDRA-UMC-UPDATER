@@ -96,3 +96,40 @@ def get_saved_lang() -> str | None:
 
 def save_lang(lang: str) -> None:
     save_settings(lang=lang)
+
+
+def settings_file_is_damaged() -> bool:
+    """True when the settings file exists but cannot be read as a JSON object.
+    Used to fail closed: a damaged file must never silently switch off a
+    safety setting that may have been stored in it."""
+    if not SETTINGS_PATH.exists():
+        return False
+    try:
+        return not isinstance(json.loads(SETTINGS_PATH.read_text(encoding="utf-8")), dict)
+    except (OSError, ValueError):
+        return True
+
+
+def get_require_signed_commits() -> bool:
+    """Whether the saved settings ask for signed commits. A damaged settings
+    file counts as "yes" (fail closed)."""
+    if settings_file_is_damaged():
+        return True
+    return load_settings().get("require_signed_commits") is True
+
+
+def save_require_signed_commits(required: bool) -> None:
+    save_settings(require_signed_commits=bool(required))
+
+
+def get_allowed_signers_file() -> str | None:
+    """Path of the ssh allowed-signers file used to verify commit signatures,
+    only when it is a real file."""
+    raw = load_settings().get("allowed_signers_file")
+    if isinstance(raw, str) and raw and Path(raw).is_file():
+        return raw
+    return None
+
+
+def save_allowed_signers_file(path: Path | str) -> None:
+    save_settings(allowed_signers_file=str(path))

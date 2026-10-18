@@ -464,12 +464,18 @@ ApplicationWindow {
                     LabelText { text: ui("local_ecosystem_title"); font.pixelSize: 18; font.bold: true }
                     LabelText { text: ui("workspace_caption"); color: window.textMuted; font.pixelSize: 11; font.bold: true; font.letterSpacing: 1 }
                     LabelText { text: backend.workspaceRoot; color: window.textPrimary; font.pixelSize: 11; wrapMode: Text.WrapAnywhere; Layout.fillWidth: true }
-                    GameButton { text: ui("browse_button"); Layout.fillWidth: true; accent: "#265c89"; onClicked: workspaceDialog.open() }
+                    GameButton { text: ui("browse_button"); enabled: !backend.busy; Layout.fillWidth: true; accent: "#265c89"; onClicked: workspaceDialog.open() }
                     Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: window.border }
                     MetricCard { Layout.fillWidth: true; caption: ui("metric_detected"); value: String(backend.discoveredCount); accent: window.cyan }
                     MetricCard { Layout.fillWidth: true; caption: ui("metric_installed"); value: String(backend.installedCount); accent: window.green }
                     MetricCard { Layout.fillWidth: true; caption: ui("metric_updates"); value: String(backend.updateCount); accent: window.amber }
                     Item { Layout.fillHeight: true }
+                    Rectangle {
+                        visible: !backend.signatureRequired
+                        Layout.fillWidth: true; Layout.preferredHeight: visible ? warningText.implicitHeight + 16 : 0
+                        radius: 8; color: "#3a1418"; border.width: 1; border.color: "#b04050"
+                        LabelText { id: warningText; anchors.fill: parent; anchors.margins: 8; text: ui("signature_off_warning"); color: "#ff8f9b"; font.pixelSize: 10; wrapMode: Text.WordWrap }
+                    }
                     LabelText { text: ui("local_footer"); color: window.textMuted; wrapMode: Text.WordWrap; font.pixelSize: 11; Layout.fillWidth: true }
                 }
             }

@@ -143,4 +143,6 @@ PT: dict[str, str] = {
     "about_qt_runtime": "Runtime de desktop Qt Quick / PySide6",
     "copy_log_button": "Copiar",
     "log_file_prefix": "Ficheiro de registo:",
+    "checkpoint_signature": "Verificação da assinatura",
+    "signature_off_warning": "As assinaturas dos commits NÃO são verificadas: o script de compilação de um projeto é executado sem prova de quem o publicou. Defina HYDRA_UMC_UPDATER_REQUIRE_SIGNED=1 para as exigir.",
 }

@@ -24,6 +24,15 @@ it. If you discover a vulnerability affecting:
   check report a false "up to date"/"outdated" state that could mislead
   someone into skipping a real update, or attempting one that isn't
   actually needed.
+- **The signature gate** - a way to run a project's `build-test` script
+  from a commit that fails `git verify-commit` while the requirement
+  (`HYDRA_UMC_UPDATER_REQUIRE_SIGNED=1`, or `require_signed_commits` in
+  the saved settings) is on. The gate covers a first install and an
+  update. It is off by default and only as strong as the keyring or ssh
+  allowed-signers file of the machine it runs on; a damaged settings file
+  is read as "required". With the gate off, the `build-test` script of the
+  commit being installed runs with this user's privileges before anything
+  has shown who published it - the window says so while that is the case.
 
 please report it responsibly:
 
