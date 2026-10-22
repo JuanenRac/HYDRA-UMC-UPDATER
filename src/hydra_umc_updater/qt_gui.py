@@ -25,7 +25,7 @@ import traceback
 import webbrowser
 from pathlib import Path
 
-from PySide6.QtCore import QObject, Property, QUrl, Signal, Slot
+from PySide6.QtCore import Property, QCoreApplication, QEvent, QObject, QUrl, Signal, Slot
 from PySide6.QtGui import QGuiApplication, QIcon
 from PySide6.QtQml import QQmlApplicationEngine
 
@@ -687,4 +687,12 @@ def launch_qt_gui(workspace_root: Path) -> int:
     for window in engine.rootObjects():
         if hasattr(window, "setIcon"):
             window.setIcon(app.windowIcon())
-    return app.exec()
+    code = app.exec()
+    # The windows go first, while the bridge their bindings read still exists: the other way round every binding of the window reads a null `backend` while it closes and the
+    # console fills with "Cannot read property ... of null".
+    for window in engine.rootObjects():
+        window.deleteLater()
+    QCoreApplication.sendPostedEvents(None, QEvent.Type.DeferredDelete)
+    del engine
+    del bridge
+    return code

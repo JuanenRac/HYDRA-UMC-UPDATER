@@ -257,7 +257,7 @@ HYDRA-UMC-UPDATER/
 ├── build.sh / build.bat    # venv + instalación editable + compile-check
 ├── run.sh / run.bat        # GUI por defecto / entrada CLI
 ├── run-gui.vbs             # Lanzador grafico Windows sin ventana de consola
-├── bump_version.py         # Incremento "cuentakilómetros" del ecosistema (pyproject.toml + __init__.py)
+├── bump_version.py         # Incremento de versión tipo cuentakilómetros (solo lo ejecuta el comando `bump` explícito)
 └── bump_manifest_version.py # Sincroniza la versión de hydra-umc.project.json con la nativa (--sync)
 ```
 
