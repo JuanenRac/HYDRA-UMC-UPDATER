@@ -1,4 +1,4 @@
-# Changelog: HYDRA-UMC-UPDATER 🛠️
+# Changelog
 
 All notable changes to this project are documented here.
 
@@ -701,7 +701,6 @@ repo's own test suite is run with).
 - This same pass regenerated `JuanenRac/docs/index.html` (the public dashboard) against this registry - see that repo's own CHANGELOG for the dashboard-side v3 changes (maturity/role badges, family/parent grouping, per-project notes).
 
 ## [0.0.4]
-### Added
 - Windowed GUI (`gui.py`, Tkinter/ttk, stdlib only) - now the DEFAULT way
   to run this tool (bare `hydra-umc-updater` / double-click), on both
   Windows (a developer's own PC) and Linux (the real CM5's own local
@@ -731,7 +730,6 @@ repo's own test suite is run with).
   table defaults to filtering to "CM5" on Linux and shows everything on
   Windows/macOS - always overridable from the dropdown.
 
-### Verified
 - Real GUI smoke test against the actual 44-project checkout: window
   construction, the offline local scan populating all 44 rows, and the
   deploy-target filter narrowing to the expected 31 (CM5) / 10 (user-pc)
@@ -739,7 +737,6 @@ repo's own test suite is run with).
   installed, 0 parse failures) after the dispatch change in `main.py`.
 
 ## [0.0.2]
-### Added
 - Initial working implementation - `registry.py` (all 44 ecosystem
   projects: repo, stack, version file, extraction pattern), a shared
   `version_parse.py` used identically for local and GitHub-fetched text,
@@ -751,7 +748,6 @@ repo's own test suite is run with).
 - `CHANGELOG.md` (this file), full community-health files, and README.md
   plus its 4 translations.
 
-### Verified
 - Real end-to-end run against the actual 44-project ecosystem checkout:
   local detection correctly read all 44 real version files with zero
   parse failures, and the real GitHub check (raw.githubusercontent.com,
