@@ -2,11 +2,11 @@
 # =============================================================================
 # HYDRA-UMC - Manifest-backed build version utility
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
-# GPL-3.0 - see LICENSE
+# GPL-3.0-or-later - see LICENSE
 # =============================================================================
 """Increment or synchronize a repository-native version and its manifest.
 
-This file is intentionally copied to each HYDRA-UMC repository root so
+This file is intentionally copied to each HYDRA-UMC/URTC repository root so
 its build scripts work from a normal standalone checkout.  It reads only the
 repository's own ``hydra-umc.project.json``; there is no project catalogue or
 per-project conditional logic in this utility.

@@ -5,6 +5,11 @@ version number follows this ecosystem's "odometer" scheme: PATCH +1 on
 every real build, rolling into MINOR past 9 (`0.0.9` -> `0.1.0`); MAJOR is
 bumped manually only. See `bump_version.py`.
 
+## [Unreleased]
+
+- Added `tools/hydra_project_tool.py`: the same `validate`, `test`, `version`, `status` and `bump` commands in every repository. The checks run with `HYDRA_UMC_CI=1` and fail if the version changes; only `bump` changes it.
+- The SDK is now fetched at a release tag instead of the main branch, so a change of the SDK cannot break this repository by itself.
+
 ## [0.4.8] - A failure never leaves the window stuck; one install at a time; the signature gate also covers a first install
 
 - **No more window stuck on "working":** an exception inside an install or update (git missing from the path, a file that belongs to another user, a folder in use on Windows) used to end the worker thread without a result, so every button stayed disabled until the program was restarted and nothing was written to the evidence file. Every step now comes back as an ordinary failed result, the attempt is always recorded, background-thread exceptions are written to the log file, and the Qt Quick and Tkinter windows leave the busy state whatever happens.
