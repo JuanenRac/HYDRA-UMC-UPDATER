@@ -108,7 +108,7 @@ seleccionada.
 ## 2. 🔄 CÓMO FUNCIONA REALMENTE UNA COMPROBACIÓN/ACTUALIZACIÓN
 
 - **Origen de la versión**: la convención "cuentakilómetros" de
-  auto-incremento de este ecosistema (cada build real incrementa un
+  auto-incremento de este ecosistema (cada bump explícito incrementa un
   número de versión que vive DENTRO de un archivo fuente -
   `pyproject.toml`, `Cargo.toml`, `version.go`, `package.json`,
   `version.properties`, `pubspec.yaml`, o un `#define` de firmware, según

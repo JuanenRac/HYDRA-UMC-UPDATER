@@ -106,7 +106,7 @@ selezionata.
 ## 2. 🔄 COME FUNZIONA DAVVERO UN CONTROLLO/AGGIORNAMENTO
 
 - **Origine della versione**: la convenzione "contachilometri" di
-  auto-incremento di questo ecosistema (ogni build reale incrementa un
+  auto-incremento di questo ecosistema (ogni bump esplicito incrementa un
   numero di versione che vive DENTRO un file sorgente - `pyproject.toml`,
   `Cargo.toml`, `version.go`, `package.json`, `version.properties`,
   `pubspec.yaml`, o un `#define` di firmware, a seconda dello stack del

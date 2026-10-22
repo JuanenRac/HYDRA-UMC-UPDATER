@@ -109,7 +109,7 @@ is written to `~/.hydra_umc_updater/logs/`.
 ## 2. 🔄 HOW A CHECK/UPDATE ACTUALLY WORKS
 
 - **Version source**: this ecosystem's own "odometer" auto-bump
-  convention (every real build increments a version number that lives
+  convention (every explicit bump increments a version number that lives
   IN a source file - `pyproject.toml`, `Cargo.toml`, `version.go`,
   `package.json`, `version.properties`, `pubspec.yaml`, or a firmware
   `#define`, depending on the project's stack) has never created a git

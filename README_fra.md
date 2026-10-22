@@ -105,7 +105,7 @@ ligne sélectionnée.
 ## 2. 🔄 COMMENT FONCTIONNE VRAIMENT UNE VÉRIFICATION/MISE À JOUR
 
 - **Source de la version** : la convention "compteur kilométrique"
-  d'auto-incrémentation de cet écosystème (chaque build réel incrémente
+  d'auto-incrémentation de cet écosystème (chaque bump explicite incrémente
   un numéro de version qui vit DANS un fichier source -
   `pyproject.toml`, `Cargo.toml`, `version.go`, `package.json`,
   `version.properties`, `pubspec.yaml`, ou un `#define` de firmware,
