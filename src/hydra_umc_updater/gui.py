@@ -29,7 +29,7 @@
 # ecosystem's own README "Project Catalog" tables already describe, now
 # machine-readable instead of implicit in a markdown table's own grouping.
 #
-# Also v3: real, complete language support (7 languages, see i18n.py) -
+# Also v3: real, complete language support (8 languages, see i18n.py) -
 # a language Combobox next to the deploy filter switches every real
 # widget's own text live (labels, buttons, column headings, status/state
 # text, message boxes), not just at startup. `--cli` mode (main.py) stays

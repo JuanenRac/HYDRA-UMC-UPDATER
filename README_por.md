@@ -65,7 +65,7 @@ número em si nunca é codificado aqui, já que cresce com o ecossistema:
 3. **Se o GitHub for mais recente, deixe-me escolher um projeto ou um lote sequencial confirmado.**
 
 Este último ponto é deliberado e inegociável: esta ferramenta nunca altera um
-projeto por sua própria iniciativa. Uma ação sobre um projeto selecionado
+projeto pela sua própria iniciativa. Uma ação sobre um projeto selecionado
 exige sempre uma confirmação explícita. A GUI pode também oferecer **Instalar
 todos os em falta** ou **Atualizar todos os desatualizados**; cada uma é um
 lote sequencial confirmado em separado, cujos projetos seguem as mesmas
