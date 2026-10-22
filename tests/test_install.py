@@ -13,7 +13,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from hydra_umc_updater import install
+from hydra_umc_updater import install, settings
 from hydra_umc_updater.install import clone_or_pull, find_build_test_script, run_build_script
 from hydra_umc_updater.registry import ProjectEntry
 
@@ -911,3 +911,78 @@ def test_git_verify_commit_failing_on_an_unsigned_commit_is_reported_as_not_ok(t
     ok, detail = install.verify_candidate_signature(local)
     assert ok is False
     assert detail  # git's own explanation, not an empty string
+
+
+# --- a fresh .venv after a promotion ----------------------------------------
+
+def _promotable_update(tmp_path: Path, *, venv_marker: bool, requirements: bool = False) -> Path:
+    """A remote, a local checkout (optionally with an old .venv) and a newer commit; returns the local checkout."""
+    remote = tmp_path / "remote.git"
+    git("init", "--bare", str(remote), cwd=tmp_path)
+    seed = tmp_path / "seed"
+    git("clone", str(remote), str(seed), cwd=tmp_path)
+    git("config", "user.email", "contract@example.invalid", cwd=seed)
+    git("config", "user.name", "Contract", cwd=seed)
+    write_manifest(seed, "1.0.0")
+    write_build_script(seed, ok=True)
+    if requirements:
+        (seed / "requirements.txt").write_text("# no packages\n", encoding="utf-8")
+    git("add", "-A", cwd=seed)
+    git("commit", "-m", "base", cwd=seed)
+    git("push", "origin", "HEAD", cwd=seed)
+    local = tmp_path / entry().name
+    git("clone", str(remote), str(local), cwd=tmp_path)
+    if venv_marker:
+        (local / ".venv").mkdir()
+        (local / ".venv" / "old-marker.txt").write_text("from the previous installation", encoding="utf-8")
+    write_manifest(seed, "1.1.0")
+    git("add", "-A", cwd=seed)
+    git("commit", "-m", "new release", cwd=seed)
+    git("push", "origin", "HEAD", cwd=seed)
+    return local
+
+
+def test_a_promotion_recreates_the_venv_and_keeps_the_old_one_in_the_backup(tmp_path: Path, monkeypatch):
+    monkeypatch.delenv(install.RECREATE_VENV_ENV, raising=False)
+    local = _promotable_update(tmp_path, venv_marker=True, requirements=True)
+    result = clone_or_pull(entry(), tmp_path)
+    assert result.ok, result.message + result.output
+    assert (local / ".venv" / "pyvenv.cfg").is_file(), "the promoted checkout must have a real, fresh virtual environment"
+    assert not (local / ".venv" / "old-marker.txt").exists(), "the old environment must not be carried over"
+    backup = next(tmp_path.glob(f"{entry().name}.backup-*"))
+    assert (backup / ".venv" / "old-marker.txt").is_file(), "the old environment stays in the backup"
+
+
+def test_a_project_without_a_venv_gets_none(tmp_path: Path, monkeypatch):
+    monkeypatch.delenv(install.RECREATE_VENV_ENV, raising=False)
+    local = _promotable_update(tmp_path, venv_marker=False)
+    result = clone_or_pull(entry(), tmp_path)
+    assert result.ok, result.message
+    assert not (local / ".venv").exists()
+
+
+def test_the_venv_can_be_left_alone_by_setting_or_environment(tmp_path: Path, monkeypatch):
+    monkeypatch.setenv(install.RECREATE_VENV_ENV, "0")
+    local = _promotable_update(tmp_path, venv_marker=True)
+    result = clone_or_pull(entry(), tmp_path)
+    assert result.ok, result.message
+    assert not (local / ".venv").exists(), "with the switch off the checkout keeps no environment (it was never carried over)"
+    monkeypatch.delenv(install.RECREATE_VENV_ENV)
+    assert install.recreate_venv_enabled() is True
+    settings.save_recreate_venv(False)
+    assert install.recreate_venv_enabled() is False
+    monkeypatch.setenv(install.RECREATE_VENV_ENV, "1")
+    assert install.recreate_venv_enabled() is True, "the environment wins over the saved setting"
+
+
+def test_a_venv_that_cannot_be_created_is_reported_and_the_old_one_is_kept(tmp_path: Path, monkeypatch):
+    monkeypatch.delenv(install.RECREATE_VENV_ENV, raising=False)
+    monkeypatch.setattr(install, "_python_for_venv", lambda: None)
+    local = _promotable_update(tmp_path, venv_marker=True)
+    result = clone_or_pull(entry(), tmp_path)
+    assert not result.ok
+    assert ".venv could not be recreated" in result.message
+    backup = next(tmp_path.glob(f"{entry().name}.backup-*"))
+    assert str(backup) in result.message
+    assert (backup / ".venv" / "old-marker.txt").is_file()
+    assert (local / "built.txt").exists(), "the promoted checkout itself is in place"

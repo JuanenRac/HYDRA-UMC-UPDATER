@@ -101,6 +101,7 @@ OK  Updated /home/pi/HYDRA-UMC/HYDRA-UMC-SERVER to v0.0.9 (commit 1a2b3c4d5e6f) 
 
 - **可选的签名检查**：候选版本的 `build-test` 脚本是候选版本自带的代码，会在任何东西证明该提交确属维护者之前就在本机运行。设置 `HYDRA_UMC_UPDATER_REQUIRE_SIGNED=1` 后，更新器会先在暂存克隆中对已接受的候选版本执行 `git verify-commit`；若该提交没有本机信任的签名（密钥环中的 gpg 密钥，或 `gpg.ssh.allowedSignersFile` 中的 ssh 签名者），就在此停止：不会构建也不会运行任何内容，正在使用的安装保持原样。默认关闭，因为它需要本机上有信任维护者密钥的密钥环。
 
+- **每次升级后重建 `.venv`**：被替换的安装若有 `.venv`，升级后的检出会得到一个新的（`python -m venv`，项目有 `requirements.txt` 时再执行 `pip install -r requirements.txt`），而不是什么都没有；旧的留在 `.backup` 中。可用 `HYDRA_UMC_UPDATER_RECREATE_VENV=0` 或已保存的设置 `recreate_venv` 关闭。若无法创建，更新会被报告为失败，并指出仍保存着旧 `.venv` 的备份。
 - **更多安全保障**：每个工作区同一时间只运行一次安装或更新（锁文件）；每条 git 命令和每个 build-test 都有时间限制，且绝不会索要凭据；意外错误会在窗口和证据文件中表现为失败结果，而不会让窗口永远停在"工作中"；签名检查也适用于首次安装，并可在已保存的设置中开启（`require_signed_commits`；无法读取的设置文件视为开启），关闭期间窗口会显示红色提示；导致无法快进的本地提交会在拒绝信息中点名；构建失败的全新安装会被再次移除；过期的暂存文件夹会在每次运行开始时清理，`--cli prune-backups [--keep N] [--dry-run]` 仅在你要求时才删除旧的 `<名称>.backup-xxxxxxxx` 文件夹。
 
 <p align="center">

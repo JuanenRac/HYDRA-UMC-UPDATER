@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import os
 import re
+import shutil
 import stat
 import subprocess
 import sys
@@ -93,6 +94,60 @@ BUILD_TIMEOUT_S = 1800
 
 #: Per-workspace lock file; held while a project is being installed or updated.
 LOCK_FILENAME = ".hydra_umc_updater.lock"
+
+
+RECREATE_VENV_ENV = "HYDRA_UMC_UPDATER_RECREATE_VENV"
+
+
+def recreate_venv_enabled() -> bool:
+    """A fresh `.venv` after a promotion is the default; HYDRA_UMC_UPDATER_RECREATE_VENV=0 (or the saved setting) turns it off."""
+    value = os.environ.get(RECREATE_VENV_ENV, "").strip().lower()
+    if value in {"0", "false", "no", "off"}:
+        return False
+    if value in {"1", "true", "yes", "on"}:
+        return True
+    return settings.get_recreate_venv()
+
+
+def _python_for_venv() -> str | None:
+    """The interpreter that creates a virtual environment: the one running this updater, or, when it is a frozen application, one found on the PATH."""
+    if not getattr(sys, "frozen", False):
+        return sys.executable
+    for name in ("python3", "python", "py"):
+        found = shutil.which(name)
+        if found:
+            return found
+    return None
+
+
+def recreate_venv(checkout: Path, previous: Path, *, progress: ProgressCallback | None = None) -> InstallResult:
+    """Gives a promoted checkout a fresh `.venv` when the installation it replaces had one.
+
+    A virtual environment holds absolute paths and the packages of the old sources, so it is never
+    carried over. The old one stays in the backup next to the previous checkout. A project that
+    had no `.venv` is left alone. Packages come from `requirements.txt` when the project has one.
+    """
+    if not (previous / ".venv").is_dir():
+        return InstallResult(True, "no .venv in the previous installation; nothing to recreate", "")
+    python = _python_for_venv()
+    if python is None:
+        return InstallResult(False, "no Python interpreter was found to create the .venv", "")
+    _checkpoint(progress, "validation", "Creating a fresh .venv for the promoted checkout; the previous one stays in the backup.")
+    venv = checkout / ".venv"
+    if venv.exists():
+        _rmtree_best_effort(venv)
+    created = _run([python, "-m", "venv", str(venv)], checkout, capture_output=True, timeout=600)
+    output = _command_output(created)
+    if created.returncode != 0:
+        return InstallResult(False, f"could not create the .venv (exit {created.returncode})", output)
+    requirements = checkout / "requirements.txt"
+    if requirements.is_file():
+        interpreter = venv / ("Scripts" if os.name == "nt" else "bin") / ("python.exe" if os.name == "nt" else "python")
+        installed = _run([str(interpreter), "-m", "pip", "install", "-r", "requirements.txt"], checkout, capture_output=True, timeout=1800)
+        output += _command_output(installed)
+        if installed.returncode != 0:
+            return InstallResult(False, f"the .venv was created but its packages could not be installed (exit {installed.returncode})", output)
+    return InstallResult(True, "fresh .venv created", output)
 
 
 def signature_required() -> bool:
@@ -906,6 +961,16 @@ def clone_or_pull(
     if journal:
         journal.advance(promotion_id, PromotionPhase.PROMOTED)
     sha_label = candidate_sha[:12]
+    # The promoted checkout gets its own fresh .venv; the previous one stays inside the backup.
+    if recreate_venv_enabled():
+        venv_result = recreate_venv(path, backup_path, progress=progress)
+        if not venv_result.ok:
+            return InstallResult(
+                False,
+                f"Promoted {path} to v{candidate.version} (commit {sha_label}), but its .venv could not be recreated: "
+                f"{venv_result.message}. The previous installation, with its own .venv, is kept at {backup_path}",
+                venv_result.output or build_result.output,
+            )
     # a promotion that finishes its 2 renames is not yet a HEALTHY
     # promotion when the project itself declares a real health endpoint -
     # check it for real before ever calling this a success, rather than

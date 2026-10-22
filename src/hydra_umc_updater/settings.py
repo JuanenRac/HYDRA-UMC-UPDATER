@@ -122,6 +122,18 @@ def save_require_signed_commits(required: bool) -> None:
     save_settings(require_signed_commits=bool(required))
 
 
+def get_recreate_venv() -> bool:
+    """Whether a promoted checkout gets a fresh `.venv` when the previous installation had one.
+    On unless the saved settings say otherwise; a damaged file keeps the default."""
+    if settings_file_is_damaged():
+        return True
+    return load_settings().get("recreate_venv") is not False
+
+
+def save_recreate_venv(enabled: bool) -> None:
+    save_settings(recreate_venv=bool(enabled))
+
+
 def get_allowed_signers_file() -> str | None:
     """Path of the ssh allowed-signers file used to verify commit signatures,
     only when it is a real file."""

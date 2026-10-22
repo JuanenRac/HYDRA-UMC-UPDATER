@@ -168,6 +168,7 @@ escrita no terminal de arranque.
   Desativada por defeito, porque exige na máquina um porta-chaves que confie
   na chave do mantenedor.
 
+- **Um `.venv` novo após cada promoção**: se a instalação substituída tinha um `.venv`, a cópia promovida recebe um novo (`python -m venv`, e depois `pip install -r requirements.txt` quando o projeto tem esse ficheiro) em vez de nenhum; o antigo fica dentro do `.backup`. Desativa-se com `HYDRA_UMC_UPDATER_RECREATE_VENV=0` ou com a definição guardada `recreate_venv`. Se não for possível criá-lo, a atualização é dada como falhada e indica a cópia de segurança que ainda guarda o antigo.
 - **Mais redes de segurança**: uma só instalação ou atualização de cada vez por área de trabalho (ficheiro de bloqueio); limite de tempo em cada comando git e em cada build-test, sem nunca pedir credenciais; um erro inesperado é um resultado falhado na janela e no ficheiro de evidências, nunca uma janela presa em "a trabalhar"; a barreira de assinatura abrange também uma primeira instalação e pode ser ativada nas definições guardadas (`require_signed_commits`; um ficheiro de definições ilegível conta como ativada), com um aviso vermelho na janela enquanto estiver desativada; um commit local que impede o avanço rápido é indicado na recusa; uma instalação nova cuja compilação falha é removida de novo; as pastas de staging antigas são limpas no início de uma execução, e `--cli prune-backups [--keep N] [--dry-run]` remove as pastas `<nome>.backup-xxxxxxxx` antigas apenas a pedido.
 
 <p align="center">

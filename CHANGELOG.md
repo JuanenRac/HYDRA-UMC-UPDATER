@@ -10,6 +10,7 @@ All notable changes to this project are documented here.
 - The SDK is now fetched at a release tag instead of the main branch, so a change of the SDK cannot break this repository by itself.
 - The window texts in Spanish, French, Italian and German have their accents back (about ninety texts, such as the update, confirmation and check labels); a test keeps the unaccented spellings out and checks that every placeholder survives.
 - The confirmation of an install-all or update-all batch now lists the exact projects, numbered, in the order they will run (the SDK first, the updater last). The list is built by a tested function; the dialog itself was not run here.
+- After a promotion, a project whose previous installation had a `.venv` gets a fresh one (`python -m venv`, then `pip install -r requirements.txt` when the project has that file); the old one is never carried over and stays inside the backup. `HYDRA_UMC_UPDATER_RECREATE_VENV=0` or the saved setting `recreate_venv` turns it off. A `.venv` that cannot be created is reported as a failed update that names the backup. Tested with real virtual environments.
 
 ## [0.4.8] - A failure never leaves the window stuck; one install at a time; the signature gate also covers a first install
 
