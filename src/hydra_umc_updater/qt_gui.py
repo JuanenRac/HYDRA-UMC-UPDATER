@@ -32,7 +32,7 @@ from PySide6.QtQml import QQmlApplicationEngine
 from . import __version__, i18n, settings
 from .detect import LocalStatus, discover_workspace
 from .github_client import RemoteStatus, discover_remote_projects, fetch_all
-from .install import InstallResult, batch_order_key, install_or_update, signature_required
+from .install import InstallResult, batch_order_key, format_batch_list, install_or_update, signature_required
 from .registry import GITHUB_OWNER
 
 
@@ -446,6 +446,28 @@ class UpdaterBridge(QObject):
 
         threading.Thread(target=worker, daemon=True, name="hydra-umc-updater-action").start()
 
+    def _batch_targets(self, action: str) -> list[LocalStatus] | None:
+        """The projects a batch would handle, in the order it would handle them (None for an unknown action)."""
+        if action == "install":
+            targets = [item for item in self._locals if not item.installed]
+        elif action == "update":
+            targets = [
+                item for item in self._locals
+                if _state_key(item, self._remotes.get(item.entry.name)) == "state_outdated"
+            ]
+        else:
+            return None
+        # The SDK first and the updater itself last, so a batch never replaces
+        # the program that is running it halfway through.
+        targets.sort(key=lambda item: batch_order_key(item.entry.name))
+        return targets
+
+    @Slot(str, result=str)
+    def batchPreview(self, action: str) -> str:
+        """The exact list a batch of this action would run, for the confirmation dialog."""
+        targets = self._batch_targets(action) or []
+        return format_batch_list([item.entry.name for item in targets])
+
     @Slot(str, bool)
     def performBatch(self, action: str, skip_build: bool) -> None:
         """Run one operator-confirmed, sequential batch of safe actions.
@@ -460,21 +482,12 @@ class UpdaterBridge(QObject):
         """
         if self._busy:
             return
-        if action == "install":
-            targets = [item for item in self._locals if not item.installed]
-        elif action == "update":
-            targets = [
-                item for item in self._locals
-                if _state_key(item, self._remotes.get(item.entry.name)) == "state_outdated"
-            ]
-        else:
+        targets = self._batch_targets(action)
+        if targets is None:
             return
         if not targets:
             self._append_activity(self.text("msg_batch_nothing_to_do"))
             return
-        # The SDK first and the updater itself last, so a batch never replaces
-        # the program that is running it halfway through.
-        targets.sort(key=lambda item: batch_order_key(item.entry.name))
         workspace_root = self._workspace_root
 
         verb = self.text("action_installing" if action == "install" else "action_updating")

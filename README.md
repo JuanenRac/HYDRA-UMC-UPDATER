@@ -67,7 +67,7 @@ explicit confirmation. The GUI may also offer **Install all missing** or
 **Update all outdated**; each is a separately confirmed, sequential batch
 whose projects follow the same manifest, version and safety gates. A
 robot-control cell must never auto-update overnight without a person
-approving the exact action.
+approving the exact action. The confirmation shows the exact projects of the batch, in the order they will run.
 
 Not every discovered project belongs on the CM5 itself, either - a few are tools a developer runs from their own PC (firmware gets compiled/flashed FROM a workstation, not built ON the cell) or apps installed on a phone/watch. Each project's own manifest records which is which (see section 3), and the GUI's project table can filter by it - every project is shown by default, so the updater itself and the SDK are never hidden.
 

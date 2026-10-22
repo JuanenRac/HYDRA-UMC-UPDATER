@@ -261,6 +261,22 @@ ApplicationWindow {
                 }
                 color: window.textMuted; wrapMode: Text.WordWrap; Layout.fillWidth: true
             }
+            // The exact projects of the batch, in the order they will run.
+            ScrollView {
+                id: batchView
+                visible: confirmDialog.batch
+                Layout.fillWidth: true
+                Layout.preferredHeight: 150
+                clip: true
+                ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
+                LabelText {
+                    width: batchView.availableWidth
+                    text: confirmDialog.batch ? backend.batchPreview(confirmDialog.action) : ""
+                    color: window.textPrimary
+                    font.pixelSize: 11
+                    wrapMode: Text.WrapAnywhere
+                }
+            }
             RowLayout {
                 Layout.fillWidth: true
                 Item { Layout.fillWidth: true }

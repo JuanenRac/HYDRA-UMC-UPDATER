@@ -22,6 +22,7 @@ from hydra_umc_updater.install import (
     WorkspaceBusyError,
     WorkspaceLock,
     batch_order_key,
+    format_batch_list,
     cleanup_orphaned_staging,
     clone_or_pull,
     install_or_update,
@@ -374,3 +375,21 @@ def test_a_project_is_read_from_its_own_default_branch():
     on_trunk = ProjectEntry("HYDRA-UMC-X", "python", "pyproject.toml", r"(\d+)", branch="trunk")
     assert "/HYDRA-UMC-X/trunk/" in github_raw_url(on_trunk)
     assert "/HYDRA-UMC-EXAMPLE/main/" in github_raw_url(entry())
+
+
+def test_the_batch_confirmation_lists_the_exact_projects_in_run_order():
+    names = ["HYDRA-UMC-UPDATER", "HYDRA-UMC-SERVER", "HYDRA-UMC-SDK", "HYDRA-UMC-OS"]
+    assert format_batch_list(names).splitlines() == [
+        "1. HYDRA-UMC-SDK",
+        "2. HYDRA-UMC-OS",
+        "3. HYDRA-UMC-SERVER",
+        "4. HYDRA-UMC-UPDATER",
+    ]
+
+
+def test_a_long_batch_list_is_cut_but_says_how_many_were_left_out():
+    names = [f"HYDRA-UMC-P{number:03d}" for number in range(45)]
+    lines = format_batch_list(names, limit=40).splitlines()
+    assert len(lines) == 41
+    assert lines[-1] == "... +5"
+    assert format_batch_list([]) == ""

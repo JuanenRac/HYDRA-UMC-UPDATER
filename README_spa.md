@@ -69,7 +69,7 @@ siempre exige confirmación explícita. La GUI también puede ofrecer **Instalar
 todos los faltantes** o **Actualizar todos los desfasados**; ambos son lotes
 secuenciales confirmados por separado y sujetos a las mismas puertas de
 manifiesto, versión y seguridad. Nunca existe actualización automática nocturna
-sin una persona aprobando la acción exacta.
+sin una persona aprobando la acción exacta. La confirmación muestra los proyectos exactos del lote, en el orden en que se ejecutarán.
 
 Tampoco todo proyecto descubierto pertenece a la CM5 en sí - algunos son herramientas que un desarrollador ejecuta desde su propio PC (el firmware se compila y se flashea DESDE un puesto de trabajo, no se compila EN la célula), o apps que se instalan en un móvil/reloj. El manifiesto de cada proyecto registra cuál es cuál (ver sección 3), y la tabla de proyectos de la GUI puede filtrar por él - por defecto se muestran todos los proyectos, así que ni el propio actualizador ni el SDK quedan ocultos.
 

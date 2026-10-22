@@ -1005,6 +1005,19 @@ def batch_order_key(name: str) -> tuple[int, str]:
     return (1, name.casefold())
 
 
+def format_batch_list(names: list[str], limit: int = 40) -> str:
+    """The exact, ordered list a batch confirmation shows: one numbered name per line.
+
+    More than `limit` names are cut with a final line that says how many were left out,
+    so the dialog stays readable while the count shown there is still the real one.
+    """
+    ordered = sorted(names, key=batch_order_key)
+    lines = [f"{index}. {name}" for index, name in enumerate(ordered[:limit], start=1)]
+    if len(ordered) > limit:
+        lines.append(f"... +{len(ordered) - limit}")
+    return "\n".join(lines)
+
+
 #: A staging directory this updater left behind (a crash, a power cut, an
 #: undeletable file) is removed once it is clearly not in use any more.
 ORPHAN_STAGING_AGE_S = 2 * 60 * 60

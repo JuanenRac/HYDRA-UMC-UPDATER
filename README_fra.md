@@ -66,7 +66,7 @@ un projet de sa propre initiative. Une action sur un projet sélectionné exige
 toujours une confirmation explicite. La GUI peut aussi proposer **Installer
 tous les manquants** ou **Mettre à jour tous les dépassés** ; ce sont des lots
 séquentiels confirmés séparément, soumis aux mêmes contrôles de manifeste, de
-version et de sécurité. Il n'existe aucune mise à jour nocturne automatique.
+version et de sécurité. Il n'existe aucune mise à jour nocturne automatique. La confirmation affiche les projets exacts du lot, dans l'ordre où ils seront exécutés.
 
 Tous les projets découverts n'appartiennent pas non plus à la CM5 elle-même - certains sont des outils qu'un développeur exécute depuis son propre PC (le firmware est compilé et flashé DEPUIS un poste de travail, pas construit SUR la cellule) ou des applications installées sur un téléphone/une montre. Le manifeste de chaque projet indique de quel cas il s'agit (voir section 3), et le tableau des projets de la GUI peut filtrer selon ce critère - tous les projets sont affichés par défaut, de sorte que l'outil de mise à jour lui-même et le SDK ne sont jamais masqués.
 

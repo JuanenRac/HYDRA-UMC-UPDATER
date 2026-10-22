@@ -67,7 +67,7 @@ Projekt verlangt immer eine ausdrückliche Bestätigung. Die GUI kann auch
 **Alle fehlenden installieren** oder **Alle veralteten aktualisieren**
 anbieten; beides sind getrennt bestätigte, sequenzielle Sammelaktionen mit
 denselben Manifest-, Versions- und Sicherheitsprüfungen. Es gibt kein
-unbeaufsichtigtes nächtliches Auto-Update.
+unbeaufsichtigtes nächtliches Auto-Update. Die Bestätigung zeigt die genauen Projekte der Sammelaktion in der Reihenfolge, in der sie laufen.
 
 Auch gehört nicht jedes entdeckte Projekt auf die CM5 selbst - manche sind Werkzeuge, die ein Entwickler von seinem eigenen PC aus ausführt (Firmware wird VON einer Workstation kompiliert und geflasht, nicht AUF der Zelle gebaut), oder Apps, die auf einem Telefon/einer Uhr installiert werden. Das Manifest jedes Projekts hält fest, was zutrifft (siehe Abschnitt 3), und die Projekttabelle der GUI kann danach filtern - standardmäßig werden alle Projekte angezeigt, sodass weder der Updater selbst noch das SDK verborgen bleiben.
 

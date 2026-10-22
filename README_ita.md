@@ -68,7 +68,7 @@ selezionato richiede sempre una conferma esplicita. La GUI può anche offrire
 **Installa tutti i mancanti** o **Aggiorna tutti gli obsoleti**: sono lotti
 sequenziali confermati separatamente e soggetti agli stessi controlli di
 manifest, versione e sicurezza. Non esiste alcun aggiornamento automatico
-notturno senza approvazione umana.
+notturno senza approvazione umana. La conferma mostra i progetti esatti del lotto, nell'ordine in cui verranno eseguiti.
 
 Nemmeno tutti i progetti scoperti appartengono alla CM5 stessa - alcuni sono strumenti che uno sviluppatore esegue dal proprio PC (il firmware viene compilato e flashato DA una postazione di lavoro, non compilato SULLA cella) oppure app installate su un telefono/orologio. Il manifest di ogni progetto indica quale sia il caso (vedi sezione 3) e la tabella dei progetti della GUI può filtrare in base a esso - per impostazione predefinita sono mostrati tutti i progetti, così né l'updater stesso né l'SDK restano nascosti.
 

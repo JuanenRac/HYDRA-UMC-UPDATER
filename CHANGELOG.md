@@ -8,6 +8,8 @@ All notable changes to this project are documented here.
 - The banner follows the animated style of the ecosystem banners, with the name, the kind and the technologies of the project.
 - Added `tools/hydra_project_tool.py`: the same `validate`, `test`, `version`, `status` and `bump` commands in every repository. The checks run with `HYDRA_UMC_CI=1` and fail if the version changes; only `bump` changes it.
 - The SDK is now fetched at a release tag instead of the main branch, so a change of the SDK cannot break this repository by itself.
+- The window texts in Spanish, French, Italian and German have their accents back (about ninety texts, such as the update, confirmation and check labels); a test keeps the unaccented spellings out and checks that every placeholder survives.
+- The confirmation of an install-all or update-all batch now lists the exact projects, numbered, in the order they will run (the SDK first, the updater last). The list is built by a tested function; the dialog itself was not run here.
 
 ## [0.4.8] - A failure never leaves the window stuck; one install at a time; the signature gate also covers a first install
 

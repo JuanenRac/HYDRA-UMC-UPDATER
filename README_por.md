@@ -71,7 +71,7 @@ todos os em falta** ou **Atualizar todos os desatualizados**; cada uma é um
 lote sequencial confirmado em separado, cujos projetos seguem as mesmas
 portas de manifesto, versão e segurança. Uma célula de controlo de robôs
 nunca deve atualizar-se automaticamente de um dia para o outro sem que uma
-pessoa aprove a ação exata.
+pessoa aprove a ação exata. A confirmação mostra os projetos exatos do lote, pela ordem em que serão executados.
 
 Nem todos os projetos descobertos pertencem à própria CM5 - alguns são ferramentas que um programador executa a partir do seu próprio PC (o firmware é compilado e gravado A PARTIR de um posto de trabalho, não compilado NA célula) ou aplicações instaladas num telemóvel/relógio. O manifesto de cada projeto regista qual é o caso (ver secção 3) e a tabela de projetos da GUI pode filtrar por ele - por omissão são mostrados todos os projetos, pelo que nem o próprio atualizador nem o SDK ficam escondidos.
 

@@ -125,3 +125,31 @@ def test_the_qml_language_menu_offers_every_language():
     qml = (Path(i18n.__file__).parent / "qml" / "Main.qml").read_text(encoding="utf-8")
     for code, _label in i18n.LANGUAGES:
         assert f'code: "{code}"' in qml, code
+
+
+#: Unaccented spellings that were left in the Spanish, French, Italian and German texts.
+_MISSING_ACCENTS = {
+    "es": ("accion", "actualizacion", "confirmacion", "comprobacion", "validacion", "conexion", "atencion", "ningun", "raiz"),
+    "fr": ("ecosysteme", "securite", "verification", "selectionne", "sequentiellement", "etapes", "fenetre", "decouvrez", "prealable"),
+    "it": ("attivita", "puo", "piu"),
+    "de": ("fur", "ausfuhren", "bestatigen", "okosystem", "prufen", "verfugbar", "ubersprungen", "andert", "offnen"),
+}
+
+
+def test_the_translations_keep_their_accents():
+    import re
+
+    for lang, words in _MISSING_ACCENTS.items():
+        pattern = re.compile(r"(?<![A-Za-z])(" + "|".join(words) + r")(?![A-Za-z])", re.IGNORECASE)
+        for key, value in i18n.TRANSLATIONS[lang].items():
+            text = re.sub(r"\{[^}]*\}", "", value)
+            assert not pattern.search(text), f"{lang}.{key} has an unaccented word: {value!r}"
+
+
+def test_the_accented_texts_keep_their_placeholders():
+    import re
+
+    placeholders = lambda text: sorted(re.findall(r"\{\w+\}", text))  # noqa: E731
+    for lang in ("es", "fr", "it", "de"):
+        for key, value in i18n.TRANSLATIONS[lang].items():
+            assert placeholders(value) == placeholders(i18n.TRANSLATIONS["en"][key]), f"{lang}.{key}"
