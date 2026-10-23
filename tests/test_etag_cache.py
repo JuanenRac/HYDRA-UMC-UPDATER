@@ -13,8 +13,6 @@ import threading
 from contextlib import contextmanager
 from pathlib import Path
 
-import pytest
-
 from hydra_umc_updater import github_client
 from hydra_umc_updater.github_client import EtagCache, default_etag_cache, discover_remote_projects
 
