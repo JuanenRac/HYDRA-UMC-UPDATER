@@ -40,6 +40,7 @@ from __future__ import annotations
 import json
 import os
 import socket
+import tempfile
 import time
 import urllib.error
 import urllib.request
@@ -49,6 +50,7 @@ from concurrent.futures import (
     as_completed,
 )
 from dataclasses import dataclass, replace
+from pathlib import Path
 
 from .project_manifest import (
     ECOSYSTEM_ID,
@@ -164,6 +166,7 @@ def _urlopen_with_retries(
     backoff_base_s: float | None = None,
     opener=urllib.request.urlopen,
     sleep=time.sleep,
+    response_headers: dict[str, str] | None = None,
 ) -> bytes:
     """Open `request`, retrying up to `max_attempts` times on a transient
     network failure (URLError/TimeoutError/socket.timeout/OSError, or a
@@ -177,7 +180,8 @@ def _urlopen_with_retries(
     module-level constants, read here (not as literal defaults) so tests
     can also monkeypatch those constants directly for callers - like
     every real caller in this module - that never override them
-    explicitly."""
+    explicitly. When `response_headers` is given, the headers of the
+    successful response are copied into it (the caller wants the ETag)."""
     if max_attempts is None:
         max_attempts = RETRY_MAX_ATTEMPTS
     if backoff_base_s is None:
@@ -187,6 +191,8 @@ def _urlopen_with_retries(
         attempt += 1
         try:
             with opener(request, timeout=timeout) as response:
+                if response_headers is not None and getattr(response, "headers", None) is not None:
+                    response_headers.update({key: value for key, value in response.headers.items()})
                 return response.read()
         except urllib.error.HTTPError as exc:
             retry_after = _retry_after_seconds(exc)
@@ -197,6 +203,63 @@ def _urlopen_with_retries(
             if attempt >= max_attempts:
                 raise
             sleep(backoff_base_s * (2 ** (attempt - 1)))
+
+
+# ---------------------------------------------------------------------------
+# Conditional requests
+# ---------------------------------------------------------------------------
+
+class EtagCache:
+    """The last answer to a GET and its ETag, so the next request can ask "has it changed?".
+
+    GitHub answers 304 Not Modified to a conditional request with the unchanged ETag, and a 304 does not count against
+    the rate limit of an authenticated request; without a token the list of repositories (one page per hundred) was
+    fetched in full each time and the 60 requests an hour went on repeating it. The cache is a small JSON file (at
+    most `max_entries` URLs, each with the text of one page of repositories); a file that cannot be read is an empty
+    cache, never an error, and a file that cannot be written only means the next run asks in full."""
+
+    def __init__(self, path: Path | None = None, *, max_entries: int = 32) -> None:
+        self._path = path
+        self._max_entries = max_entries
+        self._entries: dict[str, dict[str, str]] = {}
+        if path is not None:
+            try:
+                data = json.loads(path.read_text(encoding="utf-8"))
+            except (OSError, ValueError):
+                data = {}
+            entries = data.get("entries") if isinstance(data, dict) and data.get("version") == 1 else None
+            if isinstance(entries, dict):
+                for url, entry in entries.items():
+                    if isinstance(url, str) and isinstance(entry, dict) and isinstance(entry.get("etag"), str) and isinstance(entry.get("body"), str):
+                        self._entries[url] = {"etag": entry["etag"], "body": entry["body"]}
+
+    def get(self, url: str) -> tuple[str, str] | None:
+        entry = self._entries.get(url)
+        return (entry["etag"], entry["body"]) if entry else None
+
+    def put(self, url: str, etag: str, body: str) -> None:
+        self._entries.pop(url, None)
+        self._entries[url] = {"etag": etag, "body": body}
+        while len(self._entries) > self._max_entries:
+            self._entries.pop(next(iter(self._entries)))  # the oldest goes first
+
+    def save(self) -> None:
+        if self._path is None:
+            return
+        try:
+            handle, temporary = tempfile.mkstemp(dir=self._path.parent, suffix=".tmp")
+            with os.fdopen(handle, "w", encoding="utf-8") as stream:
+                json.dump({"version": 1, "entries": self._entries}, stream)
+            os.replace(temporary, self._path)
+        except OSError:
+            pass
+
+
+def default_etag_cache() -> EtagCache:
+    """The cache in the user's home directory, next to the settings file. `HYDRA_UMC_UPDATER_NO_CACHE=1` turns it off."""
+    if os.environ.get("HYDRA_UMC_UPDATER_NO_CACHE") == "1":
+        return EtagCache(None)
+    return EtagCache(Path.home() / ".hydra_umc_updater_etag_cache.json")
 
 
 # ---------------------------------------------------------------------------
@@ -282,6 +345,7 @@ def discover_remote_projects(
     owner: str = "JuanenRac",
     *,
     token: str | None = None,
+    cache: EtagCache | None = None,
 ) -> RemoteDiscovery:
     """Discover every public ecosystem repository from GitHub, no fixed list.
 
@@ -289,6 +353,9 @@ def discover_remote_projects(
     the ecosystem only after its own root manifest validates and declares
     ``ecosystem: HYDRA-UMC``. A newly pushed repository therefore appears on
     the next dashboard or updater scan without an index.html edit.
+
+    With a `cache`, each page of the listing is asked for conditionally (`If-None-Match`): a 304 reuses the page
+    from the last run and costs no rate limit; a 200 stores the new page and its ETag.
     """
     resolved_token = token if token is not None else os.environ.get("GITHUB_TOKEN", "")
     headers = {
@@ -303,9 +370,24 @@ def discover_remote_projects(
     page = 1
     while True:
         url = f"{GITHUB_API_BASE}/users/{owner}/repos?type=owner&per_page=100&page={page}"
-        request = urllib.request.Request(url, headers=headers, method="GET")
+        request_headers = dict(headers)
+        cached = cache.get(url) if cache is not None else None
+        if cached is not None:
+            request_headers["If-None-Match"] = cached[0]
+        request = urllib.request.Request(url, headers=request_headers, method="GET")
         try:
-            payload = json.loads(_urlopen_with_retries(request, timeout=REQUEST_TIMEOUT_S).decode("utf-8", errors="replace"))
+            answer_headers: dict[str, str] = {}
+            try:
+                text = _urlopen_with_retries(request, timeout=REQUEST_TIMEOUT_S, response_headers=answer_headers).decode("utf-8", errors="replace")
+            except urllib.error.HTTPError as not_modified:
+                if not_modified.code != 304 or cached is None:
+                    raise
+                text = cached[1]  # unchanged since the last run
+            else:
+                etag = next((value for key, value in answer_headers.items() if key.lower() == "etag"), None)
+                if cache is not None and etag:
+                    cache.put(url, etag, text)
+            payload = json.loads(text)
         except urllib.error.HTTPError as exc:
             # Found while diagnosing a real report of repeated GitHub
             # refreshes silently listing fewer and fewer projects (42 ->
@@ -329,6 +411,8 @@ def discover_remote_projects(
             break
         page += 1
 
+    if cache is not None:
+        cache.save()
     discovered: list[RemoteStatus] = []
     errors: list[str] = []
     with ThreadPoolExecutor(max_workers=MAX_CONCURRENT_REQUESTS, thread_name_prefix="hydra-discovery") as pool:

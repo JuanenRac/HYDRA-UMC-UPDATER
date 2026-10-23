@@ -31,7 +31,7 @@ from PySide6.QtQml import QQmlApplicationEngine
 
 from . import __version__, i18n, settings
 from .detect import LocalStatus, discover_workspace
-from .github_client import RemoteStatus, discover_remote_projects, fetch_all
+from .github_client import RemoteStatus, default_etag_cache, discover_remote_projects, fetch_all
 from .install import InstallResult, batch_order_key, format_batch_list, install_or_update, signature_required
 from .registry import GITHUB_OWNER
 
@@ -392,7 +392,7 @@ class UpdaterBridge(QObject):
         def worker() -> None:
             try:
                 try:
-                    discovery = discover_remote_projects()
+                    discovery = discover_remote_projects(cache=default_etag_cache())
                     remotes = {status.entry.name: status for status in discovery.projects}
                     errors: tuple[str, ...] = discovery.errors
                 except RuntimeError as exc:

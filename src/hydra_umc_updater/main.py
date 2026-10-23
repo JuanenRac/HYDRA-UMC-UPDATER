@@ -34,7 +34,7 @@ from pathlib import Path
 
 from . import __version__, settings
 from .detect import LocalStatus, discover_workspace
-from .github_client import RemoteStatus, discover_remote_projects, fetch_all
+from .github_client import RemoteStatus, default_etag_cache, discover_remote_projects, fetch_all
 from .install import (
     WorkspaceBusyError,
     WorkspaceLock,
@@ -121,7 +121,7 @@ def cmd_status(args: argparse.Namespace) -> int:
     if not args.offline:
         print("Checking GitHub repository manifests...", file=sys.stderr)
         try:
-            remote_discovery = discover_remote_projects()
+            remote_discovery = discover_remote_projects(cache=default_etag_cache())
             remotes = {status.entry.name: status for status in remote_discovery.projects}
             for error in remote_discovery.errors:
                 print(f"WARNING: {error}", file=sys.stderr)
@@ -232,7 +232,7 @@ def _install_or_update(args: argparse.Namespace, *, expect_installed: bool) -> i
     # an updater release or a hard-coded registry row.
     if entry is None or not expect_installed:
         try:
-            remote_discovery = discover_remote_projects()
+            remote_discovery = discover_remote_projects(cache=default_etag_cache())
         except RuntimeError as exc:
             print(f"Unable to discover GitHub projects: {exc}", file=sys.stderr)
             return 1

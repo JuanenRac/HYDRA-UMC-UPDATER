@@ -34,7 +34,7 @@
 > ações em lote sequenciais, confirmadas em separado, construídas a partir do
 > mesmo estado em direto e do mesmo caminho de segurança.
 
-**Verificação de honestidade - o que realmente funciona hoje:** a lógica de descoberta/versões de todo o ecossistema (`registry.py`, `project_manifest.py`, `ecosystem_catalog.py`, `version_parse.py`, `detect.py`), o cliente real de conteúdo bruto do GitHub com repetição/backoff (`github_client.py`) e a lógica de clonar-preparar-verificar-promover do pipeline de instalação/atualização (`install.py`) são reais e testados - 140 testes a passar (`pytest tests/`), incluindo um servidor HTTP de fixture que prova o isolamento entre catálogo malformado e projeto malformado e idas e voltas reais de git clone/build em diretorias temporárias. `--cli status`/`install`/`update` exercitam este mesmo núcleo testado de ponta a ponta contra o anfitrião real e em direto de conteúdo bruto do GitHub (não uma simulação) sempre que os executa de facto. A GUI de desktop Qt Quick (`qt_gui.py`, `qml/Main.qml`) e o recurso Tkinter legado (`gui.py`) ligam esse mesmo núcleo testado a uma janela real e foram executados em cópias reais do ecossistema, mas nenhum tem teste automático próprio - não existe `test_gui.py`/`test_qt_gui.py`, já que não se tenta conduzir um ciclo de eventos Qt/Tk real. A cobertura de 8 idiomas do `i18n.py` é imposta por teste (`test_i18n.py`), mas apenas quanto à paridade de chaves e de `{marcadores}` entre idiomas, não quanto à qualidade da tradução. Consulte o `CHANGELOG.md` para saber exatamente o que já foi entregue.
+**Verificação de honestidade - o que realmente funciona hoje:** a lógica de descoberta/versões de todo o ecossistema (`registry.py`, `project_manifest.py`, `ecosystem_catalog.py`, `version_parse.py`, `detect.py`), o cliente real de conteúdo bruto do GitHub com repetição/backoff (`github_client.py`) e a lógica de clonar-preparar-verificar-promover do pipeline de instalação/atualização (`install.py`) são reais e testados - 157 testes a passar (`pytest tests/`), incluindo um servidor HTTP de fixture que prova o isolamento entre catálogo malformado e projeto malformado e idas e voltas reais de git clone/build em diretorias temporárias. `--cli status`/`install`/`update` exercitam este mesmo núcleo testado de ponta a ponta contra o anfitrião real e em direto de conteúdo bruto do GitHub (não uma simulação) sempre que os executa de facto. A GUI de desktop Qt Quick (`qt_gui.py`, `qml/Main.qml`) e o recurso Tkinter legado (`gui.py`) ligam esse mesmo núcleo testado a uma janela real e foram executados em cópias reais do ecossistema, mas nenhum tem teste automático próprio - não existe `test_gui.py`/`test_qt_gui.py`, já que não se tenta conduzir um ciclo de eventos Qt/Tk real. A cobertura de 8 idiomas do `i18n.py` é imposta por teste (`test_i18n.py`), mas apenas quanto à paridade de chaves e de `{marcadores}` entre idiomas, não quanto à qualidade da tradução. Consulte o `CHANGELOG.md` para saber exatamente o que já foi entregue.
 
 ---
 
@@ -46,7 +46,7 @@
 |---|---|
 | Versão | `0.4.8` |
 | Maturidade | Estabelecido |
-| Testes | 140 (`pytest tests/`) |
+| Testes | 157 (`pytest tests/`) |
 | Tecnologia | Python 3.10+ / PySide6 / Qt Quick (QML) / Tkinter (legacy fallback) / Git / GitHub raw content |
 | Destino | O PC de quem o usa |
 | Em hardware real | Não aplicável: nada aqui corre em hardware |

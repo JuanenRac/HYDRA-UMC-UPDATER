@@ -48,7 +48,7 @@ def test_status_json_output_is_real_machine_readable_json(monkeypatch, capsys, t
         errors=(),
     )
     monkeypatch.setattr(main_module, "discover_workspace", lambda root: local_discovery)
-    monkeypatch.setattr(main_module, "discover_remote_projects", lambda: remote_discovery)
+    monkeypatch.setattr(main_module, "discover_remote_projects", lambda **kwargs: remote_discovery)
 
     args = build_parser().parse_args(["status", "--json", "--workspace", str(tmp_path)])
     exit_code = args.func(args)

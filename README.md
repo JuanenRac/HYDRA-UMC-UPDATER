@@ -30,7 +30,7 @@
 > **Install all missing** and **Update all outdated** are separately confirmed,
 > sequential batch actions built from the same live state and safety path.
 
-**Honesty check - what actually runs today:** the ecosystem-wide discovery/version logic (`registry.py`, `project_manifest.py`, `ecosystem_catalog.py`, `version_parse.py`, `detect.py`), the real GitHub raw-content client with retry/backoff (`github_client.py`), and the install/update pipeline's clone-stage-verify-promote logic (`install.py`) are real and tested - 140 passing tests (`pytest tests/`), including a fixture HTTP server proving the malformed-catalog-vs-malformed-project isolation and real temp-directory git clone/build round-trips. `--cli status`/`install`/`update` exercise this same tested core end to end against the real, live GitHub raw-content host (not a mock) whenever you actually run them. The Qt Quick desktop GUI (`qt_gui.py`, `qml/Main.qml`) and the legacy Tkinter fallback (`gui.py`) wire that same tested core into a real window and have been run on real ecosystem checkouts, but neither has any automated test of its own - no `test_gui.py`/`test_qt_gui.py` exists, since driving a real Qt/Tk event loop isn't attempted here. `i18n.py`'s 8-language coverage is enforced by test (`test_i18n.py`), but only for key-parity across languages, not translation quality. See `CHANGELOG.md` for exactly what has shipped so far.
+**Honesty check - what actually runs today:** the ecosystem-wide discovery/version logic (`registry.py`, `project_manifest.py`, `ecosystem_catalog.py`, `version_parse.py`, `detect.py`), the real GitHub raw-content client with retry/backoff (`github_client.py`), and the install/update pipeline's clone-stage-verify-promote logic (`install.py`) are real and tested - 157 passing tests (`pytest tests/`), including a fixture HTTP server proving the malformed-catalog-vs-malformed-project isolation and real temp-directory git clone/build round-trips. `--cli status`/`install`/`update` exercise this same tested core end to end against the real, live GitHub raw-content host (not a mock) whenever you actually run them. The Qt Quick desktop GUI (`qt_gui.py`, `qml/Main.qml`) and the legacy Tkinter fallback (`gui.py`) wire that same tested core into a real window and have been run on real ecosystem checkouts, but neither has any automated test of its own - no `test_gui.py`/`test_qt_gui.py` exists, since driving a real Qt/Tk event loop isn't attempted here. `i18n.py`'s 8-language coverage is enforced by test (`test_i18n.py`), but only for key-parity across languages, not translation quality. See `CHANGELOG.md` for exactly what has shipped so far.
 
 ---
 
@@ -42,7 +42,7 @@
 |---|---|
 | Version | `0.4.8` |
 | Maturity | Established |
-| Tests | 140 (`pytest tests/`) |
+| Tests | 157 (`pytest tests/`) |
 | Stack | Python 3.10+ / PySide6 / Qt Quick (QML) / Tkinter (legacy fallback) / Git / GitHub raw content |
 | Target | The PC of the person using it |
 | On real hardware | Not applicable: nothing here runs on hardware |

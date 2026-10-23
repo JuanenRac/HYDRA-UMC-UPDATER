@@ -48,7 +48,7 @@ from tkinter import filedialog, messagebox, ttk
 
 from . import __version__, i18n, settings
 from .detect import LocalStatus, discover_workspace
-from .github_client import RemoteStatus, discover_remote_projects, fetch_all
+from .github_client import RemoteStatus, default_etag_cache, discover_remote_projects, fetch_all
 from .install import InstallResult, install_or_update
 from .registry import GITHUB_OWNER
 
@@ -573,7 +573,7 @@ class UpdaterGUI:
 
         def worker():
             try:
-                discovery = discover_remote_projects()
+                discovery = discover_remote_projects(cache=default_etag_cache())
                 remotes = {status.entry.name: status for status in discovery.projects}
                 errors = discovery.errors
             except RuntimeError as exc:

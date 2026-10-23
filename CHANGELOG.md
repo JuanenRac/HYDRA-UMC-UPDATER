@@ -4,6 +4,7 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The list of repositories is asked for conditionally** (`EtagCache`): each page of `GET /users/<owner>/repos` is sent with `If-None-Match` and its last ETag, a `304` reuses the page from the previous run (and does not count against the rate limit of an authenticated request), a `200` replaces it. The cache is a small JSON file (`~/.hydra_umc_updater_etag_cache.json`, at most 32 URLs, written atomically; one that cannot be read is an empty cache and one that cannot be written only means the next run asks in full); `HYDRA_UMC_UPDATER_NO_CACHE=1` turns it off. The command line and both windows use it. 9 new tests with a local server that answers conditional requests as GitHub does (157 in all). Reading the token from the system keyring is not done.
 - Building no longer changes the version; raising it is the explicit `bump` command (`python tools/hydra_project_tool.py bump`). The build scripts only report the version they built, and CI fails if a build script runs a bump.
 - The build and run scripts use the Python of the `.venv` directly instead of an activate script, and create the venv with the `py` launcher when there is one; CI fails if a script activates a venv.
 - **The window no longer fills the console with `Cannot read property ... of null` when it closes:** the windows are deleted before the object their bindings read, instead of the other way round.
