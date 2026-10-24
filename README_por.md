@@ -51,6 +51,19 @@
 | Destino | O PC de quem o usa |
 | Em hardware real | Não aplicável: nada aqui corre em hardware |
 
+## 🚦 Estado do projeto
+
+Cada linha é uma parte deste repositório e a luz diz até onde chega hoje. É escrita com o que o repositório consegue demonstrar (testes, compilações, execuções), não com o que está previsto.
+
+🟢 Feito e verificado · 🟡 Funciona, com limites conhecidos · 🟠 Feito a meio ou ainda por verificar · 🔴 Por fazer ou a não funcionar
+
+| Área | Estado | O que significa aqui |
+|---|---|---|
+| Software | 🟢 | Completo para o seu propósito e estável; a verificação de honestidade acima lista os limites conhecidos |
+| Testes | 🟢 | 140 testes automáticos, executados a cada alteração |
+| Hardware real | 🟢 | Não aplicável: nada aqui corre em hardware |
+| Documentação | 🟢 | README em oito idiomas, verificado contra o manifesto a cada alteração |
+
 ## 1. 🛠️ VISÃO TÉCNICA GERAL
 
 O HYDRA-UMC-UPDATER é uma pequena ferramenta - GUI com janela por defeito,

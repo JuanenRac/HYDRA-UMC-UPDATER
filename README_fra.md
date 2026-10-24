@@ -47,6 +47,19 @@
 | Cible | Le PC de la personne qui l'utilise |
 | Sur matériel réel | Sans objet : rien ici ne s'exécute sur du matériel |
 
+## 🚦 État du projet
+
+Chaque ligne est une partie de ce dépôt et le feu dit où elle en est aujourd'hui. Elle est écrite d'après ce que le dépôt peut montrer (tests, compilations, exécutions), pas d'après ce qui est prévu.
+
+🟢 Fait et vérifié · 🟡 Fonctionne, avec des limites connues · 🟠 À moitié fait ou pas encore vérifié · 🔴 Pas fait ou ne fonctionne pas
+
+| Domaine | État | Ce que cela veut dire ici |
+|---|---|---|
+| Logiciel | 🟢 | Complet pour son usage et stable ; la vérification d'honnêteté ci-dessus liste les limites connues |
+| Tests | 🟢 | 140 tests automatiques, exécutés à chaque modification |
+| Matériel réel | 🟢 | Sans objet : rien ici ne s'exécute sur du matériel |
+| Documentation | 🟢 | README en huit langues, vérifié par rapport au manifeste à chaque modification |
+
 ## 1. 🛠️ VUE TECHNIQUE
 
 HYDRA-UMC-UPDATER est un petit outil - GUI avec fenêtre par défaut, CLI
