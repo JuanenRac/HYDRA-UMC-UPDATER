@@ -39,9 +39,9 @@
 
 | | |
 |---|---|
-| バージョン | `0.4.8` |
+| バージョン | `0.4.9` |
 | 成熟度 | 確立 |
-| テスト | 157 (`pytest tests/`) |
+| テスト | 140 (`pytest tests/`) |
 | 技術 | Python 3.10+ / PySide6 / Qt Quick (QML) / Tkinter (legacy fallback) / Git / GitHub raw content |
 | 対象 | 利用者の PC |
 | 実機での確認 | 対象外：ここにあるものはハードウェア上では動きません |

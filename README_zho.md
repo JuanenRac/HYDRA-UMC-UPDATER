@@ -36,9 +36,9 @@
 
 | | |
 |---|---|
-| 版本 | `0.4.8` |
+| 版本 | `0.4.9` |
 | 成熟度 | 成熟 |
-| 测试 | 157 (`pytest tests/`) |
+| 测试 | 140 (`pytest tests/`) |
 | 技术栈 | Python 3.10+ / PySide6 / Qt Quick (QML) / Tkinter (legacy fallback) / Git / GitHub raw content |
 | 目标 | 使用者的电脑 |
 | 真实硬件 | 不适用：这里的内容不在硬件上运行 |

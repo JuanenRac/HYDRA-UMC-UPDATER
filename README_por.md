@@ -44,9 +44,9 @@
 
 | | |
 |---|---|
-| Versão | `0.4.8` |
+| Versão | `0.4.9` |
 | Maturidade | Estabelecido |
-| Testes | 157 (`pytest tests/`) |
+| Testes | 140 (`pytest tests/`) |
 | Tecnologia | Python 3.10+ / PySide6 / Qt Quick (QML) / Tkinter (legacy fallback) / Git / GitHub raw content |
 | Destino | O PC de quem o usa |
 | Em hardware real | Não aplicável: nada aqui corre em hardware |
