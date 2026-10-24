@@ -222,6 +222,7 @@ is written to `~/.hydra_umc_updater/logs/`.
 ```
 HYDRA-UMC-UPDATER/
 ├── src/hydra_umc_updater/
+│   ├── __init__.py         # Package description and version
 │   ├── registry.py         # ProjectEntry - no static catalogue; built at discovery time from each repo's own manifest
 │   ├── project_manifest.py # Reads/validates a repository-owned hydra-umc.project.json
 │   ├── ecosystem_catalog.py # Parser for the public JuanenRac ecosystem discovery catalog
@@ -233,7 +234,11 @@ HYDRA-UMC-UPDATER/
 │   ├── qt_gui.py           # Qt Quick bridge over the real discovery/update services
 │   ├── qml/Main.qml        # Themed desktop shell: controls, checkpoints and About
 │   ├── gui.py              # Legacy Tkinter fallback if PySide6 is unavailable
-│   └── main.py             # Dispatch: GUI by default, --cli for status/install/update
+│   ├── main.py             # Dispatch: GUI by default, --cli for status/install/update
+│   ├── evidence.py         # One line of evidence for every install or update attempt: project, before, after, commit and outcome
+│   ├── assets/             # The application icons (HYDRA_UMC_ICON.ico and .svg)
+│   ├── i18n_pt.py          # Portuguese GUI translation
+│   └── settings.py         # Persisted user settings (the workspace root and the other choices the GUI remembers between launches)
 ├── tests/                  # Real tests: github_client, i18n, install, project_manifest, registry
 ├── docs/
 │   ├── CLI_REFERENCE.md     # Command reference
@@ -244,7 +249,10 @@ HYDRA-UMC-UPDATER/
 │   ├── ci_validate.py       # Manifest/CHANGELOG/docs validation used by CI
 │   ├── generate_app_icon.py # Renders the public HYDRA-UMC SVG into the Windows-consumed icon
 │   ├── migrate_project_manifests.py  # Audits a workspace after the one-time manifest migration
-│   └── validate_project_manifests.py # Validates repository-owned manifests + native build versions
+│   ├── validate_project_manifests.py # Validates repository-owned manifests + native build versions
+│   ├── _doc_policy.py                # Documentation rules shared by the family (a copy of HYDRA-UMC-SDK's, kept in sync)
+│   ├── _readme_parity.py             # Check that the eight READMEs share one structure (a copy of HYDRA-UMC-SDK's, kept in sync)
+│   └── hydra_project_tool.py         # The same commands in every repository: validate, test, ci, version, status, bump
 ├── .env.example            # Environment variable template
 ├── build.sh / build.bat    # venv + editable install + compile-check
 ├── run.sh / run.bat        # GUI default / CLI entry point

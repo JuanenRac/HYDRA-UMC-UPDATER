@@ -155,6 +155,7 @@ OK  Updated /home/pi/HYDRA-UMC/HYDRA-UMC-SERVER to v0.0.9 (commit 1a2b3c4d5e6f) 
 ```
 HYDRA-UMC-UPDATER/
 ├── src/hydra_umc_updater/
+│   ├── __init__.py         # パッケージの説明とバージョン
 │   ├── registry.py         # ProjectEntry - 静的カタログなし。各リポジトリ自身のマニフェストから検出時に構築
 │   ├── project_manifest.py # リポジトリ自身の hydra-umc.project.json を読み取り/検証
 │   ├── ecosystem_catalog.py # JuanenRac エコシステムの公開検出カタログのパーサー
@@ -166,7 +167,11 @@ HYDRA-UMC-UPDATER/
 │   ├── qt_gui.py           # 実際の検出/更新サービスへの Qt Quick ブリッジ
 │   ├── qml/Main.qml        # テーマ、チェックポイント、About を持つデスクトップ画面
 │   ├── gui.py              # PySide6 がない場合の Tkinter 互換フォールバック
-│   └── main.py             # ディスパッチ：デフォルトは GUI、--cli で status/install/update
+│   ├── main.py             # ディスパッチ：デフォルトは GUI、--cli で status/install/update
+│   ├── evidence.py         # インストールや更新の試行ごとの証跡1行: プロジェクト、変更前、変更後、コミット、結果
+│   ├── assets/             # アプリケーションのアイコン (HYDRA_UMC_ICON.ico と .svg)
+│   ├── i18n_pt.py          # GUI のポルトガル語訳
+│   └── settings.py         # 保存されるユーザー設定 (ワークスペースのルートなど、GUI が起動間で記憶する選択)
 ├── tests/                  # 実際のテスト：github_client、i18n、install、project_manifest、registry
 ├── docs/
 │   ├── CLI_REFERENCE.md     # コマンドリファレンス
@@ -177,7 +182,10 @@ HYDRA-UMC-UPDATER/
 │   ├── ci_validate.py       # CI が使用するマニフェスト/CHANGELOG/ドキュメント検証
 │   ├── generate_app_icon.py # 公開HYDRA-UMC SVGをWindowsが使用するアイコンにレンダリング
 │   ├── migrate_project_manifests.py  # 一度限りのマニフェスト移行後のワークスペース監査
-│   └── validate_project_manifests.py # リポジトリ自身のマニフェスト+ネイティブビルドバージョンを検証
+│   ├── validate_project_manifests.py # リポジトリ自身のマニフェスト+ネイティブビルドバージョンを検証
+│   ├── _doc_policy.py                # ファミリー共通のドキュメント規則 (HYDRA-UMC-SDK のコピーで、同期を維持)
+│   ├── _readme_parity.py             # 8つの README が同じ構造であることの検査 (HYDRA-UMC-SDK のコピーで、同期を維持)
+│   └── hydra_project_tool.py         # すべてのリポジトリで共通のコマンド: validate、test、ci、version、status、bump
 ├── .env.example            # 環境変数テンプレート
 ├── build.sh / build.bat    # venv + editable インストール + コンパイルチェック
 ├── run.sh / run.bat        # 標準 GUI / CLI エントリポイント

@@ -234,6 +234,7 @@ escrita no terminal de arranque.
 ```
 HYDRA-UMC-UPDATER/
 ├── src/hydra_umc_updater/
+│   ├── __init__.py         # Descrição e versão do pacote
 │   ├── registry.py         # ProjectEntry - sem catálogo estático; construído na descoberta a partir do manifesto de cada repositório
 │   ├── project_manifest.py # Lê/valida um hydra-umc.project.json pertencente ao repositório
 │   ├── ecosystem_catalog.py # Analisador do catálogo público de descoberta do ecossistema JuanenRac
@@ -245,7 +246,11 @@ HYDRA-UMC-UPDATER/
 │   ├── qt_gui.py           # Ponte Qt Quick sobre os serviços reais de descoberta/atualização
 │   ├── qml/Main.qml        # Shell de desktop com tema: controlos, pontos de controlo e Acerca de
 │   ├── gui.py              # Recurso Tkinter legado se o PySide6 não estiver disponível
-│   └── main.py             # Despacho: GUI por defeito, --cli para status/install/update
+│   ├── main.py             # Despacho: GUI por defeito, --cli para status/install/update
+│   ├── evidence.py         # Uma linha de evidência por cada tentativa de instalação ou atualização: projeto, antes, depois, commit e resultado
+│   ├── assets/             # Os ícones da aplicação (HYDRA_UMC_ICON.ico e .svg)
+│   ├── i18n_pt.py          # Tradução da interface para português
+│   └── settings.py         # Definições do utilizador guardadas (a raiz da área de trabalho e as outras escolhas que a interface recorda entre arranques)
 ├── tests/                  # Testes reais: github_client, i18n, install, project_manifest, registry
 ├── docs/
 │   ├── CLI_REFERENCE.md     # Referência de comandos
@@ -256,7 +261,10 @@ HYDRA-UMC-UPDATER/
 │   ├── ci_validate.py       # Validação de manifesto/CHANGELOG/docs usada pelo CI
 │   ├── generate_app_icon.py # Renderiza o SVG público do HYDRA-UMC no ícone consumido pelo Windows
 │   ├── migrate_project_manifests.py  # Audita um espaço de trabalho depois da migração única de manifestos
-│   └── validate_project_manifests.py # Valida os manifestos pertencentes aos repositórios + versões nativas de compilação
+│   ├── validate_project_manifests.py # Valida os manifestos pertencentes aos repositórios + versões nativas de compilação
+│   ├── _doc_policy.py                # Regras de documentação partilhadas pela família (cópia da de HYDRA-UMC-SDK, mantida em sincronia)
+│   ├── _readme_parity.py             # Verificação de que os oito README partilham a mesma estrutura (cópia da de HYDRA-UMC-SDK, mantida em sincronia)
+│   └── hydra_project_tool.py         # Os mesmos comandos em todos os repositórios: validate, test, ci, version, status, bump
 ├── .env.example            # Modelo de variáveis de ambiente
 ├── build.sh / build.bat    # venv + instalação editável + verificação de compilação
 ├── run.sh / run.bat        # GUI por defeito / ponto de entrada da CLI
