@@ -1,0 +1,780 @@
+{
+  "repo": "HYDRA-UMC-UPDATER",
+  "ecosystem": "hydra",
+  "svg": "en",
+  "exempt": [
+    "CODE_OF_CONDUCT.md",
+    "CONTRIBUTING.md",
+    "SECURITY.md",
+    "SUPPORT.md",
+    "LICENSE",
+    "LICENSE.md",
+    "build-test.bat",
+    "test.bat"
+  ],
+  "cards": [
+    {
+      "name": "src/hydra_umc_updater/",
+      "span": 3,
+      "accent": "a",
+      "rows": [
+        {
+          "name": "__init__.py",
+          "desc": {
+            "en": "Package description and version",
+            "es": "Descripción y versión del paquete",
+            "de": "Paketbeschreibung und Version",
+            "fr": "Description et version du paquet",
+            "it": "Descrizione e versione del pacchetto",
+            "ja": "パッケージの説明とバージョン",
+            "zh": "包说明与版本",
+            "pt": "Descrição e versão do pacote"
+          },
+          "tree_desc": {
+            "en": "Package description and version",
+            "es": "Descripción y versión del paquete",
+            "de": "Paketbeschreibung und Version",
+            "fr": "Description et version du paquet",
+            "it": "Descrizione e versione del pacchetto",
+            "ja": "パッケージの説明とバージョン",
+            "zh": "包说明与版本",
+            "pt": "Descrição e versão do pacote"
+          }
+        },
+        {
+          "name": "registry.py",
+          "desc": {
+            "en": "ProjectEntry - no static catalogue",
+            "es": "ProjectEntry - sin catálogo estático",
+            "de": "ProjectEntry - kein statischer Katalog",
+            "fr": "ProjectEntry - aucun catalogue statique",
+            "it": "ProjectEntry - nessun catalogo statico",
+            "ja": "ProjectEntry - 静的カタログな",
+            "zh": "ProjectEntry —— 没有静态目录",
+            "pt": "ProjectEntry - sem catálogo estático"
+          },
+          "tree_desc": {
+            "en": "ProjectEntry - no static catalogue; built at discovery time from each repo's own manifest",
+            "es": "ProjectEntry - sin catálogo estático; se construye en tiempo de descubrimiento desde el manifiesto propio de cada repo",
+            "de": "ProjectEntry - kein statischer Katalog; wird zur Erkennungszeit aus dem eigenen Manifest jedes Repos gebaut",
+            "fr": "ProjectEntry - aucun catalogue statique ; construit au moment de la découverte depuis le manifeste propre de chaque dépôt",
+            "it": "ProjectEntry - nessun catalogo statico; costruito a tempo di scoperta dal manifesto proprio di ogni repo",
+            "ja": "ProjectEntry - 静的カタログなし。各リポジトリ自身のマニフェストから検出時に構築",
+            "zh": "ProjectEntry —— 没有静态目录;在发现时从每个仓库自身的清单构建",
+            "pt": "ProjectEntry - sem catálogo estático; construído na descoberta a partir do manifesto de cada repositório"
+          }
+        },
+        {
+          "name": "project_manifest.py",
+          "desc": {
+            "en": "Reads/validates a repository-owned",
+            "es": "Lee/valida un hydra-umc.project.json propio",
+            "de": "Liest/validiert eine repository-eigene",
+            "fr": "Lit/valide un hydra-umc.project.json propre",
+            "it": "Legge/valida un hydra-umc.project.json",
+            "ja": "リポジトリ自身の hydra-umc.pro",
+            "zh": "读取/校验仓库自身的 hydra-umc.p",
+            "pt": "Lê/valida um hydra-umc.project.json"
+          },
+          "tree_desc": {
+            "en": "Reads/validates a repository-owned hydra-umc.project.json",
+            "es": "Lee/valida un hydra-umc.project.json propio de cada repositorio",
+            "de": "Liest/validiert eine repository-eigene hydra-umc.project.json",
+            "fr": "Lit/valide un hydra-umc.project.json propre au dépôt",
+            "it": "Legge/valida un hydra-umc.project.json proprio del repository",
+            "ja": "リポジトリ自身の hydra-umc.project.json を読み取り/検証",
+            "zh": "读取/校验仓库自身的 hydra-umc.project.json",
+            "pt": "Lê/valida um hydra-umc.project.json pertencente ao repositório"
+          }
+        },
+        {
+          "name": "ecosystem_catalog.py",
+          "desc": {
+            "en": "Parser for the public JuanenRac ecosystem",
+            "es": "Parser del catálogo público de",
+            "de": "Parser für den öffentlichen",
+            "fr": "Parseur du catalogue public de découverte",
+            "it": "Parser del catalogo pubblico di scoperta",
+            "ja": "JuanenRac エコシステムの公開検出カ",
+            "zh": "JuanenRac 生态系统公开发现目录的解",
+            "pt": "Analisador do catálogo público de"
+          },
+          "tree_desc": {
+            "en": "Parser for the public JuanenRac ecosystem discovery catalog",
+            "es": "Parser del catálogo público de descubrimiento del ecosistema de JuanenRac",
+            "de": "Parser für den öffentlichen JuanenRac-Ökosystem-Erkennungskatalog",
+            "fr": "Parseur du catalogue public de découverte de l'écosystème JuanenRac",
+            "it": "Parser del catalogo pubblico di scoperta dell'ecosistema di JuanenRac",
+            "ja": "JuanenRac エコシステムの公開検出カタログのパーサー",
+            "zh": "JuanenRac 生态系统公开发现目录的解析器",
+            "pt": "Analisador do catálogo público de descoberta do ecossistema JuanenRac"
+          }
+        },
+        {
+          "name": "version_parse.py",
+          "desc": {
+            "en": "ONE regex-extraction implementation",
+            "es": "UNA implementación de extracción por regex",
+            "de": "EINE Regex-Extraktions-Implementierung",
+            "fr": "UNE implémentation d'extraction regex",
+            "it": "UN'implementazione di estrazione regex",
+            "ja": "ローカル+GitHub 共通の単一の正規表現",
+            "zh": "单一的正则表达式提取实现，本地+GitHub",
+            "pt": "UMA só implementação de extração por regex"
+          },
+          "tree_desc": {
+            "en": "ONE regex-extraction implementation, local+GitHub",
+            "es": "UNA implementación de extracción por regex, local+GitHub",
+            "de": "EINE Regex-Extraktions-Implementierung, lokal+GitHub",
+            "fr": "UNE implémentation d'extraction regex, local+GitHub",
+            "it": "UN'implementazione di estrazione regex, locale+GitHub",
+            "ja": "ローカル+GitHub 共通の単一の正規表現抽出実装",
+            "zh": "单一的正则表达式提取实现，本地+GitHub 通用",
+            "pt": "UMA só implementação de extração por regex, local+GitHub"
+          }
+        },
+        {
+          "name": "detect.py",
+          "desc": {
+            "en": "Scans a workspace root for what's installed",
+            "es": "Escanea una raíz de workspace para ver qué",
+            "de": "Scannt eine Workspace-Wurzel nach",
+            "fr": "Scanne une racine de workspace pour ce qui",
+            "it": "Scansiona una radice di workspace per ciò",
+            "ja": "ワークスペースルートをスキャンし",
+            "zh": "扫描工作区根目录，检测已安装的内容",
+            "pt": "Analisa uma raiz de espaço de trabalho para"
+          },
+          "tree_desc": {
+            "en": "Scans a workspace root for what's installed",
+            "es": "Escanea una raíz de workspace para ver qué está instalado",
+            "de": "Scannt eine Workspace-Wurzel nach Installiertem",
+            "fr": "Scanne une racine de workspace pour ce qui est installé",
+            "it": "Scansiona una radice di workspace per ciò che è installato",
+            "ja": "ワークスペースルートをスキャンし、何がインストールされているかを検出",
+            "zh": "扫描工作区根目录，检测已安装的内容",
+            "pt": "Analisa uma raiz de espaço de trabalho para ver o que está instalado"
+          }
+        },
+        {
+          "name": "github_client.py",
+          "desc": {
+            "en": "Concurrent raw-content fetch +",
+            "es": "Descarga concurrente del contenido raw +",
+            "de": "Nebenläufiger Abruf des Rohinhalts + echter",
+            "fr": "Récupération concurrente du contenu brut +",
+            "it": "Recupero concorrente del contenuto raw +",
+            "ja": "生コンテンツの並行取得 + 一時的なネットワ",
+            "zh": "并发抓取原始内容 + 针对临时性网络错误的真",
+            "pt": "Obtenção concorrente de conteúdo bruto +"
+          },
+          "tree_desc": {
+            "en": "Concurrent raw-content fetch + real retry/backoff for transient network errors",
+            "es": "Descarga concurrente del contenido raw + reintento/backoff real ante errores de red transitorios",
+            "de": "Nebenläufiger Abruf des Rohinhalts + echter Wiederholungsversuch/Backoff bei vorübergehenden Netzwerkfehlern",
+            "fr": "Récupération concurrente du contenu brut + réessai/backoff réel pour les erreurs réseau transitoires",
+            "it": "Recupero concorrente del contenuto raw + ritentativo/backoff reale per errori di rete transitori",
+            "ja": "生コンテンツの並行取得 + 一時的なネットワークエラーに対する本物の再試行/バックオフ",
+            "zh": "并发抓取原始内容 + 针对临时性网络错误的真实重试/退避机制",
+            "pt": "Obtenção concorrente de conteúdo bruto + repetição/backoff real para erros de rede transitórios"
+          }
+        },
+        {
+          "name": "install.py",
+          "desc": {
+            "en": "git clone/pull + delegate to the project's",
+            "es": "git clone/pull + delega en el script de",
+            "de": "git clone/pull + delegiert an das eigene",
+            "fr": "git clone/pull + délègue au script de build",
+            "it": "git clone/pull + delega allo script di",
+            "ja": "git clone/pull + プロジェク",
+            "zh": "git clone/pull + 委托给项目",
+            "pt": "git clone/pull + delegação no script de"
+          },
+          "tree_desc": {
+            "en": "git clone/pull + delegate to the project's own build script",
+            "es": "git clone/pull + delega en el script de build propio",
+            "de": "git clone/pull + delegiert an das eigene Build-Skript",
+            "fr": "git clone/pull + délègue au script de build propre",
+            "it": "git clone/pull + delega allo script di build proprio",
+            "ja": "git clone/pull + プロジェクト自身のビルドスクリプトへの委譲",
+            "zh": "git clone/pull + 委托给项目自身的构建脚本",
+            "pt": "git clone/pull + delegação no script de compilação do próprio projeto"
+          }
+        },
+        {
+          "name": "i18n.py",
+          "desc": {
+            "en": "Real, complete GUI translations",
+            "es": "Traducciones reales y completas de la GUI",
+            "de": "Echte, vollständige GUI-Übersetzungen",
+            "fr": "Vraies traductions complètes de la GUI",
+            "it": "Traduzioni reali e complete della GUI",
+            "ja": "実際の完全なGUI翻訳(8言語)",
+            "zh": "真实、完整的 GUI 翻译（8 种语言）",
+            "pt": "Traduções reais e completas da GUI"
+          },
+          "tree_desc": {
+            "en": "Real, complete GUI translations (8 languages)",
+            "es": "Traducciones reales y completas de la GUI (8 idiomas)",
+            "de": "Echte, vollständige GUI-Übersetzungen (8 Sprachen)",
+            "fr": "Vraies traductions complètes de la GUI (8 langues)",
+            "it": "Traduzioni reali e complete della GUI (8 lingue)",
+            "ja": "実際の完全なGUI翻訳(8言語)",
+            "zh": "真实、完整的 GUI 翻译（8 种语言）",
+            "pt": "Traduções reais e completas da GUI (8 idiomas)"
+          }
+        },
+        {
+          "name": "qt_gui.py",
+          "desc": {
+            "en": "Qt Quick bridge",
+            "es": "Puente Qt Quick hacia los servicios reales",
+            "de": "Qt-Quick-Brücke zu realen",
+            "fr": "Pont Qt Quick vers les services réels de",
+            "it": "Bridge Qt Quick verso i servizi reali di",
+            "ja": "実際の検出/更新サービスへの Qt Quic",
+            "zh": "通向真实发现/更新服务的 Qt Quick",
+            "pt": "Ponte Qt Quick sobre os serviços reais de"
+          },
+          "tree_desc": {
+            "en": "Qt Quick bridge over the real discovery/update services",
+            "es": "Puente Qt Quick hacia los servicios reales de descubrimiento/actualizacion",
+            "de": "Qt-Quick-Brücke zu realen Erkennungs-/Update-Diensten",
+            "fr": "Pont Qt Quick vers les services réels de découverte/mise à jour",
+            "it": "Bridge Qt Quick verso i servizi reali di scoperta/aggiornamento",
+            "ja": "実際の検出/更新サービスへの Qt Quick ブリッジ",
+            "zh": "通向真实发现/更新服务的 Qt Quick 桥接层",
+            "pt": "Ponte Qt Quick sobre os serviços reais de descoberta/atualização"
+          }
+        },
+        {
+          "name": "qml/Main.qml",
+          "desc": {
+            "en": "Themed desktop shell",
+            "es": "Shell de escritorio con tema",
+            "de": "Desktop-Shell mit Theme",
+            "fr": "Shell desktop theme avec checkpoints et",
+            "it": "Shell desktop a tema con checkpoint e About",
+            "ja": "テーマ、チェックポイント、About を持つ",
+            "zh": "带主题、检查点和 About 的桌面界面",
+            "pt": "Shell de desktop com tema"
+          },
+          "tree_desc": {
+            "en": "Themed desktop shell: controls, checkpoints and About",
+            "es": "Shell de escritorio con tema, checkpoints y About",
+            "de": "Desktop-Shell mit Theme, Checkpoints und About",
+            "fr": "Shell desktop theme avec checkpoints et About",
+            "it": "Shell desktop a tema con checkpoint e About",
+            "ja": "テーマ、チェックポイント、About を持つデスクトップ画面",
+            "zh": "带主题、检查点和 About 的桌面界面",
+            "pt": "Shell de desktop com tema: controlos, pontos de controlo e Acerca de"
+          }
+        },
+        {
+          "name": "gui.py",
+          "desc": {
+            "en": "Legacy Tkinter fallback if PySide6",
+            "es": "Fallback Tkinter si PySide6 no esta",
+            "de": "Tkinter-Fallback falls PySide6 nicht",
+            "fr": "Fallback Tkinter si PySide6 est indisponible",
+            "it": "Fallback Tkinter se PySide6 non è",
+            "ja": "PySide6 がない場合の Tkinter",
+            "zh": "PySide6 不可用时的 Tkinter",
+            "pt": "Recurso Tkinter legado se o PySide6 não"
+          },
+          "tree_desc": {
+            "en": "Legacy Tkinter fallback if PySide6 is unavailable",
+            "es": "Fallback Tkinter si PySide6 no esta disponible",
+            "de": "Tkinter-Fallback falls PySide6 nicht verfügbar ist",
+            "fr": "Fallback Tkinter si PySide6 est indisponible",
+            "it": "Fallback Tkinter se PySide6 non è disponibile",
+            "ja": "PySide6 がない場合の Tkinter 互換フォールバック",
+            "zh": "PySide6 不可用时的 Tkinter 兼容回退",
+            "pt": "Recurso Tkinter legado se o PySide6 não estiver disponível"
+          }
+        },
+        {
+          "name": "main.py",
+          "desc": {
+            "en": "Dispatch: GUI by default",
+            "es": "Despacho: GUI por defecto",
+            "de": "Dispatch: GUI standardmäßig",
+            "fr": "Répartition : GUI par défaut",
+            "it": "Dispatch: GUI predefinita",
+            "ja": "ディスパッチ：デフォルトは GUI",
+            "zh": "分发逻辑：默认 GUI，--cli 用于 s",
+            "pt": "Despacho: GUI por defeito"
+          },
+          "tree_desc": {
+            "en": "Dispatch: GUI by default, --cli for status/install/update",
+            "es": "Despacho: GUI por defecto, --cli para status/install/update",
+            "de": "Dispatch: GUI standardmäßig, --cli für status/install/update",
+            "fr": "Répartition : GUI par défaut, --cli pour status/install/update",
+            "it": "Dispatch: GUI predefinita, --cli per status/install/update",
+            "ja": "ディスパッチ：デフォルトは GUI、--cli で status/install/update",
+            "zh": "分发逻辑：默认 GUI，--cli 用于 status/install/update",
+            "pt": "Despacho: GUI por defeito, --cli para status/install/update"
+          }
+        },
+        {
+          "name": "evidence.py",
+          "desc": {
+            "en": "One line of evidence for every install",
+            "es": "Una línea de evidencia por cada intento de",
+            "de": "Eine Beweiszeile für jeden Installations",
+            "fr": "Une ligne de preuve pour chaque tentative",
+            "it": "Una riga di prova per ogni tentativo di",
+            "ja": "インストールや更新の試行ごとの証跡1行",
+            "zh": "每次安装或更新尝试留一行证据",
+            "pt": "Uma linha de evidência por cada tentativa"
+          },
+          "tree_desc": {
+            "en": "One line of evidence for every install or update attempt: project, before, after, commit and outcome",
+            "es": "Una línea de evidencia por cada intento de instalación o actualización: proyecto, antes, después, commit y resultado",
+            "de": "Eine Beweiszeile für jeden Installations- oder Update-Versuch: Projekt, vorher, nachher, Commit und Ergebnis",
+            "fr": "Une ligne de preuve pour chaque tentative d'installation ou de mise à jour : projet, avant, après, commit et résultat",
+            "it": "Una riga di prova per ogni tentativo di installazione o aggiornamento: progetto, prima, dopo, commit ed esito",
+            "ja": "インストールや更新の試行ごとの証跡1行: プロジェクト、変更前、変更後、コミット、結果",
+            "zh": "每次安装或更新尝试留一行证据: 项目、之前、之后、提交与结果",
+            "pt": "Uma linha de evidência por cada tentativa de instalação ou atualização: projeto, antes, depois, commit e resultado"
+          }
+        },
+        {
+          "name": "assets/",
+          "desc": {
+            "en": "The application icons",
+            "es": "Los iconos de la aplicación",
+            "de": "Die Anwendungssymbole",
+            "fr": "Les icônes de l'application",
+            "it": "Le icone dell'applicazione",
+            "ja": "アプリケーションのアイコン (HYDRA_U",
+            "zh": "应用程序图标 (HYDRA_UMC_ICON",
+            "pt": "Os ícones da aplicação"
+          },
+          "tree_desc": {
+            "en": "The application icons (HYDRA_UMC_ICON.ico and .svg)",
+            "es": "Los iconos de la aplicación (HYDRA_UMC_ICON.ico y .svg)",
+            "de": "Die Anwendungssymbole (HYDRA_UMC_ICON.ico und .svg)",
+            "fr": "Les icônes de l'application (HYDRA_UMC_ICON.ico et .svg)",
+            "it": "Le icone dell'applicazione (HYDRA_UMC_ICON.ico e .svg)",
+            "ja": "アプリケーションのアイコン (HYDRA_UMC_ICON.ico と .svg)",
+            "zh": "应用程序图标 (HYDRA_UMC_ICON.ico 和 .svg)",
+            "pt": "Os ícones da aplicação (HYDRA_UMC_ICON.ico e .svg)"
+          }
+        },
+        {
+          "name": "i18n_pt.py",
+          "desc": {
+            "en": "Portuguese GUI translation",
+            "es": "Traducción al portugués de la interfaz",
+            "de": "Portugiesische Übersetzung der Oberfläche",
+            "fr": "Traduction portugaise de l'interface",
+            "it": "Traduzione portoghese dell'interfaccia",
+            "ja": "GUI のポルトガル語訳",
+            "zh": "界面的葡萄牙语翻译",
+            "pt": "Tradução da interface para português"
+          },
+          "tree_desc": {
+            "en": "Portuguese GUI translation",
+            "es": "Traducción al portugués de la interfaz",
+            "de": "Portugiesische Übersetzung der Oberfläche",
+            "fr": "Traduction portugaise de l'interface",
+            "it": "Traduzione portoghese dell'interfaccia",
+            "ja": "GUI のポルトガル語訳",
+            "zh": "界面的葡萄牙语翻译",
+            "pt": "Tradução da interface para português"
+          }
+        },
+        {
+          "name": "settings.py",
+          "desc": {
+            "en": "Persisted user settings",
+            "es": "Ajustes del usuario guardados",
+            "de": "Gespeicherte Benutzereinstellungen",
+            "fr": "Réglages utilisateur conservés",
+            "it": "Impostazioni utente salvate",
+            "ja": "保存されるユーザー設定 (ワークスペースのル",
+            "zh": "持久保存的用户设置 (工作区根目录等界面在两",
+            "pt": "Definições do utilizador guardadas"
+          },
+          "tree_desc": {
+            "en": "Persisted user settings (the workspace root and the other choices the GUI remembers between launches)",
+            "es": "Ajustes del usuario guardados (la raíz del espacio de trabajo y las demás elecciones que la interfaz recuerda entre arranques)",
+            "de": "Gespeicherte Benutzereinstellungen (der Arbeitsbereich-Stamm und die übrigen Entscheidungen, die die Oberfläche zwischen Starts behält)",
+            "fr": "Réglages utilisateur conservés (la racine de l'espace de travail et les autres choix que l'interface retient d'un lancement à l'autre)",
+            "it": "Impostazioni utente salvate (la radice dell'area di lavoro e le altre scelte che l'interfaccia ricorda tra un avvio e l'altro)",
+            "ja": "保存されるユーザー設定 (ワークスペースのルートなど、GUI が起動間で記憶する選択)",
+            "zh": "持久保存的用户设置 (工作区根目录等界面在两次启动之间记住的选择)",
+            "pt": "Definições do utilizador guardadas (a raiz da área de trabalho e as outras escolhas que a interface recorda entre arranques)"
+          }
+        }
+      ],
+      "tree_head": {
+        "en": "source code",
+        "es": "código fuente",
+        "de": "Quellcode",
+        "fr": "code source",
+        "it": "codice sorgente",
+        "ja": "ソースコード",
+        "zh": "源代码",
+        "pt": "código-fonte"
+      },
+      "sub": {
+        "en": "source code",
+        "es": "código fuente",
+        "de": "Quellcode",
+        "fr": "code source",
+        "it": "codice sorgente",
+        "ja": "ソースコード",
+        "zh": "源代码",
+        "pt": "código-fonte"
+      },
+      "columns": 2
+    },
+    {
+      "name": {
+        "en": "folders",
+        "es": "carpetas",
+        "de": "Ordner",
+        "fr": "dossiers",
+        "it": "cartelle",
+        "ja": "フォルダ",
+        "zh": "文件夹",
+        "pt": "pastas"
+      },
+      "kind": "group",
+      "span": 3,
+      "accent": "b",
+      "columns": 2,
+      "rows": [
+        {
+          "name": "tests/",
+          "desc": {
+            "en": "Real tests: github_client",
+            "es": "Tests reales: github_client",
+            "de": "Echte Tests: github_client",
+            "fr": "Tests réels : github_client",
+            "it": "Test reali: github_client",
+            "ja": "実際のテスト：github_client",
+            "zh": "真实测试：github_client",
+            "pt": "Testes reais: github_client"
+          },
+          "tree_desc": {
+            "en": "Real tests: github_client, i18n, install, project_manifest, registry",
+            "es": "Tests reales: github_client, i18n, install, project_manifest, registry",
+            "de": "Echte Tests: github_client, i18n, install, project_manifest, registry",
+            "fr": "Tests réels : github_client, i18n, install, project_manifest, registry",
+            "it": "Test reali: github_client, i18n, install, project_manifest, registry",
+            "ja": "実際のテスト：github_client、i18n、install、project_manifest、registry",
+            "zh": "真实测试：github_client、i18n、install、project_manifest、registry",
+            "pt": "Testes reais: github_client, i18n, install, project_manifest, registry"
+          }
+        },
+        {
+          "name": "docs/",
+          "desc": {
+            "en": "documents of the project",
+            "es": "documentos del proyecto",
+            "de": "Dokumente des Projekts",
+            "fr": "documents du projet",
+            "it": "documenti del progetto",
+            "ja": "プロジェクトの文書",
+            "zh": "项目文档",
+            "pt": "documentos do projeto"
+          },
+          "tree_desc": {
+            "en": "documents of the project",
+            "es": "documentos del proyecto",
+            "de": "Dokumente des Projekts",
+            "fr": "documents du projet",
+            "it": "documenti del progetto",
+            "ja": "プロジェクトの文書",
+            "zh": "项目文档",
+            "pt": "documentos do projeto"
+          }
+        },
+        {
+          "name": "images/",
+          "desc": {
+            "en": "Media, app icons and interface screenshots",
+            "es": "Medios, iconos de app y capturas de la",
+            "de": "Medien, App-Icons und Interface-Screenshots",
+            "fr": "Médias, icônes de l'app et captures de",
+            "it": "Media, icone dell'app e screenshot",
+            "ja": "メディア、アプリアイコン、インターフェースの",
+            "zh": "媒体、应用图标与界面截图",
+            "pt": "Multimédia, ícones da aplicação e capturas"
+          },
+          "tree_desc": {
+            "en": "Media, app icons and interface screenshots",
+            "es": "Medios, iconos de app y capturas de la interfaz",
+            "de": "Medien, App-Icons und Interface-Screenshots",
+            "fr": "Médias, icônes de l'app et captures de l'interface",
+            "it": "Media, icone dell'app e screenshot dell'interfaccia",
+            "ja": "メディア、アプリアイコン、インターフェースのスクリーンショット",
+            "zh": "媒体、应用图标与界面截图",
+            "pt": "Multimédia, ícones da aplicação e capturas da interface"
+          }
+        },
+        {
+          "name": "tools/",
+          "desc": {
+            "en": "project tools and CI checks",
+            "es": "herramientas del proyecto y comprobaciones",
+            "de": "Projektwerkzeuge und CI-Prüfungen",
+            "fr": "outils du projet et vérifications de la CI",
+            "it": "strumenti del progetto e controlli della CI",
+            "ja": "プロジェクトのツールと CI の検査",
+            "zh": "项目工具和 CI 检查",
+            "pt": "ferramentas do projeto e verificações da CI"
+          },
+          "tree_desc": {
+            "en": "project tools and CI checks",
+            "es": "herramientas del proyecto y comprobaciones del CI",
+            "de": "Projektwerkzeuge und CI-Prüfungen",
+            "fr": "outils du projet et vérifications de la CI",
+            "it": "strumenti del progetto e controlli della CI",
+            "ja": "プロジェクトのツールと CI の検査",
+            "zh": "项目工具和 CI 检查",
+            "pt": "ferramentas do projeto e verificações da CI"
+          }
+        },
+        {
+          "name": ".github/",
+          "desc": {
+            "en": "CI workflow and issue templates",
+            "es": "flujo de CI y plantillas de incidencias",
+            "de": "CI-Workflow und Issue-Vorlagen",
+            "fr": "workflow de CI et modèles de tickets",
+            "it": "workflow di CI e modelli di segnalazione",
+            "ja": "CI ワークフローと Issue テンプレート",
+            "zh": "CI 工作流和 Issue 模板",
+            "pt": "fluxo de CI e modelos de problemas"
+          }
+        }
+      ]
+    },
+    {
+      "name": {
+        "en": "project files",
+        "es": "ficheros del proyecto",
+        "de": "Projektdateien",
+        "fr": "fichiers du projet",
+        "it": "file del progetto",
+        "ja": "プロジェクトのファイル",
+        "zh": "项目文件",
+        "pt": "ficheiros do projeto"
+      },
+      "kind": "group",
+      "span": 3,
+      "accent": "c",
+      "columns": 2,
+      "rows": [
+        {
+          "name": ".env.example",
+          "desc": {
+            "en": "Environment variable template",
+            "es": "Plantilla de variables de entorno",
+            "de": "Umgebungsvariablen-Vorlage",
+            "fr": "Modèle de variables d'environnement",
+            "it": "Modello delle variabili d'ambiente",
+            "ja": "環境変数テンプレート",
+            "zh": "环境变量模板",
+            "pt": "Modelo de variáveis de ambiente"
+          },
+          "tree_desc": {
+            "en": "Environment variable template",
+            "es": "Plantilla de variables de entorno",
+            "de": "Umgebungsvariablen-Vorlage",
+            "fr": "Modèle de variables d'environnement",
+            "it": "Modello delle variabili d'ambiente",
+            "ja": "環境変数テンプレート",
+            "zh": "环境变量模板",
+            "pt": "Modelo de variáveis de ambiente"
+          }
+        },
+        {
+          "name": "build.sh / build.bat",
+          "desc": {
+            "en": "venv + editable install + compile-check",
+            "es": "venv + instalación editable + compile-check",
+            "de": "venv + editierbare Installation +",
+            "fr": "venv + installation éditable + compile-check",
+            "it": "venv + installazione editabile +",
+            "ja": "venv + editable インストール",
+            "zh": "venv + 可编辑安装 + 编译检查",
+            "pt": "venv + instalação editável + verificação de"
+          },
+          "tree_desc": {
+            "en": "venv + editable install + compile-check",
+            "es": "venv + instalación editable + compile-check",
+            "de": "venv + editierbare Installation + Compile-Check",
+            "fr": "venv + installation éditable + compile-check",
+            "it": "venv + installazione editabile + compile-check",
+            "ja": "venv + editable インストール + コンパイルチェック",
+            "zh": "venv + 可编辑安装 + 编译检查",
+            "pt": "venv + instalação editável + verificação de compilação"
+          }
+        },
+        {
+          "name": "run.sh / run.bat",
+          "desc": {
+            "en": "GUI default / CLI entry point",
+            "es": "GUI por defecto / entrada CLI",
+            "de": "Standard-GUI / CLI-Einstieg",
+            "fr": "GUI par défaut / entrée CLI",
+            "it": "GUI predefinita / ingresso CLI",
+            "ja": "標準 GUI / CLI エントリポイント",
+            "zh": "默认 GUI / CLI 入口",
+            "pt": "GUI por defeito / ponto de entrada da CLI"
+          },
+          "tree_desc": {
+            "en": "GUI default / CLI entry point",
+            "es": "GUI por defecto / entrada CLI",
+            "de": "Standard-GUI / CLI-Einstieg",
+            "fr": "GUI par défaut / entrée CLI",
+            "it": "GUI predefinita / ingresso CLI",
+            "ja": "標準 GUI / CLI エントリポイント",
+            "zh": "默认 GUI / CLI 入口",
+            "pt": "GUI por defeito / ponto de entrada da CLI"
+          }
+        },
+        {
+          "name": "run-gui.vbs",
+          "desc": {
+            "en": "Windows graphical launcher with no console",
+            "es": "Lanzador grafico Windows sin ventana de",
+            "de": "Windows-GUI-Starter ohne Konsole",
+            "fr": "Lanceur graphique Windows sans console",
+            "it": "Launcher grafico Windows senza console",
+            "ja": "コンソールなしの Windows GUI ラ",
+            "zh": "无控制台窗口的 Windows 图形启动器",
+            "pt": "Lançador gráfico para Windows sem janela de"
+          },
+          "tree_desc": {
+            "en": "Windows graphical launcher with no console window",
+            "es": "Lanzador grafico Windows sin ventana de consola",
+            "de": "Windows-GUI-Starter ohne Konsole",
+            "fr": "Lanceur graphique Windows sans console",
+            "it": "Launcher grafico Windows senza console",
+            "ja": "コンソールなしの Windows GUI ランチャー",
+            "zh": "无控制台窗口的 Windows 图形启动器",
+            "pt": "Lançador gráfico para Windows sem janela de consola"
+          }
+        },
+        {
+          "name": "bump_version.py",
+          "desc": {
+            "en": "explicit version bump",
+            "es": "Incremento de versión tipo cuentakilómetros",
+            "de": "ausdrückliche Versionserhöhung",
+            "fr": "Incrément de version type compteur",
+            "it": "Incremento di versione stile contachilometri",
+            "ja": "明示的なバージョン更新",
+            "zh": "显式提升版本",
+            "pt": "Subida de versão ao estilo conta-quilómetros"
+          },
+          "tree_desc": {
+            "en": "explicit version bump",
+            "es": "Incremento de versión tipo cuentakilómetros (solo lo ejecuta el comando `bump` explícito)",
+            "de": "ausdrückliche Versionserhöhung",
+            "fr": "Incrément de version type compteur kilométrique (exécuté seulement par la commande `bump` explicite)",
+            "it": "Incremento di versione stile contachilometri (eseguito solo dal comando `bump` esplicito)",
+            "ja": "明示的なバージョン更新",
+            "zh": "显式提升版本",
+            "pt": "Subida de versão ao estilo conta-quilómetros (executada só pelo comando `bump` explícito)"
+          }
+        },
+        {
+          "name": "bump_manifest_version.py",
+          "desc": {
+            "en": "Syncs hydra-umc.project.json's version",
+            "es": "Sincroniza la versión de",
+            "de": "Synchronisiert die Version von",
+            "fr": "Synchronise la version de",
+            "it": "Sincronizza la versione di",
+            "ja": "hydra-umc.project.json",
+            "zh": "将 hydra-umc.project.js",
+            "pt": "Sincroniza a versão do"
+          },
+          "tree_desc": {
+            "en": "Syncs hydra-umc.project.json's version to the native one (--sync)",
+            "es": "Sincroniza la versión de hydra-umc.project.json con la nativa (--sync)",
+            "de": "Synchronisiert die Version von hydra-umc.project.json mit der nativen (--sync)",
+            "fr": "Synchronise la version de hydra-umc.project.json avec la version native (--sync)",
+            "it": "Sincronizza la versione di hydra-umc.project.json con quella nativa (--sync)",
+            "ja": "hydra-umc.project.json のバージョンをネイティブ版と同期(--sync)",
+            "zh": "将 hydra-umc.project.json 的版本与原生版本同步(--sync)",
+            "pt": "Sincroniza a versão do hydra-umc.project.json com a nativa (--sync)"
+          }
+        },
+        {
+          "name": "CHANGELOG.md",
+          "desc": {
+            "en": "what changed in each version",
+            "es": "qué cambió en cada versión",
+            "de": "was sich in jeder Version geändert hat",
+            "fr": "ce qui a changé à chaque version",
+            "it": "cosa è cambiato in ogni versione",
+            "ja": "各バージョンの変更点",
+            "zh": "每个版本的变更",
+            "pt": "o que mudou em cada versão"
+          }
+        },
+        {
+          "name": "build-test.sh",
+          "desc": {
+            "en": "non-mutating build check",
+            "es": "comprobación de compilación sin cambios",
+            "de": "Build-Prüfung ohne Änderungen",
+            "fr": "vérification de build sans modification",
+            "it": "controllo di build senza modifiche",
+            "ja": "変更を伴わないビルド確認",
+            "zh": "不修改内容的构建检查",
+            "pt": "verificação de compilação sem alterações"
+          }
+        },
+        {
+          "name": "hydra-umc.project.json",
+          "desc": {
+            "en": "manifest: version, maturity, family",
+            "es": "manifiesto: versión, madurez, familia",
+            "de": "Manifest: Version, Reifegrad, Familie",
+            "fr": "manifeste : version, maturité, famille",
+            "it": "manifesto: versione, maturità, famiglia",
+            "ja": "マニフェスト：バージョン、成熟度、ファミリー",
+            "zh": "清单：版本、成熟度、系列",
+            "pt": "manifesto: versão, maturidade, família"
+          }
+        },
+        {
+          "name": "pyproject.toml",
+          "desc": {
+            "en": "package metadata",
+            "es": "metadatos del paquete",
+            "de": "Paketmetadaten",
+            "fr": "métadonnées du paquet",
+            "it": "metadati del pacchetto",
+            "ja": "パッケージのメタデータ",
+            "zh": "包的元数据",
+            "pt": "metadados do pacote"
+          }
+        },
+        {
+          "name": "test.sh",
+          "desc": {
+            "en": "runs the tests",
+            "es": "ejecuta las pruebas",
+            "de": "führt die Tests aus",
+            "fr": "lance les tests",
+            "it": "esegue i test",
+            "ja": "テストを実行",
+            "zh": "运行测试",
+            "pt": "executa os testes"
+          }
+        }
+      ]
+    }
+  ]
+}

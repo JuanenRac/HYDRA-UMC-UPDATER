@@ -1,36 +1,34 @@
+<!-- =============================================================================
+HYDRA-UMC-UPDATER - Installs and updates the HYDRA-UMC projects
+Copyright (C) JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
+GPL-3.0-or-later - see LICENSE
+============================================================================= -->
+
 <p align="center">
   <img src="images/HYDRA_UMC_BANNER.svg" alt="HYDRA-UMC-UPDATER banner" width="100%">
 </p>
 
-# 🛠️ HYDRA-UMC-UPDATER
+# 📦 HYDRA-UMC-UPDATER
 
 <p align="center"><a href="README.md">🇺🇸 English</a> | <a href="README_spa.md">🇪🇸 Español</a> | <a href="README_fra.md">🇫🇷 Français</a> | <a href="README_ita.md">🇮🇹 Italiano</a> | <a href="README_deu.md">🇩🇪 Deutsch</a> | 🇨🇳 <b>简体中文</b> | <a href="README_jpn.md">🇯🇵 日本語</a> | <a href="README_por.md">🇵🇹 Português</a></p>
 
 ### 📦 检测、安装并手动更新整个 HYDRA-UMC 生态系统
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Licencia-GPL%203.0-blue.svg" alt="GPL 3.0">
-  <img src="https://img.shields.io/badge/Language-Python%203.10%2B-blue.svg" alt="Python">
-  <img src="https://img.shields.io/badge/Core-stdlib%20only-brightgreen.svg" alt="stdlib-only CLI core">
-  <img src="https://img.shields.io/badge/Desktop-PySide6%20%7C%20Qt%20Quick-367BF5.svg" alt="PySide6 Qt Quick desktop GUI">
+  <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
+  <img src="https://img.shields.io/badge/Language-Python%203.10%2B-blue.svg" alt="Language">
+  <img src="https://img.shields.io/badge/Core-stdlib%20only-brightgreen.svg" alt="Core">
+  <img src="https://img.shields.io/badge/Desktop-PySide6%20%7C%20Qt%20Quick-367BF5.svg" alt="Desktop">
+  <img src="https://img.shields.io/badge/Tests-160%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Version-0.4.9-0f6cbd.svg" alt="Version">
+  <img src="https://img.shields.io/badge/Maturity-established-2EA44F.svg" alt="Maturity">
 </p>
-
-> **可视化桌面模式：** 默认桌面界面现通过可选的 `PySide6` GUI 运行时使用
-> **Qt Quick / QML**。更新器核心与 `--cli` 模式仍仅使用标准库，适合无桌面的 CM5。
->
-> **Windows 启动和操作证据：** 双击 `run-gui.vbs`（或不带参数运行
-> `run.bat`）即可启动无控制台图形客户端。更新面板会显示真实的预检查、源更新、
-> 清单验证、构建测试和完成检查点及捕获的证据；`run.bat --cli ...` 保留诊断终端。
-> 仅在缺少检出时启用安装，仅在 GitHub 版本更高时启用更新。已批准操作期间，
-> 检查点会替换项目控制区；选择其他项目即可恢复控制区。
-> **安装全部缺失项目**和**更新全部过期项目**是分别确认的顺序批量操作，使用相同的
-> 实时状态和安全流程。
-
-**诚实核查 - 今天真正能运行的部分：** 整个生态系统的发现/版本逻辑（`registry.py`、`project_manifest.py`、`ecosystem_catalog.py`、`version_parse.py`、`detect.py`）、带重试/退避的真实 GitHub 原始内容客户端（`github_client.py`），以及安装/更新流水线中"克隆-暂存-验证-提升"的真实逻辑（`install.py`）都是真实且经过测试的——157 个通过的测试（`pytest tests/`），包括一个证明"目录损坏"与"单个项目清单损坏"相互隔离的模拟 HTTP 服务器，以及在临时目录中进行的真实 git 克隆/构建往返测试。`--cli status`/`install`/`update` 在你真正运行它们时，会端到端地驱动这同一套经过测试的核心逻辑，访问真实、在线的 GitHub 原始内容服务器（而非模拟）。Qt Quick 桌面 GUI（`qt_gui.py`、`qml/Main.qml`）和旧版 Tkinter 后备方案（`gui.py`）把同一套经过测试的核心接入一个真实窗口，并已经在真实的生态系统检出目录上运行过，但两者都没有自己的自动化测试——不存在 `test_gui.py`/`test_qt_gui.py`，因为这里没有尝试去驱动真实的 Qt/Tk 事件循环。`i18n.py` 的 8 语言覆盖由测试强制保证（`test_i18n.py`），但仅保证各语言间的键一致性，不保证翻译质量。具体已经交付了什么，请参见 `CHANGELOG.md`。
 
 ---
 
 > **安全与安防现状:**本生态系统不是经认证的安全系统。目前尚无硬件 E-STOP 通路,没有由固件强制执行的限位或联锁,也没有经过验证的运动指令;固件映像使用 CRC32 和共享密钥的 HMAC-SHA256 校验,而非非对称签名;TLS 与双向 TLS 均为可选项,默认关闭;自制电路板尚未组装或测试。在依赖此处任何说法来保障人身安全之前,请先阅读[安全基线](https://github.com/JuanenRac/HYDRA-UMC-DOCS/blob/main/docs/SECURITY_BASELINE.md)和[威胁模型](https://github.com/JuanenRac/HYDRA-UMC-DOCS/blob/main/docs/THREAT_MODEL.md)。
+
+---
 
 ## 📋 速览
 
@@ -38,10 +36,12 @@
 |---|---|
 | 版本 | `0.4.9` |
 | 成熟度 | 成熟 |
-| 测试 | 140 (`pytest tests/`) |
+| 测试 | 160 (`python -m pytest -q tests`) |
 | 技术栈 | Python 3.10+ / PySide6 / Qt Quick (QML) / Tkinter (legacy fallback) / Git / GitHub raw content |
 | 目标 | 使用者的电脑 |
 | 真实硬件 | 不适用：这里的内容不在硬件上运行 |
+
+**跳转：** [概述](#-概述) · [架构](#-架构) · [安全与防护](#-安全与防护) · [配置](#-配置) · [快速开始](#-快速开始) · [测试](#-测试) · [故障排除](#-故障排除) · [仓库结构](#-仓库结构) · [相关项目](#-相关项目)
 
 ## 🚦 项目状态
 
@@ -52,11 +52,11 @@
 | 领域 | 状态 | 在这里的含义 |
 |---|---|---|
 | 软件 | 🟢 | 就其用途而言已完整且稳定；上面的诚实性检查列出了已知限制 |
-| 测试 | 🟢 | 140 项自动测试，每次变更都会运行 |
+| 测试 | 🟢 | 160 项自动测试，每次变更都会运行 |
 | 真实硬件 | 🟢 | 不适用：这里的内容不在硬件上运行 |
 | 文档 | 🟢 | 八种语言的 README，每次变更都会与清单核对 |
 
-## 1. 🛠️ 技术概述
+## 🎯 概述
 
 HYDRA-UMC-UPDATER 是一个小型工具——默认为窗口化 GUI，通过 `--cli` 可
 获得完整的 CLI——旨在运行在真实的 CM5 本机上，或运行在开发者自己的
@@ -105,9 +105,19 @@ OK  Updated /home/pi/HYDRA-UMC/HYDRA-UMC-SERVER to v0.0.9 (commit 1a2b3c4d5e6f) 
   <img src="images/HYDRA_UMC_UPDATER_INTERFACE_1.png" alt="HYDRA-UMC-UPDATER 真实桌面总览" width="100%">
 </p>
 
-## 2. 🔄 检查/更新实际是如何工作的
+## 🧩 在 HYDRA-UMC 中的角色
 
-- **版本来源**：本生态系统自身的"里程表"式自动递增惯例（每次真实构建都会递增一个存在于源文件*内部*的版本号——根据项目所用技术栈的不同，可能是 `pyproject.toml`、`Cargo.toml`、`version.go`、`package.json`、`version.properties`、`pubspec.yaml`，或一个固件 `#define`）从未为该次递增创建过 git 标签或 GitHub Release。因此本工具直接通过 GitHub 的原始内容托管，读取每个项目自身的 `bump_version.py`/构建脚本已经在写入的那个*同一个*文件的仓库默认分支版本——而非 Releases API，后者会把每个项目都报告为"完全没有发布记录"。
+**HYDRA-UMC-UPDATER** 在所运行的机器上查找、安装并更新 HYDRA-UMC 项目，手动且一次一个项目。新版本先在暂存文件夹中克隆并构建，然后才移入位置，旧版本保留为备份，每次尝试都会留下一行证据。它有命令行和桌面窗口，二者调用同一个核心。
+
+## 🏛️ 架构
+
+<p align="center">
+  <img src="images/architecture.svg" alt="HYDRA-UMC-UPDATER architecture" width="100%">
+</p>
+
+### 检查/更新实际是如何工作的
+
+因此本工具直接通过 GitHub 的原始内容托管，读取每个项目自身的 `bump_version.py`/构建脚本已经在写入的那个*同一个*文件的仓库默认分支版本——而非 Releases API，后者会把每个项目都报告为"完全没有发布记录"。
 - **本地检测**：对于每一个发现的项目，检查工作区根目录下是否存在一个与该项目名称完全一致的目录（标准的生态系统布局——每个项目作为同级目录，这正是 `build-frontend.sh`/HYDRA-UMC-SUITE 自身的发现逻辑已经假定的方式），如果存在，则读取该项目*自身*的本地版本文件副本。
 - **单一解析实现**（`version_parse.py`）在本地读取和 GitHub 抓取之间共享，因此本地检出和 GitHub 抓取绝不会被两个独立漂移的正则表达式分别解读。
 - **安装/更新**：`git clone`（安装）之后作为单独的一步再编译。更新一个已存在的检出则改为「通过验证实现原子性」：候选版本先被克隆、进行快进合并（绝不使用强制重置，因此真实的本地修改会明确失败，而非被丢弃），然后首先在一个完全独立的暂存克隆中编译/验证——只有当那次暂存编译真正成功时，实际安装才会被触碰（通过两次连续的目录重命名，之前的安装会被保留在 `<name>.backup-xxxxxxxx` 中，而不是被删除）。在最终提升之前的任何时刻发生编译失败、检出分叉/存在未提交修改、崩溃或磁盘写满，都会让之前的安装完全不受影响、继续保持可运行——详见 `install.py` 自身 `clone_or_pull` 的 docstring。暂存克隆自身的 git 远程仓库会在创建后立即恢复为真实的 GitHub 上游（否则一个普通的本地克隆会指向旧的安装路径，一旦被提升就会在不知不觉中终止所有未来的更新），并且已安装检出自身真实的本地数据（任何 git 视为未跟踪或被忽略的内容——`data/settings.json` 及类似文件，不包括可重新生成的构建产物）会在编译前被带入暂存克隆，这样一个项目自身真实的运行状态就能在更新后保留下来，而不是被困在保留的 `.backup` 检出中。无论哪种情况，只要该项目自身实际拥有 `build-test.sh`/`build-test.bat`（不递增版本号的检查——见第 3 节），就会运行它。本工具从不重新实现某个项目自身的构建步骤。
@@ -121,7 +131,7 @@ OK  Updated /home/pi/HYDRA-UMC/HYDRA-UMC-SERVER to v0.0.9 (commit 1a2b3c4d5e6f) 
   <img src="images/HYDRA_UMC_UPDATER_INTERFACE_2.png" alt="HYDRA-UMC-UPDATER 安装或更新期间的真实检查点" width="100%">
 </p>
 
-## 3. 🧱 架构与设计决策
+### 架构与设计决策
 
 - **默认 Qt Quick GUI，`--cli` 用于无桌面环境。** `main.py` 会在导入可选 PySide6
   运行时之前检查 `--cli`。CLI 可在没有显示器或桌面依赖的 CM5 上工作；无参数时会在
@@ -139,51 +149,45 @@ OK  Updated /home/pi/HYDRA-UMC/HYDRA-UMC-SERVER to v0.0.9 (commit 1a2b3c4d5e6f) 
 - **仅使用标准库。** `urllib` 用于 GitHub 抓取（`github_client.py`），`subprocess` 用于 git/构建脚本调用（`install.py`），仅此而已——一个负责维护其他*所有*项目依赖健全性的工具，其自身保持零依赖，这是刻意为之的。
 - **已知的简化处理**：HYDRA-UMC 和 URTC 是真正的多组件固件仓库（各自分别有 6 个和 4 个独立版本管理的二进制文件——见各自的 `VERSION_CHECKLIST.txt`/`build_firmware.sh`），并不存在单一的"那个"版本号。`registry.py` 每个仓库只跟踪*一个*代表性组件——足以回答"这个仓库大致是否是最新的"，但不能替代 `build_firmware.sh` 自身的 `firmware_manifest.json` 用于真实的刷写场景。
 
-## 📂 目录结构
+## 🔒 安全与防护
 
-```
-HYDRA-UMC-UPDATER/
-├── src/hydra_umc_updater/
-│   ├── __init__.py         # 包说明与版本
-│   ├── registry.py         # ProjectEntry —— 没有静态目录;在发现时从每个仓库自身的清单构建
-│   ├── project_manifest.py # 读取/校验仓库自身的 hydra-umc.project.json
-│   ├── ecosystem_catalog.py # JuanenRac 生态系统公开发现目录的解析器
-│   ├── version_parse.py   # 单一的正则表达式提取实现，本地+GitHub 通用
-│   ├── detect.py          # 扫描工作区根目录，检测已安装的内容
-│   ├── github_client.py   # 并发抓取原始内容 + 针对临时性网络错误的真实重试/退避机制
-│   ├── install.py         # git clone/pull + 委托给项目自身的构建脚本
-│   ├── i18n.py             # 真实、完整的 GUI 翻译（8 种语言）
-│   ├── qt_gui.py           # 通向真实发现/更新服务的 Qt Quick 桥接层
-│   ├── qml/Main.qml        # 带主题、检查点和 About 的桌面界面
-│   ├── gui.py              # PySide6 不可用时的 Tkinter 兼容回退
-│   ├── main.py             # 分发逻辑：默认 GUI，--cli 用于 status/install/update
-│   ├── evidence.py         # 每次安装或更新尝试留一行证据: 项目、之前、之后、提交与结果
-│   ├── assets/             # 应用程序图标 (HYDRA_UMC_ICON.ico 和 .svg)
-│   ├── i18n_pt.py          # 界面的葡萄牙语翻译
-│   └── settings.py         # 持久保存的用户设置 (工作区根目录等界面在两次启动之间记住的选择)
-├── tests/                  # 真实测试：github_client、i18n、install、project_manifest、registry
-├── docs/
-│   ├── CLI_REFERENCE.md     # 命令参考
-│   └── QML_DESKTOP_GUI.md   # Qt Quick GUI 架构
-├── images/                 # 媒体、应用图标与界面截图
-├── tools/
-│   ├── build_test.py        # 不递增版本号的构建检查
-│   ├── ci_validate.py       # CI 使用的清单/CHANGELOG/文档校验
-│   ├── generate_app_icon.py # 将公开的 HYDRA-UMC SVG 渲染为 Windows 使用的图标
-│   ├── migrate_project_manifests.py  # 一次性清单迁移后对工作区的审计
-│   ├── validate_project_manifests.py # 校验仓库自身的清单 + 原生构建版本号
-│   ├── _doc_policy.py                # 家族共享的文档规则 (HYDRA-UMC-SDK 的副本,保持同步)
-│   ├── _readme_parity.py             # 检查八个 README 结构一致 (HYDRA-UMC-SDK 的副本,保持同步)
-│   └── hydra_project_tool.py         # 每个仓库相同的命令: validate、test、ci、version、status、bump
-├── .env.example            # 环境变量模板
-├── build.sh / build.bat    # venv + 可编辑安装 + 编译检查
-├── run.sh / run.bat        # 默认 GUI / CLI 入口
-├── run-gui.vbs             # 无控制台窗口的 Windows 图形启动器
-├── bump_version.py         # 里程表式版本递增（仅由显式 `bump` 命令运行）
-└── bump_manifest_version.py # 将 hydra-umc.project.json 的版本与原生版本同步(--sync)
+| 威胁 | 防御 | 位置 |
+|---|---|---|
+| 无法构建的新版本留下更新到一半的项目 | 候选版本先在单独的暂存文件夹中克隆、合并并构建；成功之前不会碰已安装的文件夹，成功后通过两次重命名换入，并把旧版本保留为 `<name>.backup` | `install.py` |
+| 实际上是回滚的更新，或丢弃本地工作的更新 | 获取的清单会经过校验，较低的版本会被拒绝；只使用快进合并，已跟踪的本地修改会让更新明确停止 | `install.py`, `project_manifest.py` |
+| 运行并非维护者提交的代码 | 设置 `HYDRA_UMC_UPDATER_REQUIRE_SIGNED=1`（或已保存的设置）后，克隆的提交必须先通过 `git verify-commit`，才会运行其中的任何内容；缺少工具、提交未签名或密钥未知都视为未签名 | `install.py` |
+
+**它绝不做的事：** 自行更新。每一次安装和更新都是有人运行的命令，它可读取的 `GITHUB_TOKEN` 是可选的，且只需要读取权限。
+
+## ⚙️ 配置
+
+| 变量 | 默认值 | 设置内容 |
+|---|---|---|
+| `GITHUB_TOKEN` | 无 | 可选的只读令牌；没有它时 GitHub 每小时允许 60 次请求 |
+| `HYDRA_UMC_UPDATER_REQUIRE_SIGNED` | `0` | `1`、`true`、`yes` 或 `on` 要求克隆的提交带有有效签名 |
+| `HYDRA_UMC_UPDATER_RECREATE_VENV` | 开启 | `0` 表示升级后保留旧虚拟环境，而不是新建一个 |
+| `--workspace` | 本文件夹的上级文件夹 | 每个项目一个子文件夹的父文件夹 |
+
+## 🚀 快速开始
+
+需要 Python 3.10 或更高版本。
+
+```bash
+./build.sh  # Linux, macOS (build.bat on Windows)
+./run.sh --cli status --offline
+./run.sh --cli status --workspace ~/hydra
+./run.sh --cli install HYDRA-UMC-DATALAKE
+./run.sh --cli update HYDRA-UMC-DATALAKE
+./run.sh --cli prune-backups --keep 2 --dry-run
 ```
 
-## ⚙️ 构建与运行
+## 🧪 测试
+
+运行 `python -m pytest -q tests` 会执行 160 个自动测试。 不需要硬件，也不需要这台机器以外的任何东西。
+
+CI 运行 `HYDRA_UMC_CI=1 python tools/ci_validate.py`，检查清单、文档、八个 README 和图片。
+
+## 🏗️ 构建与发布
 
 ```bash
 chmod +x build.sh   # 仅需一次
@@ -211,11 +215,73 @@ CM5。没有 Qt 时，旧 Tkinter 窗口仅作为兼容回退。
 - `install`/`update` 失败并提示 "No non-versioning build-test.sh/.bat found"：该项目还没有 `build-test.sh`/`build-test.bat`——请为它添加生态系统的标准脚本（它必须在不递增任何版本的情况下完成验证）。
 - `git merge --ff-only failed`：本地检出的历史已分叉或存在本地提交（提示信息会点名）——请先移走或丢弃它们（在该项目自身目录中运行 `git status`/`git log`），再重试 `update`。已跟踪文件中未提交的修改会被直接拒绝。本工具从不对检出目录执行强制重置。
 
-## 🚀 路线图
+## 🩺 故障排除
+
+| 你看到 | 原因 | 处理 |
+|---|---|---|
+| `unauthenticated requests are capped at 60/hour` | 已达到 GitHub 对无令牌请求的限制 | 等待，使用 `status --offline`，或设置只读的 `GITHUB_TOKEN` |
+| the update stops and names changed files | 项目中已跟踪的文件在这台机器上被修改 | 自行提交、暂存或丢弃该修改，然后再次运行 `update` |
+
+## 📂 仓库结构
+
+<p align="center">
+  <img src="images/repository-structure.svg" alt="Repository structure of HYDRA-UMC-UPDATER" width="100%">
+</p>
+
+<details>
+<summary>目录树的文本版本</summary>
+
+```text
+HYDRA-UMC-UPDATER/
+├── src/hydra_umc_updater/     源代码
+│   ├── __init__.py            包说明与版本
+│   ├── registry.py            ProjectEntry —— 没有静态目录;在发现时从每个仓库自身的清单构建
+│   ├── project_manifest.py    读取/校验仓库自身的 hydra-umc.project.json
+│   ├── ecosystem_catalog.py   JuanenRac 生态系统公开发现目录的解析器
+│   ├── version_parse.py       单一的正则表达式提取实现，本地+GitHub 通用
+│   ├── detect.py              扫描工作区根目录，检测已安装的内容
+│   ├── github_client.py       并发抓取原始内容 + 针对临时性网络错误的真实重试/退避机制
+│   ├── install.py             git clone/pull + 委托给项目自身的构建脚本
+│   ├── i18n.py                真实、完整的 GUI 翻译（8 种语言）
+│   ├── qt_gui.py              通向真实发现/更新服务的 Qt Quick 桥接层
+│   ├── qml/Main.qml           带主题、检查点和 About 的桌面界面
+│   ├── gui.py                 PySide6 不可用时的 Tkinter 兼容回退
+│   ├── main.py                分发逻辑：默认 GUI，--cli 用于 status/install/update
+│   ├── evidence.py            每次安装或更新尝试留一行证据: 项目、之前、之后、提交与结果
+│   ├── assets/                应用程序图标 (HYDRA_UMC_ICON.ico 和 .svg)
+│   ├── i18n_pt.py             界面的葡萄牙语翻译
+│   └── settings.py            持久保存的用户设置 (工作区根目录等界面在两次启动之间记住的选择)
+├── tests/                     真实测试：github_client、i18n、install、project_manifest、registry
+├── docs/                      项目文档
+├── images/                    媒体、应用图标与界面截图
+├── tools/                     项目工具和 CI 检查
+├── .github/                   CI 工作流和 Issue 模板
+├── .env.example               环境变量模板
+├── build.sh / build.bat       venv + 可编辑安装 + 编译检查
+├── run.sh / run.bat           默认 GUI / CLI 入口
+├── run-gui.vbs                无控制台窗口的 Windows 图形启动器
+├── bump_version.py            显式提升版本
+├── bump_manifest_version.py   将 hydra-umc.project.json 的版本与原生版本同步(--sync)
+├── CHANGELOG.md               每个版本的变更
+├── build-test.sh              不修改内容的构建检查
+├── hydra-umc.project.json     清单：版本、成熟度、系列
+├── pyproject.toml             包的元数据
+└── test.sh                    运行测试
+```
+
+</details>
+
+## 🗺️ 路线图与已知限制
+
+**当前已知限制**
 
 - 一个打包的独立 GUI 可执行文件（PyInstaller，与 HYDRA-UMC-SUITE 自身的 `build_exe.bat`/`.sh` 惯例一致），实现完全无需 `pip`/venv 步骤的双击安装——目前的 GUI 仍然需要像 CLI 一样先执行 `./build.sh`。
 - 可选的逐项目依赖预检查（在 `install` 中途失败之前，报告缺失的工具链——未安装 Rust/Go/Android SDK/Flutter）。
 - 针对 HYDRA-UMC/URTC 自身多二进制固件的逐组件跟踪（见第 3 节中的"已知的简化处理"），一旦出现超出目前所跟踪的单一代表性组件的真实需求。
+
+## 🌍 语言
+
+本 README 和仓库文档提供八种语言：英语、西班牙语、德语、法语、意大利语、日语、中文和葡萄牙语（葡萄牙）。它们同时编写，并由 CI 检查八个文件拥有相同的章节和相同的链接。
 
 ## 🔗 相关项目
 
@@ -251,7 +317,6 @@ CM5。没有 Qt 时，旧 Tkinter 窗口仅作为兼容回退。
 - **[HYDRA-UMC-BRIDGE-PRINTER3D](https://github.com/JuanenRac/HYDRA-UMC-BRIDGE-PRINTER3D)** — 面向 Moonraker/Klipper 3D 打印机的安全协调边界，具备真实的受控作业指令。
 - **[HYDRA-UMC-BRIDGE-ROS2](https://github.com/JuanenRac/HYDRA-UMC-BRIDGE-ROS2)** — 带有惰性导入 rclpy ROS 2 传输层的协调器(尚未在 ROS 2 环境中运行)。
 - **[HYDRA-UMC-BRIDGE-UAV](https://github.com/JuanenRac/HYDRA-UMC-BRIDGE-UAV)** — 面向搭载摄像头的无人机的协调边界,带有 MAVLink 指令发送器(仅针对模拟器测试)。
-
 
 *视觉 AI 节点(Hailo-8)*
 - **[HYDRA-UMC-VISION-NODE](https://github.com/JuanenRac/HYDRA-UMC-VISION-NODE)** — 面向 Hailo-8 视觉流水线的集成中枢，具备逐阶段的真实硬件就绪检测。
@@ -298,22 +363,28 @@ CM5。没有 Qt 时，旧 Tkinter 窗口仅作为兼容回退。
 - **[HYDRA-UMC-TOOL-CLI](https://github.com/JuanenRac/HYDRA-UMC-TOOL-CLI)** — 具备真实、稳定退出码契约的车队 CLI，是 HYDRA-UMC-SERVER 自身 API 的真实在线客户端。
 - **[HYDRA-UMC-WATCH](https://github.com/JuanenRac/HYDRA-UMC-WATCH)** — 带有触觉提醒模式与配对手机语音中继的 WearOS 伴侣应用(尚未在实体手表上运行)。
 
----
+## 📚 文档
 
-## 📚 文档与社区
+更多阅读：
 
-- **[docs/CLI_REFERENCE.md](docs/CLI_REFERENCE.md)** — 每一个 `--cli` 子命令、从真实安装环境中获取的真实输出，以及退出码契约。
-- **[docs/QML_DESKTOP_GUI.md](docs/QML_DESKTOP_GUI.md)** — Qt Quick/QML 桌面客户端的真实结构，以及它为何始终是同一个后端之上的真实控制界面（与 `--cli` 共用后端），而不是第二套实现。
-- **[CONTRIBUTING.md](CONTRIBUTING.md)** —— 提交 Pull Request 所需的技术栈和编码规范。
-- **[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)** —— 本社区所期望的行为准则。
-- **[SECURITY.md](SECURITY.md)** —— 如何报告漏洞，以及本项目真实的安全关注重点。
-- **[SUPPORT.md](SUPPORT.md)** —— 在哪里提问和报告缺陷。
+* **[docs/CLI_REFERENCE.md](docs/CLI_REFERENCE.md)** — 每一个 `--cli` 子命令、从真实安装环境中获取的真实输出，以及退出码契约。
+* **[docs/QML_DESKTOP_GUI.md](docs/QML_DESKTOP_GUI.md)** — Qt Quick/QML 桌面客户端的真实结构，以及它为何始终是同一个后端之上的真实控制界面（与 `--cli` 共用后端），而不是第二套实现。
+* [生态系统的安全基线](https://github.com/JuanenRac/HYDRA-UMC-DOCS/blob/main/docs/SECURITY_BASELINE.md)
+* [生态系统的威胁模型](https://github.com/JuanenRac/HYDRA-UMC-DOCS/blob/main/docs/THREAT_MODEL.md)
+* [本仓库的更新日志](CHANGELOG.md)
+* [本仓库的许可证](LICENSE.md)
+
+## 🤝 参与贡献与社区
+
+* 提交 pull request 之前，请运行 `HYDRA_UMC_CI=1 py -3 tools/ci_validate.py`（或 `HYDRA_UMC_CI=1 python3 tools/ci_validate.py`）：它必须输出 `CI_VALIDATION=PASS`。此检查不要运行 `build.sh` 或 `build.bat`；构建不是检查。
+* 八个 README 由 HYDRA-UMC-DOCS 中的同一个源生成；请勿手工编辑。修改源文件，再用 `tools/make_readmes.py` 重新生成。
+* 不要在 README 中声称尚未运行过的内容：属实时请写“仅模拟”或“尚未在硬件上试过”。
+* 请参阅 [CONTRIBUTING.md](CONTRIBUTING.md)、[行为准则](CODE_OF_CONDUCT.md)、[SECURITY.md](SECURITY.md) 和 [SUPPORT.md](SUPPORT.md)。
 
 ## 👤 作者
-**JuanenRac** (Electro Hobby 3D)
-📧 electrohobby3d@gmail.com
-📺 [youtube.com/@electrohobby3d](https://youtube.com/@electrohobby3d)
+
+**JuanenRac (Electro Hobby 3D)** · electrohobby3d@gmail.com
 
 ## 📜 许可证
 
-GPL-3.0（软件）/ CC BY-SA 4.0（文档）—— 详见 [LICENSE.md](LICENSE.md)。
+GPL-3.0-or-later - [LICENSE](LICENSE).

@@ -1,0 +1,173 @@
+{
+  "repo": "HYDRA-UMC-UPDATER",
+  "ecosystem": "hydra",
+  "tagline": "Update by hand, one project at a time: build in staging, promote, keep the old one, record the evidence.",
+  "description": "HYDRA-UMC-UPDATER detects what is installed, asks GitHub what is newest, clones and builds a candidate in a staging folder, optionally verifies its signature, moves it into place keeping a backup, and writes one evidence line per attempt.",
+  "columns": [
+    "WHO USES IT",
+    "THIS REPOSITORY",
+    "WHAT IT TOUCHES"
+  ],
+  "nodes": [
+    {
+      "id": "cli",
+      "column": 0,
+      "level": "tested",
+      "title": "CLI --cli",
+      "lines": [
+        "status, install, update,",
+        "prune-backups"
+      ],
+      "code": [
+        "src/hydra_umc_updater/main.py"
+      ]
+    },
+    {
+      "id": "gui",
+      "column": 0,
+      "level": "tested",
+      "title": "Desktop window",
+      "lines": [
+        "QML shell over the same",
+        "core; eight languages"
+      ],
+      "code": [
+        "src/hydra_umc_updater/qt_gui.py",
+        "src/hydra_umc_updater/i18n.py"
+      ]
+    },
+    {
+      "id": "gh",
+      "column": 2,
+      "level": "external",
+      "title": "GitHub",
+      "lines": [
+        "public repositories and",
+        "releases"
+      ]
+    },
+    {
+      "id": "ws",
+      "column": 2,
+      "level": "tested",
+      "title": "Workspace folders",
+      "lines": [
+        "one folder per project;",
+        "<name>.backup beside it"
+      ]
+    },
+    {
+      "id": "det",
+      "column": 1,
+      "level": "tested",
+      "title": "detect + registry",
+      "lines": [
+        "what is installed, from",
+        "each project manifest"
+      ],
+      "code": [
+        "src/hydra_umc_updater/detect.py",
+        "src/hydra_umc_updater/registry.py",
+        "src/hydra_umc_updater/project_manifest.py"
+      ]
+    },
+    {
+      "id": "ghc",
+      "column": 1,
+      "level": "tested",
+      "title": "github_client.py",
+      "lines": [
+        "newest versions; ETag",
+        "cache; optional token"
+      ],
+      "code": [
+        "src/hydra_umc_updater/github_client.py",
+        "src/hydra_umc_updater/ecosystem_catalog.py"
+      ]
+    },
+    {
+      "id": "evd",
+      "column": 1,
+      "level": "tested",
+      "title": "evidence.py",
+      "lines": [
+        "one JSON line per",
+        "install or update"
+      ],
+      "code": [
+        "src/hydra_umc_updater/evidence.py"
+      ]
+    },
+    {
+      "id": "ins",
+      "column": 1,
+      "level": "tested",
+      "title": "install.py",
+      "lines": [
+        "staging clone, build,",
+        "signature, promote, backup"
+      ],
+      "code": [
+        "src/hydra_umc_updater/install.py"
+      ]
+    },
+    {
+      "id": "set",
+      "column": 1,
+      "level": "tested",
+      "title": "settings.py",
+      "lines": [
+        "remembers workspace and",
+        "signing choices"
+      ],
+      "code": [
+        "src/hydra_umc_updater/settings.py"
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "from": "cli",
+      "to": "det",
+      "level": "tested"
+    },
+    {
+      "from": "gui",
+      "to": "det",
+      "level": "tested"
+    },
+    {
+      "from": "gui",
+      "to": "set",
+      "level": "tested"
+    },
+    {
+      "from": "det",
+      "to": "ghc",
+      "level": "tested"
+    },
+    {
+      "from": "ghc",
+      "to": "ins",
+      "level": "tested"
+    },
+    {
+      "from": "ins",
+      "to": "evd",
+      "level": "tested"
+    },
+    {
+      "from": "ghc",
+      "to": "gh",
+      "level": "external",
+      "label": "HTTPS"
+    },
+    {
+      "from": "ins",
+      "to": "ws",
+      "level": "tested",
+      "label": "promote"
+    }
+  ],
+  "footer": "Tried against local and public repositories on a computer; no CM5 was updated with it."
+}

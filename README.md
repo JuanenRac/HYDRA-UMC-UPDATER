@@ -1,40 +1,34 @@
+<!-- =============================================================================
+HYDRA-UMC-UPDATER - Installs and updates the HYDRA-UMC projects
+Copyright (C) JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
+GPL-3.0-or-later - see LICENSE
+============================================================================= -->
+
 <p align="center">
   <img src="images/HYDRA_UMC_BANNER.svg" alt="HYDRA-UMC-UPDATER banner" width="100%">
 </p>
 
-# 🛠️ HYDRA-UMC-UPDATER
+# 📦 HYDRA-UMC-UPDATER
 
 <p align="center">🇺🇸 <b>English</b> | <a href="README_spa.md">🇪🇸 Español</a> | <a href="README_fra.md">🇫🇷 Français</a> | <a href="README_ita.md">🇮🇹 Italiano</a> | <a href="README_deu.md">🇩🇪 Deutsch</a> | <a href="README_zho.md">🇨🇳 简体中文</a> | <a href="README_jpn.md">🇯🇵 日本語</a> | <a href="README_por.md">🇵🇹 Português</a></p>
 
 ### 📦 Detect, Install, and Manually Update the Whole HYDRA-UMC Ecosystem
 
 <p align="center">
-  <img src="https://img.shields.io/badge/License-GPL%203.0-blue.svg" alt="GPL 3.0">
-  <img src="https://img.shields.io/badge/Language-Python%203.10%2B-blue.svg" alt="Python">
-  <img src="https://img.shields.io/badge/Core-stdlib%20only-brightgreen.svg" alt="stdlib-only CLI core">
-  <img src="https://img.shields.io/badge/Desktop-PySide6%20%7C%20Qt%20Quick-367BF5.svg" alt="PySide6 Qt Quick desktop GUI">
+  <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
+  <img src="https://img.shields.io/badge/Language-Python%203.10%2B-blue.svg" alt="Language">
+  <img src="https://img.shields.io/badge/Core-stdlib%20only-brightgreen.svg" alt="Core">
+  <img src="https://img.shields.io/badge/Desktop-PySide6%20%7C%20Qt%20Quick-367BF5.svg" alt="Desktop">
+  <img src="https://img.shields.io/badge/Tests-160%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Version-0.4.9-0f6cbd.svg" alt="Version">
+  <img src="https://img.shields.io/badge/Maturity-established-2EA44F.svg" alt="Maturity">
 </p>
-
-> **Visual desktop mode:** the default desktop interface is now built with
-> **Qt Quick / QML** through the optional `PySide6` GUI runtime. The updater
-> core and `--cli` mode remain stdlib-only for a headless CM5.
->
-> **Windows launch and update evidence:** double-click `run-gui.vbs` (or use
-> bare `run.bat`) for the console-free desktop client. Its Safe Update panel
-> shows real Preflight, Source refresh, Manifest validation, Build-test and
-> Complete checkpoints with captured command evidence; `run.bat --cli ...`
-> deliberately keeps a terminal for diagnostics.
-> Install is available only for a missing checkout; Update only when GitHub is
-> newer. During an approved action, checkpoints replace the selected-project
-> controls and selecting another project restores them.
-> **Install all missing** and **Update all outdated** are separately confirmed,
-> sequential batch actions built from the same live state and safety path.
-
-**Honesty check - what actually runs today:** the ecosystem-wide discovery/version logic (`registry.py`, `project_manifest.py`, `ecosystem_catalog.py`, `version_parse.py`, `detect.py`), the real GitHub raw-content client with retry/backoff (`github_client.py`), and the install/update pipeline's clone-stage-verify-promote logic (`install.py`) are real and tested - 157 passing tests (`pytest tests/`), including a fixture HTTP server proving the malformed-catalog-vs-malformed-project isolation and real temp-directory git clone/build round-trips. `--cli status`/`install`/`update` exercise this same tested core end to end against the real, live GitHub raw-content host (not a mock) whenever you actually run them. The Qt Quick desktop GUI (`qt_gui.py`, `qml/Main.qml`) and the legacy Tkinter fallback (`gui.py`) wire that same tested core into a real window and have been run on real ecosystem checkouts, but neither has any automated test of its own - no `test_gui.py`/`test_qt_gui.py` exists, since driving a real Qt/Tk event loop isn't attempted here. `i18n.py`'s 8-language coverage is enforced by test (`test_i18n.py`), but only for key-parity across languages, not translation quality. See `CHANGELOG.md` for exactly what has shipped so far.
 
 ---
 
 > **Safety and security status:** this ecosystem is not a certified safety system. There is no hardware E-STOP path, no firmware-enforced limits or interlocks and no verified motion command yet; firmware images are checked with CRC32 and a shared-key HMAC-SHA256, not with an asymmetric signature; TLS and mutual TLS are optional and off by default; no custom board has been populated or tested yet. Read the [security baseline](https://github.com/JuanenRac/HYDRA-UMC-DOCS/blob/main/docs/SECURITY_BASELINE.md) and the [threat model](https://github.com/JuanenRac/HYDRA-UMC-DOCS/blob/main/docs/THREAT_MODEL.md) before relying on any statement here for the safety of a person.
+
+---
 
 ## 📋 At a glance
 
@@ -42,10 +36,12 @@
 |---|---|
 | Version | `0.4.9` |
 | Maturity | Established |
-| Tests | 140 (`pytest tests/`) |
+| Tests | 160 (`python -m pytest -q tests`) |
 | Stack | Python 3.10+ / PySide6 / Qt Quick (QML) / Tkinter (legacy fallback) / Git / GitHub raw content |
 | Target | The PC of the person using it |
 | On real hardware | Not applicable: nothing here runs on hardware |
+
+**Jump to:** [Overview](#-overview) · [Architecture](#-architecture) · [Security & Safety](#-security--safety) · [Configuration](#-configuration) · [Quick start](#-quick-start) · [Testing](#-testing) · [Troubleshooting](#-troubleshooting) · [Repository Structure](#-repository-structure) · [Related Projects](#-related-projects)
 
 ## 🚦 Project status
 
@@ -56,11 +52,11 @@ Each line is one part of this repository and the light says how far it is today.
 | Area | State | What it means here |
 |---|---|---|
 | Software | 🟢 | Complete for its purpose and stable; the honesty check above lists the known limits |
-| Tests | 🟢 | 140 automated tests, run on every change |
+| Tests | 🟢 | 160 automated tests, run on every change |
 | Real hardware | 🟢 | Not applicable: nothing here runs on hardware |
 | Documentation | 🟢 | README in eight languages, checked against the manifest on every change |
 
-## 1. 🛠️ TECHNICAL OVERVIEW
+## 🎯 Overview
 
 HYDRA-UMC-UPDATER is a small tool - windowed GUI by default, full CLI with
 `--cli` - meant to run either on the real CM5 itself or on a developer's
@@ -119,9 +115,19 @@ is written to `~/.hydra_umc_updater/logs/`.
   <img src="images/HYDRA_UMC_UPDATER_INTERFACE_1.png" alt="HYDRA-UMC-UPDATER real desktop overview" width="100%">
 </p>
 
-## 2. 🔄 HOW A CHECK/UPDATE ACTUALLY WORKS
+## 🧩 Role in HYDRA-UMC
 
-- **Version source**: this ecosystem's own "odometer" auto-bump
+**HYDRA-UMC-UPDATER** finds, installs and updates the HYDRA-UMC projects on the machine it runs on, by hand and one project at a time. A new version is cloned and built in a staging folder first and only then moved into place, the previous one stays as a backup, and every attempt leaves one line of evidence. It has a command line and a desktop window that call the same core.
+
+## 🏛️ Architecture
+
+<p align="center">
+  <img src="images/architecture.svg" alt="HYDRA-UMC-UPDATER architecture" width="100%">
+</p>
+
+### HOW A CHECK/UPDATE ACTUALLY WORKS
+
+- **Version source**
   convention (every explicit bump increments a version number that lives
   IN a source file - `pyproject.toml`, `Cargo.toml`, `version.go`,
   `package.json`, `version.properties`, `pubspec.yaml`, or a firmware
@@ -174,7 +180,7 @@ is written to `~/.hydra_umc_updater/logs/`.
   <img src="images/HYDRA_UMC_UPDATER_INTERFACE_2.png" alt="HYDRA-UMC-UPDATER installation or update checkpoints in progress" width="100%">
 </p>
 
-## 3. 🧱 ARCHITECTURE & DESIGN DECISIONS
+### ARCHITECTURE & DESIGN DECISIONS
 
 - **Qt Quick GUI by default, `--cli` for headless.** `main.py` checks for
   `--cli` before importing the optional PySide6 runtime, so CLI mode works on
@@ -217,51 +223,45 @@ is written to `~/.hydra_umc_updater/logs/`.
   replacement for `build_firmware.sh`'s own `firmware_manifest.json` for
   a real flash.
 
-## 📂 DIRECTORY STRUCTURE
+## 🔒 Security & Safety
 
-```
-HYDRA-UMC-UPDATER/
-├── src/hydra_umc_updater/
-│   ├── __init__.py         # Package description and version
-│   ├── registry.py         # ProjectEntry - no static catalogue; built at discovery time from each repo's own manifest
-│   ├── project_manifest.py # Reads/validates a repository-owned hydra-umc.project.json
-│   ├── ecosystem_catalog.py # Parser for the public JuanenRac ecosystem discovery catalog
-│   ├── version_parse.py   # ONE regex-extraction implementation, local+GitHub
-│   ├── detect.py          # Scans a workspace root for what's installed
-│   ├── github_client.py   # Concurrent raw-content fetch + real retry/backoff for transient network errors
-│   ├── install.py         # git clone/pull + delegate to the project's own build script
-│   ├── i18n.py             # Real, complete GUI translations (8 languages)
-│   ├── qt_gui.py           # Qt Quick bridge over the real discovery/update services
-│   ├── qml/Main.qml        # Themed desktop shell: controls, checkpoints and About
-│   ├── gui.py              # Legacy Tkinter fallback if PySide6 is unavailable
-│   ├── main.py             # Dispatch: GUI by default, --cli for status/install/update
-│   ├── evidence.py         # One line of evidence for every install or update attempt: project, before, after, commit and outcome
-│   ├── assets/             # The application icons (HYDRA_UMC_ICON.ico and .svg)
-│   ├── i18n_pt.py          # Portuguese GUI translation
-│   └── settings.py         # Persisted user settings (the workspace root and the other choices the GUI remembers between launches)
-├── tests/                  # Real tests: github_client, i18n, install, project_manifest, registry
-├── docs/
-│   ├── CLI_REFERENCE.md     # Command reference
-│   └── QML_DESKTOP_GUI.md   # Qt Quick GUI architecture
-├── images/                 # Media, app icons and interface screenshots
-├── tools/
-│   ├── build_test.py        # Non-versioning build/compile check
-│   ├── ci_validate.py       # Manifest/CHANGELOG/docs validation used by CI
-│   ├── generate_app_icon.py # Renders the public HYDRA-UMC SVG into the Windows-consumed icon
-│   ├── migrate_project_manifests.py  # Audits a workspace after the one-time manifest migration
-│   ├── validate_project_manifests.py # Validates repository-owned manifests + native build versions
-│   ├── _doc_policy.py                # Documentation rules shared by the family (a copy of HYDRA-UMC-SDK's, kept in sync)
-│   ├── _readme_parity.py             # Check that the eight READMEs share one structure (a copy of HYDRA-UMC-SDK's, kept in sync)
-│   └── hydra_project_tool.py         # The same commands in every repository: validate, test, ci, version, status, bump
-├── .env.example            # Environment variable template
-├── build.sh / build.bat    # venv + editable install + compile-check
-├── run.sh / run.bat        # GUI default / CLI entry point
-├── run-gui.vbs             # Windows graphical launcher with no console window
-├── bump_version.py         # Odometer-style version bump (run only by the explicit `bump` command)
-└── bump_manifest_version.py # Syncs hydra-umc.project.json's version to the native one (--sync)
+| Threat | Defence | Where |
+|---|---|---|
+| A new version that does not build leaves a half-updated project | The candidate is cloned, merged and built in a separate staging folder first; the installed folder is not touched until that succeeds, then two renames move it in and keep the old one as `<name>.backup` | `install.py` |
+| An update that is really a rollback, or that discards local work | The fetched manifest is validated and a lower version is rejected; only a fast-forward merge is used, and a tracked local edit stops the update loudly | `install.py`, `project_manifest.py` |
+| Running code from a commit that is not the maintainer's | With `HYDRA_UMC_UPDATER_REQUIRE_SIGNED=1` (or the saved setting) the cloned commit must pass `git verify-commit` before anything it brings is run; a missing tool, an unsigned commit or an unknown key all count as not signed | `install.py` |
+
+**What it never does:** update by itself. Every install and update is a command someone runs, and the `GITHUB_TOKEN` it can read is optional and only needs read access.
+
+## ⚙️ Configuration
+
+| Variable | Default | What it sets |
+|---|---|---|
+| `GITHUB_TOKEN` | none | optional read-only token; without one GitHub allows 60 requests per hour |
+| `HYDRA_UMC_UPDATER_REQUIRE_SIGNED` | `0` | `1`, `true`, `yes` or `on` requires a valid signature on the cloned commit |
+| `HYDRA_UMC_UPDATER_RECREATE_VENV` | on | `0` keeps the old virtual environment instead of making a fresh one after a promotion |
+| `--workspace` | the parent of this folder | folder that holds one subfolder per project |
+
+## 🚀 Quick start
+
+Requires Python 3.10 or newer.
+
+```bash
+./build.sh  # Linux, macOS (build.bat on Windows)
+./run.sh --cli status --offline
+./run.sh --cli status --workspace ~/hydra
+./run.sh --cli install HYDRA-UMC-DATALAKE
+./run.sh --cli update HYDRA-UMC-DATALAKE
+./run.sh --cli prune-backups --keep 2 --dry-run
 ```
 
-## ⚙️ BUILD & RUN GUIDE
+## 🧪 Testing
+
+160 automated tests run with `python -m pytest -q tests`. They need no hardware and nothing outside this machine.
+
+The CI runs `HYDRA_UMC_CI=1 python tools/ci_validate.py`, which checks the manifest, the documents, the eight READMEs and the pictures.
+
+## 🏗️ Build & Release
 
 ```bash
 chmod +x build.sh   # one-time
@@ -291,7 +291,65 @@ older Tkinter shell is only a compatibility fallback.
 - `install`/`update` fails with "No non-versioning build-test.sh/.bat found": that project has no `build-test.sh`/`build-test.bat` yet - add the ecosystem's standard one to the project (it must verify without bumping any version).
 - `git merge --ff-only failed`: the local checkout has diverged history or local commits (the message names them) - move or discard them (`git status`/`git log` in that project's own directory) before retrying `update`. Uncommitted edits to tracked files are refused up front. This tool never force-resets a checkout.
 
-## 🚀 ROADMAP
+## 🩺 Troubleshooting
+
+| You see | Because | Do |
+|---|---|---|
+| `unauthenticated requests are capped at 60/hour` | GitHub's limit for requests without a token was reached | Wait, use `status --offline`, or set a read-only `GITHUB_TOKEN` |
+| the update stops and names changed files | A tracked file of the project was edited on this machine | Commit, stash or discard that edit yourself, then run `update` again |
+
+## 📂 Repository Structure
+
+<p align="center">
+  <img src="images/repository-structure.svg" alt="Repository structure of HYDRA-UMC-UPDATER" width="100%">
+</p>
+
+<details>
+<summary>Text version of the tree</summary>
+
+```text
+HYDRA-UMC-UPDATER/
+├── src/hydra_umc_updater/     source code
+│   ├── __init__.py            Package description and version
+│   ├── registry.py            ProjectEntry - no static catalogue; built at discovery time from each repo's own manifest
+│   ├── project_manifest.py    Reads/validates a repository-owned hydra-umc.project.json
+│   ├── ecosystem_catalog.py   Parser for the public JuanenRac ecosystem discovery catalog
+│   ├── version_parse.py       ONE regex-extraction implementation, local+GitHub
+│   ├── detect.py              Scans a workspace root for what's installed
+│   ├── github_client.py       Concurrent raw-content fetch + real retry/backoff for transient network errors
+│   ├── install.py             git clone/pull + delegate to the project's own build script
+│   ├── i18n.py                Real, complete GUI translations (8 languages)
+│   ├── qt_gui.py              Qt Quick bridge over the real discovery/update services
+│   ├── qml/Main.qml           Themed desktop shell: controls, checkpoints and About
+│   ├── gui.py                 Legacy Tkinter fallback if PySide6 is unavailable
+│   ├── main.py                Dispatch: GUI by default, --cli for status/install/update
+│   ├── evidence.py            One line of evidence for every install or update attempt: project, before, after, commit and outcome
+│   ├── assets/                The application icons (HYDRA_UMC_ICON.ico and .svg)
+│   ├── i18n_pt.py             Portuguese GUI translation
+│   └── settings.py            Persisted user settings (the workspace root and the other choices the GUI remembers between launches)
+├── tests/                     Real tests: github_client, i18n, install, project_manifest, registry
+├── docs/                      documents of the project
+├── images/                    Media, app icons and interface screenshots
+├── tools/                     project tools and CI checks
+├── .github/                   CI workflow and issue templates
+├── .env.example               Environment variable template
+├── build.sh / build.bat       venv + editable install + compile-check
+├── run.sh / run.bat           GUI default / CLI entry point
+├── run-gui.vbs                Windows graphical launcher with no console window
+├── bump_version.py            explicit version bump
+├── bump_manifest_version.py   Syncs hydra-umc.project.json's version to the native one (--sync)
+├── CHANGELOG.md               what changed in each version
+├── build-test.sh              non-mutating build check
+├── hydra-umc.project.json     manifest: version, maturity, family
+├── pyproject.toml             package metadata
+└── test.sh                    runs the tests
+```
+
+</details>
+
+## 🗺️ Roadmap & Known limits
+
+**Known limits today**
 
 - A packaged standalone GUI executable (PyInstaller, matching
   HYDRA-UMC-SUITE's own `build_exe.bat`/`.sh` convention) for a
@@ -303,6 +361,10 @@ older Tkinter shell is only a compatibility fallback.
 - Per-component tracking for HYDRA-UMC's own multi-binary firmware
   (see the "known simplification" in section 3), once there's a real
   need beyond the single representative component this tracks today.
+
+## 🌍 Languages
+
+This README and the documents of the repository exist in eight languages: English, Spanish, German, French, Italian, Japanese, Chinese and Portuguese (Portugal). They are written together and checked in the CI so that the eight files have the same sections and the same links.
 
 ## 🔗 Related Projects
 
@@ -338,7 +400,6 @@ This project is part of the HYDRA-UMC robotics ecosystem by the same author (Jua
 - **[HYDRA-UMC-BRIDGE-PRINTER3D](https://github.com/JuanenRac/HYDRA-UMC-BRIDGE-PRINTER3D)** — safe coordination boundary for Moonraker/Klipper 3D printers, with real gated job commands.
 - **[HYDRA-UMC-BRIDGE-ROS2](https://github.com/JuanenRac/HYDRA-UMC-BRIDGE-ROS2)** — coordinator with a lazily imported rclpy ROS 2 transport (not yet run against a ROS 2 installation).
 - **[HYDRA-UMC-BRIDGE-UAV](https://github.com/JuanenRac/HYDRA-UMC-BRIDGE-UAV)** — coordination boundary for camera-equipped UAVs, with a MAVLink command sender (tested against an emulator only).
-
 
 *Vision AI Node (Hailo-8)*
 - **[HYDRA-UMC-VISION-NODE](https://github.com/JuanenRac/HYDRA-UMC-VISION-NODE)** — integration hub for the Hailo-8 vision pipeline, with a real per-stage hardware-readiness check.
@@ -385,22 +446,28 @@ This project is part of the HYDRA-UMC robotics ecosystem by the same author (Jua
 - **[HYDRA-UMC-TOOL-CLI](https://github.com/JuanenRac/HYDRA-UMC-TOOL-CLI)** — fleet CLI with a real, stable exit-code contract, a genuine live client of HYDRA-UMC-SERVER's own API.
 - **[HYDRA-UMC-WATCH](https://github.com/JuanenRac/HYDRA-UMC-WATCH)** — WearOS companion app with haptic alert patterns and a paired-phone voice relay (not yet run on a physical watch).
 
----
+## 📚 Documentation
 
-## 📚 Documentation & Community
+Where to read more:
 
-- **[docs/CLI_REFERENCE.md](docs/CLI_REFERENCE.md)** — every `--cli` subcommand, real output captured from an installed run, and the exit-code contract.
-- **[docs/QML_DESKTOP_GUI.md](docs/QML_DESKTOP_GUI.md)** — how the Qt Quick/QML desktop client is structured, and how it stays a real control surface over the same backend `--cli` uses rather than a second implementation.
-- **[CONTRIBUTING.md](CONTRIBUTING.md)** — tech stack and coding guidelines for a pull request.
-- **[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)** — the standards of behavior expected in this community.
-- **[SECURITY.md](SECURITY.md)** — how to report a vulnerability, and this project's own real security focus areas.
-- **[SUPPORT.md](SUPPORT.md)** — where to ask questions and report bugs.
+* **[docs/CLI_REFERENCE.md](docs/CLI_REFERENCE.md)** — every `--cli` subcommand, real output captured from an installed run, and the exit-code contract.
+* **[docs/QML_DESKTOP_GUI.md](docs/QML_DESKTOP_GUI.md)** — how the Qt Quick/QML desktop client is structured, and how it stays a real control surface over the same backend `--cli` uses rather than a second implementation.
+* [Security baseline of the ecosystem](https://github.com/JuanenRac/HYDRA-UMC-DOCS/blob/main/docs/SECURITY_BASELINE.md)
+* [Threat model of the ecosystem](https://github.com/JuanenRac/HYDRA-UMC-DOCS/blob/main/docs/THREAT_MODEL.md)
+* [Changelog of this repository](CHANGELOG.md)
+* [License of this repository](LICENSE.md)
+
+## 🤝 Contributing & Community
+
+* Before a pull request run `HYDRA_UMC_CI=1 py -3 tools/ci_validate.py` (or `HYDRA_UMC_CI=1 python3 tools/ci_validate.py`): it must print `CI_VALIDATION=PASS`. Do not run `build.sh` or `build.bat` for this check; building is not a check.
+* The eight READMEs are written from one source in HYDRA-UMC-DOCS; do not edit them by hand. Change the source and write them again with `tools/make_readmes.py`.
+* Do not state in a README what has not run: say "simulated" or "not tried on hardware" where that is the truth.
+* See [CONTRIBUTING.md](CONTRIBUTING.md), the [code of conduct](CODE_OF_CONDUCT.md), [SECURITY.md](SECURITY.md) and [SUPPORT.md](SUPPORT.md).
 
 ## 👤 AUTHOR
-**JuanenRac** (Electro Hobby 3D)
-📧 electrohobby3d@gmail.com
-📺 [youtube.com/@electrohobby3d](https://youtube.com/@electrohobby3d)
+
+**JuanenRac (Electro Hobby 3D)** · electrohobby3d@gmail.com
 
 ## 📜 LICENSE
 
-GPL-3.0 (software) / CC BY-SA 4.0 (documentation) - see [LICENSE.md](LICENSE.md).
+GPL-3.0-or-later - [LICENSE](LICENSE).
