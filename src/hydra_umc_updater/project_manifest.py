@@ -25,7 +25,7 @@ ECOSYSTEM_ID = "HYDRA-UMC"
 VERSION_RE = re.compile(r"^\d+\.\d+\.\d+(?:\.\d+)?$")
 VALID_ROLES = frozenset({"api", "ui", "cli", "firmware", "library", "service", "tool"})
 VALID_MATURITY = frozenset({"scaffolding", "functional", "established", "production"})
-VALID_DEPLOYMENT_TARGETS = frozenset({"cm5", "user-pc", "mobile", "wearable", "dev-server"})
+VALID_DEPLOYMENT_TARGETS = frozenset({"cm5", "user-pc", "mobile", "wearable", "dev-server", "mcu"})
 
 
 class ManifestValidationError(ValueError):

@@ -75,6 +75,14 @@ def test_accepts_dev_server_deployment_target():
     assert manifest.deployment_target == "dev-server"
 
 
+def test_accepts_mcu_deployment_target():
+    # The firmware that runs on a microcontroller (an STM32 board) is not a computer of the cell.
+    data = valid_manifest()
+    data["deployment_target"] = "mcu"
+    manifest = parse_manifest(json.dumps(data))
+    assert manifest.deployment_target == "mcu"
+
+
 def test_accepts_the_optional_deployment_target_note_field():
     # Real regression: HYDRA-UMC-DEV-SERVER's own manifest carries this
     # field to clarify "dev-server" is not the same physical role as

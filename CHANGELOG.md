@@ -4,6 +4,7 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The manifest of a project may say `mcu` as its deployment target**, as the contract of the SDK now allows.
 - **The layout of the README is checked in the CI:** the validator runs `tools/universal_readme_check.py` and lists, as a warning, what differs from the universal layout of the README.
 
 ## [0.4.9] - The list of repositories is asked for conditionally and pinned to SDK 0.3.6
