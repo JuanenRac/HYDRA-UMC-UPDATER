@@ -4,7 +4,7 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
-- **The manifest accepts the `docs` role and an optional `evidence` field**, as the projects of EH3D declare them; before, the dashboard of the ecosystems left those projects out because their manifests were refused.
+- **The manifest accepts the `docs` and `node` roles and an optional `evidence` field**, as the projects of EH3D declare them; before, the dashboard of the ecosystems left those projects out because their manifests were refused.
 - **The manifest of a project may say `mcu` as its deployment target**, as the contract of the SDK now allows.
 - **The layout of the README is checked in the CI:** the validator runs `tools/universal_readme_check.py` and lists, as a warning, what differs from the universal layout of the README.
 

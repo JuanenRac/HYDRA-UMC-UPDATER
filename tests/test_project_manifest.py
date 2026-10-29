@@ -81,6 +81,8 @@ def test_accepts_the_docs_role_and_the_optional_evidence_field():
     data["evidence"] = "host-test"
     manifest = parse_manifest(json.dumps(data))
     assert manifest.role == "docs"
+    data["role"] = "node"   # the node firmware of a project of EH3D
+    assert parse_manifest(json.dumps(data)).role == "node"
 
 
 def test_rejects_an_empty_evidence_field():
