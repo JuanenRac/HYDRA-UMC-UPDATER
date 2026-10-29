@@ -75,6 +75,21 @@ def test_accepts_dev_server_deployment_target():
     assert manifest.deployment_target == "dev-server"
 
 
+def test_accepts_the_docs_role_and_the_optional_evidence_field():
+    data = valid_manifest()
+    data["role"] = "docs"
+    data["evidence"] = "host-test"
+    manifest = parse_manifest(json.dumps(data))
+    assert manifest.role == "docs"
+
+
+def test_rejects_an_empty_evidence_field():
+    data = valid_manifest()
+    data["evidence"] = " "
+    with pytest.raises(ManifestValidationError):
+        parse_manifest(json.dumps(data))
+
+
 def test_accepts_mcu_deployment_target():
     # The firmware that runs on a microcontroller (an STM32 board) is not a computer of the cell.
     data = valid_manifest()

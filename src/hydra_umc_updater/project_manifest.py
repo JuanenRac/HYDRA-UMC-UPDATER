@@ -23,7 +23,7 @@ MANIFEST_FILE = "hydra-umc.project.json"
 SCHEMA_VERSION = "1.0"
 ECOSYSTEM_ID = "HYDRA-UMC"
 VERSION_RE = re.compile(r"^\d+\.\d+\.\d+(?:\.\d+)?$")
-VALID_ROLES = frozenset({"api", "ui", "cli", "firmware", "library", "service", "tool"})
+VALID_ROLES = frozenset({"api", "ui", "cli", "firmware", "library", "service", "tool", "docs"})
 VALID_MATURITY = frozenset({"scaffolding", "functional", "established", "production"})
 VALID_DEPLOYMENT_TARGETS = frozenset({"cm5", "user-pc", "mobile", "wearable", "dev-server", "mcu"})
 
@@ -96,7 +96,8 @@ def parse_manifest(text: str, *, expected_name: str | None = None) -> ProjectMan
     # isn't self-evident from the enum alone (e.g. "dev-server" is not
     # the same physical role as "cm5") - optional because most
     # deployment_target values need no such note.
-    optional_fields = {"service", "deployment_target_note"}
+    # "evidence" (the EH3D projects): what a project has been tried on - a short text such as "host-test", "simulator" or "hardware".
+    optional_fields = {"service", "deployment_target_note", "evidence"}
     unknown = sorted(set(data) - expected_fields - optional_fields)
     missing = sorted(expected_fields - set(data))
     if missing:
@@ -104,6 +105,8 @@ def parse_manifest(text: str, *, expected_name: str | None = None) -> ProjectMan
     if unknown:
         raise ManifestValidationError("unknown field(s): " + ", ".join(unknown))
 
+    if "evidence" in data and (not isinstance(data["evidence"], str) or not data["evidence"].strip()):
+        raise ManifestValidationError("evidence must be a non-empty string")
     schema_version = _require_string(data, "schema_version")
     if schema_version != SCHEMA_VERSION:
         raise ManifestValidationError(
