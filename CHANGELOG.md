@@ -4,6 +4,7 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The window of the Qt shell is tested without a screen:** three tests drive the bridge with the offscreen Qt platform and check that it leaves the busy state whatever the background work does (a GitHub check that fails in an unexpected way, an install that raises, an install that fails normally); they are skipped where PySide6 is not installed, and the CI now installs it for them. 3 new tests.
 - **README in the universal layout:** the README and its seven translations follow the layout that the four families share (22 sections in a fixed order), with an architecture picture and a repository-structure picture drawn from `docs/architecture.json` and `docs/structure.json`; the CI validator checks both pictures and the file tree.
 
 - **The manifest accepts the `docs` and `node` roles and an optional `evidence` field**, as the projects of EH3D declare them; before, the dashboard of the ecosystems left those projects out because their manifests were refused.
