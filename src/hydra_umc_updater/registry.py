@@ -42,6 +42,8 @@ class ProjectEntry:
     service_port: int | None = None
     service_health_path: str | None = None
     service_systemd_unit: str | None = None
+    # The repositories to install or update before this one (manifest depends_on).
+    depends_on: tuple[str, ...] = ()
     # The repository's default branch, as GitHub reports it for a discovered
     # project; manifests and version files are read from this branch.
     branch: str = GITHUB_BRANCH
@@ -65,6 +67,7 @@ def entry_from_manifest(manifest: ProjectManifest) -> ProjectEntry:
         service_port=manifest.service_port,
         service_health_path=manifest.service_health_path,
         service_systemd_unit=manifest.service_systemd_unit,
+        depends_on=manifest.depends_on,
     )
 
 

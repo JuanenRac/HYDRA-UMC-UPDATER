@@ -32,7 +32,7 @@ from PySide6.QtQml import QQmlApplicationEngine
 from . import __version__, i18n, settings
 from .detect import LocalStatus, discover_workspace
 from .github_client import RemoteStatus, default_etag_cache, discover_remote_projects, fetch_all
-from .install import InstallResult, batch_order_key, format_batch_list, install_or_update, signature_required
+from .install import InstallResult, format_batch_list, install_or_update, order_batch, signature_required
 from .registry import GITHUB_OWNER
 
 
@@ -459,14 +459,19 @@ class UpdaterBridge(QObject):
             return None
         # The SDK first and the updater itself last, so a batch never replaces
         # the program that is running it halfway through.
-        targets.sort(key=lambda item: batch_order_key(item.entry.name))
-        return targets
+        # A project also goes after the ones its manifest says it depends on.
+        by_name = {item.entry.name: item for item in targets}
+        depends = {name: item.entry.depends_on for name, item in by_name.items()}
+        return [by_name[name] for name in order_batch(list(by_name), depends)]
 
     @Slot(str, result=str)
     def batchPreview(self, action: str) -> str:
         """The exact list a batch of this action would run, for the confirmation dialog."""
         targets = self._batch_targets(action) or []
-        return format_batch_list([item.entry.name for item in targets])
+        return format_batch_list(
+            [item.entry.name for item in targets],
+            depends_on={item.entry.name: item.entry.depends_on for item in targets},
+        )
 
     @Slot(str, bool)
     def performBatch(self, action: str, skip_build: bool) -> None:

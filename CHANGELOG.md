@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **A batch follows `depends_on`:** a project whose manifest lists other repositories in `depends_on` is installed or updated after the ones it names that are part of the same batch; the SDK still goes first and the updater last, a dependency outside the batch is ignored and a cycle cannot lose a project. The confirmation list shows the same order. The manifest parser accepts the field (unique repository names, never its own).
+
 ## [0.5.0] - The Qt window tested without a screen, the docs and node roles, an optional evidence field, the mcu target and the universal README
 
 - **The window of the Qt shell is tested without a screen:** three tests drive the bridge with the offscreen Qt platform and check that it leaves the busy state whatever the background work does (a GitHub check that fails in an unexpected way, an install that raises, an install that fails normally); they are skipped where PySide6 is not installed, and the CI now installs it for them. 3 new tests.

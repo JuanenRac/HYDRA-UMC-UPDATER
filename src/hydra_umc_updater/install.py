@@ -31,7 +31,7 @@ import time
 from dataclasses import dataclass
 from pathlib import Path
 from shutil import copy2, copytree, ignore_patterns, rmtree
-from typing import Callable
+from typing import Callable, Iterable, Mapping
 from uuid import uuid4
 
 from . import settings
@@ -1070,13 +1070,34 @@ def batch_order_key(name: str) -> tuple[int, str]:
     return (1, name.casefold())
 
 
-def format_batch_list(names: list[str], limit: int = 40) -> str:
+def order_batch(names: list[str], depends_on: Mapping[str, Iterable[str]] | None = None) -> list[str]:
+    """The order a batch handles `names` in: the SDK first and the updater last
+    (batch_order_key), and every project after the ones it declares in `depends_on`
+    that are part of the same batch. Names a project depends on that are not in the
+    batch are ignored. A cycle cannot be ordered: its members keep the plain order."""
+    base = sorted(names, key=batch_order_key)
+    if not depends_on:
+        return base
+    in_batch = set(base)
+    wanted = {name: {dep for dep in depends_on.get(name, ()) if dep in in_batch and dep != name} for name in base}
+    ordered: list[str] = []
+    done: set[str] = set()
+    pending = list(base)
+    while pending:
+        pick = next((name for name in pending if wanted[name] <= done), pending[0])
+        pending.remove(pick)
+        ordered.append(pick)
+        done.add(pick)
+    return ordered
+
+
+def format_batch_list(names: list[str], limit: int = 40, depends_on: Mapping[str, Iterable[str]] | None = None) -> str:
     """The exact, ordered list a batch confirmation shows: one numbered name per line.
 
     More than `limit` names are cut with a final line that says how many were left out,
     so the dialog stays readable while the count shown there is still the real one.
     """
-    ordered = sorted(names, key=batch_order_key)
+    ordered = order_batch(names, depends_on)
     lines = [f"{index}. {name}" for index, name in enumerate(ordered[:limit], start=1)]
     if len(ordered) > limit:
         lines.append(f"... +{len(ordered) - limit}")

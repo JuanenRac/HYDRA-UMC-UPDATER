@@ -64,6 +64,9 @@ class ProjectManifest:
     # `journalctl -u` targets for this project, alongside the live-status
     # probe above. Absent for anything not deployed as a systemd service.
     service_systemd_unit: str | None = None
+    # Optional: the repositories that must be installed or updated before this
+    # one (the order of a batch follows it).
+    depends_on: tuple[str, ...] = ()
 
 
 def _require_string(data: dict[str, Any], field: str) -> str:
@@ -71,6 +74,24 @@ def _require_string(data: dict[str, Any], field: str) -> str:
     if not isinstance(value, str) or not value.strip():
         raise ManifestValidationError(f"{field} must be a non-empty string")
     return value
+
+
+DEPENDENCY_NAME_RE = re.compile(r"^(HYDRA-UMC|URTC)(-[A-Z0-9-]+)?$")
+
+
+def _parse_depends_on(raw: Any, own_name: Any) -> tuple[str, ...]:
+    """The optional ``depends_on`` list: unique repository names, never the repository itself."""
+    if raw is None:
+        return ()
+    if (
+        not isinstance(raw, list)
+        or any(not isinstance(item, str) or not DEPENDENCY_NAME_RE.fullmatch(item) for item in raw)
+        or len(set(raw)) != len(raw)
+    ):
+        raise ManifestValidationError("depends_on must be a list of unique repository names")
+    if own_name in raw:
+        raise ManifestValidationError("depends_on must not list the repository itself")
+    return tuple(raw)
 
 
 def parse_manifest(text: str, *, expected_name: str | None = None) -> ProjectManifest:
@@ -98,7 +119,7 @@ def parse_manifest(text: str, *, expected_name: str | None = None) -> ProjectMan
     # deployment_target values need no such note.
     # "evidence" (the EH3D projects): what a project has been tried on - a short text such as "host-test", "simulator" or "hardware".
     # "hardware_bound": false for a project that has no hardware at all (it caps no light of the status table).
-    optional_fields = {"service", "deployment_target_note", "evidence", "hardware_bound"}
+    optional_fields = {"service", "deployment_target_note", "evidence", "hardware_bound", "depends_on"}
     unknown = sorted(set(data) - expected_fields - optional_fields)
     missing = sorted(expected_fields - set(data))
     if missing:
@@ -108,6 +129,7 @@ def parse_manifest(text: str, *, expected_name: str | None = None) -> ProjectMan
 
     if "evidence" in data and (not isinstance(data["evidence"], str) or not data["evidence"].strip()):
         raise ManifestValidationError("evidence must be a non-empty string")
+    depends_on = _parse_depends_on(data.get("depends_on"), data.get("name"))
     schema_version = _require_string(data, "schema_version")
     if schema_version != SCHEMA_VERSION:
         raise ManifestValidationError(
@@ -204,6 +226,7 @@ def parse_manifest(text: str, *, expected_name: str | None = None) -> ProjectMan
         service_port=service_port,
         service_health_path=service_health_path,
         service_systemd_unit=service_systemd_unit,
+        depends_on=depends_on,
     )
 
 
