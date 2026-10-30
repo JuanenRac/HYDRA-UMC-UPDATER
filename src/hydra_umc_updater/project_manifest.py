@@ -97,7 +97,8 @@ def parse_manifest(text: str, *, expected_name: str | None = None) -> ProjectMan
     # the same physical role as "cm5") - optional because most
     # deployment_target values need no such note.
     # "evidence" (the EH3D projects): what a project has been tried on - a short text such as "host-test", "simulator" or "hardware".
-    optional_fields = {"service", "deployment_target_note", "evidence"}
+    # "hardware_bound": false for a project that has no hardware at all (it caps no light of the status table).
+    optional_fields = {"service", "deployment_target_note", "evidence", "hardware_bound"}
     unknown = sorted(set(data) - expected_fields - optional_fields)
     missing = sorted(expected_fields - set(data))
     if missing:
