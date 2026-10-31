@@ -18,7 +18,9 @@ keywords = ["hydra-umc", "updater", "installer", "fleet-management"]
 dependencies = []
 
 [project.optional-dependencies]
-dev = ["pytest>=8.0", "ruff>=0.5"]
+dev = ["pytest>=8.0", "ruff>=0.5", "cryptography>=42"]
+# Ed25519 signature of version trains (train sign / signature check); the core stays standard-library only.
+signing = ["cryptography>=42"]
 gui = ["PySide6>=6.8,<7"]
 # P01: a durable, on-disk promotion journal (HYDRA-UMC-SDK's own
 # promotion_journal.py, shared with HYDRA-UMC-OPS-AGENT's own

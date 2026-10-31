@@ -32,7 +32,7 @@ import os
 import sys
 from pathlib import Path
 
-from . import __version__, settings, train
+from . import __version__, settings, train, train_signing
 from .detect import LocalStatus, discover_workspace
 from .github_client import RemoteStatus, default_etag_cache, discover_remote_projects, fetch_all
 from .registry import ProjectEntry
@@ -305,7 +305,11 @@ def cmd_train(args: argparse.Namespace) -> int:
                 return 1
             wanted, allow_downgrade = previous, True
         else:
-            wanted, allow_downgrade = train.load_train(Path(args.file)), bool(getattr(args, "allow_downgrade", False))
+            if train_signing.require_signed_trains():
+                wanted = train.load_signed_train(Path(args.file), train_signing.configured_public_key())
+            else:
+                wanted = train.load_train(Path(args.file))
+            allow_downgrade = bool(getattr(args, "allow_downgrade", False))
         plan = train.plan_train(wanted, workspace_root, allow_downgrade=allow_downgrade, fetch=fetch)
     except train.TrainError as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
@@ -333,6 +337,24 @@ def cmd_train(args: argparse.Namespace) -> int:
         train.mark_rolled_back(workspace_root)
     print(f"{'OK' if outcome.ok else 'FAIL'}: {len(outcome.applied)} repositories installed" + (f", stopped at {outcome.failed}" if outcome.failed else ""))
     return 0 if outcome.ok else 1
+
+
+def cmd_train_sign(args: argparse.Namespace) -> int:
+    """`train sign FILE --key-file PATH`: write FILE.sig, an Ed25519 signature of the train. The private key is read
+    from a file only and is never printed or stored."""
+    key_file = args.key_file or os.environ.get(train_signing.PRIVATE_KEY_FILE_ENV, "")
+    if not key_file:
+        print(f"ERROR: give the private key file with --key-file (or {train_signing.PRIVATE_KEY_FILE_ENV}).", file=sys.stderr)
+        return 1
+    train_path = Path(args.file)
+    try:
+        train.load_train(train_path)  # never sign something the updater would refuse to read
+        target = train_signing.sign_train_file(train_path, Path(key_file))
+    except (train.TrainError, train_signing.TrainSigningError) as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
+        return 1
+    print(f"Signed {train_path.name}: wrote {target.name}")
+    return 0
 
 
 def cmd_prune_backups(args: argparse.Namespace) -> int:
@@ -409,6 +431,17 @@ def build_parser() -> argparse.ArgumentParser:
         else:
             sub.set_defaults(yes=False, no_build=False)
         sub.set_defaults(func=cmd_train)
+
+    sign_p = train_sub.add_parser(
+        "sign",
+        help="Write FILE.sig, an Ed25519 signature of the train, with a private key read from a file.",
+    )
+    sign_p.add_argument("file", help="The train file to sign.")
+    sign_p.add_argument(
+        "--key-file",
+        help=f"File with the 64-hex-character private key, readable by its owner only (or {train_signing.PRIVATE_KEY_FILE_ENV}).",
+    )
+    sign_p.set_defaults(func=cmd_train_sign)
 
     prune_p = subparsers.add_parser(
         "prune-backups",

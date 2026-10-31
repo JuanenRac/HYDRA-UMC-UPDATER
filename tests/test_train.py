@@ -323,6 +323,8 @@ def test_the_command_line_is_a_dry_run_until_yes_and_the_switch(world, tmp_path,
     assert code == 1 and "switched off" in err and not (world.workspace / AAA).exists()
 
     monkeypatch.setenv(train.TRAINS_ENV, "1")
+    # with trains on a signature is required by default (see test_train_signing.py); this test is about the switch
+    monkeypatch.setenv("HYDRA_UMC_UPDATER_REQUIRE_SIGNED_TRAINS", "0")
     code, out, _ = run_cli(monkeypatch, capsys, world, "apply", str(file), "--offline", "--yes")
     assert code == 0, out
     assert checkout_head(world.workspace, AAA) == aaa.commits["1.0.0"]

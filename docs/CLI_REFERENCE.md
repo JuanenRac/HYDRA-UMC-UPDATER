@@ -185,6 +185,7 @@ the saved settings; a damaged settings file counts as off). With the switch off
 train plan     FILE [--workspace PATH] [--offline] [--allow-downgrade] [--json]
 train apply    FILE [--workspace PATH] [--offline] [--allow-downgrade] [--json] [--yes] [--no-build]
 train rollback      [--workspace PATH] [--offline] [--json] [--yes] [--no-build]
+train sign     FILE --key-file PATH
 ```
 
 - `plan` only reads. It explains, per repository and in `depends_on` order, what
@@ -202,7 +203,12 @@ train rollback      [--workspace PATH] [--offline] [--json] [--yes] [--no-build]
 - `rollback` puts back the state saved before the last `apply` (`.hydra-umc-trains/previous.json`
   in the workspace; the file is renamed, never deleted, once used). It is also a
   dry run without `--yes`. A repository that the train installed for the first
-  time is left installed: nothing is ever deleted.
+  time is left installed: nothing is ever deleted. The saved state is written by
+  the updater itself, so it is not checked against a signature.
+- `sign` writes `FILE.sig`, an Ed25519 signature of the exact bytes of the train, with a private key read
+  from a file (`--key-file`, or `HYDRA_UMC_UPDATER_TRAIN_KEY_FILE`). It refuses a train the updater would
+  not read, a key file that is not 64 hexadecimal characters and, on Linux, a key file readable by anyone
+  but its owner. The key is never printed, put on a command line or stored by the updater.
 
 **The train file** has the shape of the family's `ecosystem-release.json`
 (`schema_version` `"1.0"`, `ecosystem` `"HYDRA-UMC"`, `repositories` with `name`,
@@ -227,9 +233,25 @@ uncommitted changes; an installed version newer than the train needs
 `--allow-downgrade` (the anti-rollback rule of `update` is kept). A repository that
 is not installed yet is checked right after the clone and, if any check fails,
 nothing is installed for it. Commit signatures are checked as for `update` when
-they are required. The train file itself is not signed: its protection is the
-optional digest plus the checks above, so keep the file in a place only you can
-write (the family publishes its release file in the documentation repository).
+they are required.
+
+**Signed trains.** The digest only catches an accidental change: whoever can edit the file can recompute
+it. With `require_signed_trains` on, `train plan` and `train apply` accept a train only
+when `FILE.sig` holds a valid Ed25519 signature of the exact bytes of the file made by the public key pinned
+in the configuration. The file is read once, checked and then parsed, so what was verified is what is
+installed. A missing, malformed or wrong signature, no pinned key, a key that is not an Ed25519 key and a
+machine without the `cryptography` package (`pip install "hydra-umc-updater[signing]"`) all refuse the
+train: nothing is installed and the message never contains key material.
+
+| Setting | Environment | Meaning |
+|---|---|---|
+| `require_signed_trains` | `HYDRA_UMC_UPDATER_REQUIRE_SIGNED_TRAINS` | `true`/`false`. When unset it follows `version_trains`: a signature is required whenever trains are on. A damaged settings file counts as required. |
+| `train_public_key` | `HYDRA_UMC_UPDATER_TRAIN_PUBKEY` | The trusted public key: 64 hexadecimal characters (a raw 32-byte Ed25519 key) or the path of a file holding them. |
+
+Turning the requirement off is a deliberate choice; keep the train file in a place only you can write.
+Because the key is pinned in the configuration of each machine, a signature made with another key (or
+a train signed after someone replaced the file) is refused. The signature covers the file, not the
+contents of the repositories: those are still checked against the pinned commits.
 
 Writing a train: `tools/ecosystem_release.py --write` in the SDK produces the
 file for the checkouts side by side; add the optional fields by hand and

@@ -197,6 +197,18 @@ def load_train(path: Path) -> Train:
     return parse_train(text, default_name=path.stem)
 
 
+def load_signed_train(path: Path, public_key: str | None) -> Train:
+    """Read the train once, check that exact content against `<path>.sig` and the pinned key, and only then parse it.
+    Any failure (missing or wrong signature, no key, no crypto package) is a TrainError: nothing is installed."""
+    from . import train_signing
+
+    try:
+        text = train_signing.read_verified(path, public_key)
+    except train_signing.TrainSigningError as exc:
+        raise TrainError(f"signature check failed: {exc}") from exc
+    return parse_train(text, default_name=path.stem)
+
+
 def train_to_json(train: Train) -> str:
     """The train as a file (with its digest), in the shape `parse_train` reads."""
     repositories: list[object] = []

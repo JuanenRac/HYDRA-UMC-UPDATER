@@ -19,6 +19,8 @@ def isolated_settings(tmp_path_factory: pytest.TempPathFactory, monkeypatch: pyt
     path = tmp_path_factory.mktemp("settings") / "settings.json"
     monkeypatch.setattr(settings, "SETTINGS_PATH", path)
     monkeypatch.delenv("HYDRA_UMC_UPDATER_REQUIRE_SIGNED", raising=False)
+    for name in ("HYDRA_UMC_UPDATER_REQUIRE_SIGNED_TRAINS", "HYDRA_UMC_UPDATER_TRAIN_PUBKEY", "HYDRA_UMC_UPDATER_TRAIN_KEY_FILE"):
+        monkeypatch.delenv(name, raising=False)
     # no test writes the ETag cache of whoever runs it
     monkeypatch.setenv("HYDRA_UMC_UPDATER_NO_CACHE", "1")
     return path
