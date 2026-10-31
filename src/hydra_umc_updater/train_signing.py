@@ -188,3 +188,36 @@ def read_verified(train_path: Path, public_key: str | None) -> str:
         return content.decode("utf-8")
     except UnicodeDecodeError as error:
         raise TrainSigningError("the train is not valid UTF-8") from error
+
+
+def default_key_dir() -> Path:
+    """Where the keys of the family live: the user's own folder, never a repository."""
+    return Path.home() / ".hydra-umc-keys"
+
+
+def generate_train_keypair(directory: Path, name: str = "hydra_train") -> tuple[Path, Path]:
+    """Make a new Ed25519 pair for the version trains: `<name>.key` (private, 64 hex characters, owner only) and
+    `<name>.pub` (public, 64 hex characters). Never overwrites a file; the private key is never printed or returned."""
+    if not re.fullmatch(r"[A-Za-z0-9_.-]{1,64}", name) or name.startswith("."):
+        raise TrainSigningError("the name of the key may only hold letters, digits, dot, dash and underscore")
+    ed25519, _ = _ed25519()
+    private_path, public_path = directory / f"{name}.key", directory / f"{name}.pub"
+    if private_path.exists() or public_path.exists():
+        raise TrainSigningError(f"{private_path.name} or {public_path.name} already exists in {directory}: nothing was overwritten")
+    from cryptography.hazmat.primitives import serialization
+
+    private = ed25519.Ed25519PrivateKey.generate()
+    seed = private.private_bytes(
+        serialization.Encoding.Raw, serialization.PrivateFormat.Raw, serialization.NoEncryption()
+    ).hex()
+    public = private.public_key().public_bytes(serialization.Encoding.Raw, serialization.PublicFormat.Raw).hex()
+    try:
+        directory.mkdir(parents=True, exist_ok=True)
+        fd = os.open(private_path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+        with os.fdopen(fd, "w", encoding="utf-8") as handle:
+            handle.write(seed + "\n")
+        public_path.write_text(public + "\n", encoding="utf-8")
+    except OSError as error:
+        private_path.unlink(missing_ok=True)
+        raise TrainSigningError(f"the keys cannot be written in {directory}") from error
+    return private_path, public_path

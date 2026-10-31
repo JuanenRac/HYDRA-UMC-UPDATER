@@ -186,6 +186,7 @@ train plan     FILE [--workspace PATH] [--offline] [--allow-downgrade] [--json]
 train apply    FILE [--workspace PATH] [--offline] [--allow-downgrade] [--json] [--yes] [--no-build]
 train rollback      [--workspace PATH] [--offline] [--json] [--yes] [--no-build]
 train sign     FILE --key-file PATH
+train keygen   [--out-dir PATH] [--name NAME]
 ```
 
 - `plan` only reads. It explains, per repository and in `depends_on` order, what
@@ -209,6 +210,10 @@ train sign     FILE --key-file PATH
   from a file (`--key-file`, or `HYDRA_UMC_UPDATER_TRAIN_KEY_FILE`). It refuses a train the updater would
   not read, a key file that is not 64 hexadecimal characters and, on Linux, a key file readable by anyone
   but its owner. The key is never printed, put on a command line or stored by the updater.
+- `keygen` makes a new Ed25519 pair: `NAME.key` (private, 64 hexadecimal characters, owner only) and `NAME.pub`
+  (public) in `~/.hydra-umc-keys` (or `--out-dir`). It never overwrites a file and prints only the paths and the
+  public key, which is then pinned with `HYDRA_UMC_UPDATER_TRAIN_PUBKEY` or the `train_public_key` setting.
+  The private key must stay out of every repository.
 
 **The train file** has the shape of the family's `ecosystem-release.json`
 (`schema_version` `"1.0"`, `ecosystem` `"HYDRA-UMC"`, `repositories` with `name`,

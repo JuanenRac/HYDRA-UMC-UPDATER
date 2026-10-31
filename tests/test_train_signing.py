@@ -220,3 +220,37 @@ def test_apply_with_yes_installs_nothing_for_an_unsigned_train(tmp_path, train_f
     code, _, err = cli(capsys, "apply", str(train_file), "--offline", "--yes", "--workspace", str(workspace))
     assert code == 1 and "signature check failed" in err
     assert not (workspace / AAA).exists() and not (workspace / train.STATE_DIR).exists()
+
+
+# ----------------------------------------------------------------------------- keygen ------------------------------
+
+def test_keygen_writes_a_pair_that_signs_and_verifies(tmp_path, train_file, capsys):
+    keys = tmp_path / "keys"
+    code, out, err = cli(capsys, "keygen", "--out-dir", str(keys), "--name", "mine")
+    assert code == 0, err
+    private = (keys / "mine.key").read_text(encoding="utf-8").strip()
+    public = (keys / "mine.pub").read_text(encoding="utf-8").strip()
+    assert len(private) == 64 and len(public) == 64 and private != public
+    assert private not in out and private not in err  # the private key is never printed
+    assert public in out
+    if os.name == "posix":
+        assert (keys / "mine.key").stat().st_mode & 0o077 == 0
+    signed = train_signing.sign_train_file(train_file, keys / "mine.key")
+    assert signed.exists()
+    train_signing.verify_train_bytes(train_file.read_bytes(), sig_of(train_file), str(keys / "mine.pub"))
+
+
+def test_keygen_never_overwrites_a_key(tmp_path, capsys):
+    keys = tmp_path / "keys"
+    assert cli(capsys, "keygen", "--out-dir", str(keys))[0] == 0
+    before = (keys / "hydra_train.key").read_text(encoding="utf-8")
+    code, _out, err = cli(capsys, "keygen", "--out-dir", str(keys))
+    assert code == 1 and "already exists" in err
+    assert (keys / "hydra_train.key").read_text(encoding="utf-8") == before
+
+
+@pytest.mark.parametrize("name", ["", "../escape", ".hidden", "a b", "x" * 65])
+def test_keygen_refuses_a_bad_name(tmp_path, capsys, name):
+    code, _out, err = cli(capsys, "keygen", "--out-dir", str(tmp_path), "--name", name)
+    assert code == 1 and "name of the key" in err
+    assert list(tmp_path.iterdir()) == []

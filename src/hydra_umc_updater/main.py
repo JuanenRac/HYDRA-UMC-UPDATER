@@ -357,6 +357,21 @@ def cmd_train_sign(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_train_keygen(args: argparse.Namespace) -> int:
+    """`train keygen`: make a new Ed25519 pair for the trains. Only the public key and the paths are printed."""
+    directory = Path(args.out_dir) if args.out_dir else train_signing.default_key_dir()
+    try:
+        private_path, public_path = train_signing.generate_train_keypair(directory, args.name)
+    except train_signing.TrainSigningError as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
+        return 1
+    print(f"Private key (keep it secret, never put it in a repository): {private_path}")
+    print(f"Public key file: {public_path}")
+    print(f"Public key: {public_path.read_text(encoding='utf-8').strip()}")
+    print(f"Pin the public key with {train_signing.PUBKEY_ENV} or the train_public_key setting.")
+    return 0
+
+
 def cmd_prune_backups(args: argparse.Namespace) -> int:
     workspace_root = Path(args.workspace).resolve() if args.workspace else default_workspace_root()
     if args.keep < 0:
@@ -442,6 +457,14 @@ def build_parser() -> argparse.ArgumentParser:
         help=f"File with the 64-hex-character private key, readable by its owner only (or {train_signing.PRIVATE_KEY_FILE_ENV}).",
     )
     sign_p.set_defaults(func=cmd_train_sign)
+
+    keygen_p = train_sub.add_parser(
+        "keygen",
+        help="Make a new Ed25519 key pair for the trains (the private key stays in your own key folder).",
+    )
+    keygen_p.add_argument("--out-dir", help="Folder for the keys (default: ~/.hydra-umc-keys).")
+    keygen_p.add_argument("--name", default="hydra_train", help="Base name of the key files (default: hydra_train).")
+    keygen_p.set_defaults(func=cmd_train_keygen)
 
     prune_p = subparsers.add_parser(
         "prune-backups",
