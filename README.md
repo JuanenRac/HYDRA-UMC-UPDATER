@@ -19,7 +19,7 @@ GPL-3.0-or-later - see LICENSE
   <img src="https://img.shields.io/badge/Language-Python%203.10%2B-blue.svg" alt="Language">
   <img src="https://img.shields.io/badge/Core-stdlib%20only-brightgreen.svg" alt="Core">
   <img src="https://img.shields.io/badge/Desktop-PySide6%20%7C%20Qt%20Quick-367BF5.svg" alt="Desktop">
-  <img src="https://img.shields.io/badge/Tests-219%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-259%20passing-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.5.0-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-established-2EA44F.svg" alt="Maturity">
 </p>
@@ -36,7 +36,7 @@ GPL-3.0-or-later - see LICENSE
 |---|---|
 | Version | `0.5.0` |
 | Maturity | Established |
-| Tests | 219 (`python -m pytest -q tests`) |
+| Tests | 259 (`python -m pytest -q tests`) |
 | Stack | Python 3.10+ / PySide6 / Qt Quick (QML) / Tkinter (legacy fallback) / Git / GitHub raw content |
 | Target | The PC of the person using it |
 | On real hardware | Not applicable: nothing here runs on hardware |
@@ -52,7 +52,7 @@ Each line is one part of this repository and the light says how far it is today.
 | Area | State | What it means here |
 |---|---|---|
 | Software | 🟢 | Complete for its purpose and stable; the honesty check above lists the known limits |
-| Tests | 🟢 | 219 automated tests, run on every change |
+| Tests | 🟢 | 259 automated tests, run on every change |
 | Real hardware | 🟢 | Not applicable: nothing here runs on hardware |
 | Documentation | 🟢 | README in eight languages, checked against the manifest on every change |
 
@@ -225,6 +225,8 @@ is written to `~/.hydra_umc_updater/logs/`.
 
 - **Order of a batch and undoing a promotion:** a project whose manifest lists repositories in `depends_on` is installed or updated after the ones it names that are in the same batch (the SDK first, the updater last; a dependency outside the batch is ignored and a cycle cannot lose a project). After a promotion the health check can be repeated (`HYDRA_UMC_UPDATER_HEALTH_RETRIES`) and, with `HYDRA_UMC_UPDATER_ROLLBACK_ON_UNHEALTHY=1` (off by default), a check that still fails puts the previous installation back and reports the update as failed.
 
+- **Version trains (off by default):** a tested set of versions, described by one file with the version and exact commit of each repository, can be installed together with `train plan|apply|rollback`. Before anything is installed the plan checks that the file is well formed and its digest matches, that every pinned commit is part of the published history with a manifest of the listed version and digest, that minimum versions and `depends_on` are met and that nothing is a cycle or an unexpected downgrade; a bad train installs nothing. `apply` and `rollback` are dry runs without `--yes` and need the `version_trains` switch, and the state before the first change is saved for the rollback. The train file itself is not signed: its protection is the optional digest plus those checks. Tested against temporary Git repositories, not yet against the real family.
+
 ## 🔒 Security & Safety
 
 | Threat | Defence | Where |
@@ -262,7 +264,7 @@ Requires Python 3.10 or newer.
 
 ## 🧪 Testing
 
-219 automated tests run with `python -m pytest -q tests`. They need no hardware and nothing outside this machine.
+259 automated tests run with `python -m pytest -q tests`. They need no hardware and nothing outside this machine.
 
 The CI runs `HYDRA_UMC_CI=1 python tools/ci_validate.py`, which checks the manifest, the documents, the eight READMEs and the pictures.
 

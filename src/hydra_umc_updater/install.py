@@ -21,6 +21,7 @@
 # =============================================================================
 from __future__ import annotations
 
+import hashlib
 import os
 import re
 import shutil
@@ -655,12 +656,52 @@ def _is_running_from(path: Path) -> bool:
     return True
 
 
+@dataclass(frozen=True)
+class PinSpec:
+    """A pinned target for one install or update (a version train): install exactly `commit`, not the head.
+
+    The commit must be part of the published history of the remote, the manifest at that commit must name `version`
+    when one is given, and its sha256 must be `manifest_sha256` when one is given. `allow_downgrade` lifts the
+    anti-rollback rule for this one target (a train going back to the previous train)."""
+
+    commit: str
+    version: str | None = None
+    manifest_sha256: str | None = None
+    allow_downgrade: bool = False
+
+
+def _check_pin(path: Path, pin: PinSpec, entry: ProjectEntry, upstream: str) -> tuple[ProjectManifest | None, str | None]:
+    """Validate a pin against the fetched repository at `path`. Returns (manifest, None) or (None, the reason)."""
+    resolved = _run(["git", "rev-parse", "--verify", "--quiet", f"{pin.commit}^{{commit}}"], cwd=path, capture_output=True, timeout=GIT_TIMEOUT_S)
+    if resolved.returncode != 0 or not resolved.stdout.strip():
+        return None, f"commit {pin.commit[:12]} of the train is not in the repository"
+    if resolved.stdout.strip() != pin.commit:
+        return None, f"commit {pin.commit[:12]} of the train is not a full commit id"
+    ancestor = _run(["git", "merge-base", "--is-ancestor", pin.commit, upstream], cwd=path, capture_output=True, timeout=GIT_TIMEOUT_S)
+    if ancestor.returncode != 0:
+        return None, f"commit {pin.commit[:12]} of the train is not part of the published history of {entry.name}"
+    try:
+        manifest = _manifest_from_revision(path, pin.commit, entry)
+    except ManifestValidationError as exc:
+        return None, f"the manifest at commit {pin.commit[:12]} failed validation: {exc}"
+    if pin.version is not None and manifest.version != pin.version:
+        return None, f"the train lists {entry.name} v{pin.version} but commit {pin.commit[:12]} is v{manifest.version}"
+    if pin.manifest_sha256 is not None:
+        shown = subprocess.run(
+            ["git", "show", f"{pin.commit}:hydra-umc.project.json"], cwd=path, capture_output=True, timeout=GIT_TIMEOUT_S, check=False
+        )
+        if shown.returncode != 0 or hashlib.sha256(shown.stdout).hexdigest() != pin.manifest_sha256:
+            return None, f"the manifest digest at commit {pin.commit[:12]} does not match the one in the train"
+    return manifest, None
+
+
 def clone_or_pull(
     entry: ProjectEntry,
     workspace_root: Path,
     *,
     verify_build: bool = True,
     progress: ProgressCallback | None = None,
+    pin: PinSpec | None = None,
 ) -> InstallResult:
     """git clone if this project isn't checked out yet under
     workspace_root, otherwise `git -C <path> fetch` followed by a real
@@ -719,6 +760,18 @@ def clone_or_pull(
         except ManifestValidationError as exc:
             _rmtree_best_effort(staging_path)
             return InstallResult(False, f"cloned checkout failed manifest validation: {exc}")
+        if pin is not None:
+            # A train installs its own commit, not the head: check it against the cloned history, then put the
+            # staged checkout on it (the branch stays where it is named, so a later plain update still works).
+            _checkpoint(progress, "validation", "Checking the commit of the train against the cloned history.")
+            _, problem = _check_pin(staging_path, pin, entry, "HEAD")
+            if problem is None:
+                moved = _run(["git", "reset", "--hard", "--quiet", pin.commit], cwd=staging_path, capture_output=True, timeout=GIT_TIMEOUT_S)
+                if moved.returncode != 0:
+                    problem = f"could not check out commit {pin.commit[:12]} (exit {moved.returncode})"
+            if problem is not None:
+                _rmtree_best_effort(staging_path)
+                return InstallResult(False, f"{problem} - nothing was installed")
         if signature_required():
             # The first install runs the project's own build-test script just
             # like an update does, so it goes through the same gate: nothing
@@ -793,7 +846,12 @@ def clone_or_pull(
         candidate = _manifest_from_revision(path, "FETCH_HEAD", entry)
     except ManifestValidationError as exc:
         return InstallResult(False, f"remote candidate failed manifest validation: {exc}")
-    if _version_tuple(candidate) < _version_tuple(installed):
+    if pin is not None:
+        pinned, problem = _check_pin(path, pin, entry, "FETCH_HEAD")
+        if pinned is None:
+            return InstallResult(False, f"{problem}; {path} was not modified")
+        candidate = pinned
+    if _version_tuple(candidate) < _version_tuple(installed) and not (pin is not None and pin.allow_downgrade):
         return InstallResult(
             False,
             f"remote candidate v{candidate.version} is older than installed v{installed.version}; anti-rollback refused update",
@@ -818,7 +876,7 @@ def clone_or_pull(
     if not verify_build:
         _checkpoint(progress, "validation", "Applying the accepted candidate with a fast-forward-only merge.")
         result = _run(
-            ["git", "merge", "--ff-only", "FETCH_HEAD"],
+            ["git", "reset", "--hard", "--quiet", pin.commit] if pin is not None else ["git", "merge", "--ff-only", "FETCH_HEAD"],
             cwd=path,
             capture_output=progress is not None,
             timeout=GIT_TIMEOUT_S,
@@ -843,7 +901,7 @@ def clone_or_pull(
     # clone` would otherwise point at `path` itself, not path's real
     # upstream - fetching "origin" there would silently fetch nothing
     # new and validate the WRONG, stale candidate).
-    candidate_sha = _run(
+    candidate_sha = pin.commit if pin is not None else _run(
         ["git", "rev-parse", "FETCH_HEAD"], cwd=path, capture_output=True, timeout=GIT_TIMEOUT_S
     ).stdout.strip()
     if not candidate_sha:
@@ -915,7 +973,7 @@ def clone_or_pull(
 
     _checkpoint(progress, "validation", "Applying the accepted candidate in the isolated staging clone.")
     result = _run(
-        ["git", "merge", "--ff-only", candidate_sha],
+        ["git", "reset", "--hard", "--quiet", candidate_sha] if pin is not None else ["git", "merge", "--ff-only", candidate_sha],
         cwd=staging_path, capture_output=progress is not None, timeout=GIT_TIMEOUT_S,
     )
     if result.returncode != 0:
@@ -1264,6 +1322,7 @@ def install_or_update(
     *,
     build: bool = True,
     progress: ProgressCallback | None = None,
+    pin: PinSpec | None = None,
 ) -> list[InstallResult]:
     """The full manual install/update flow for ONE project - never called
     for more than one project per invocation (see cli.py's own `install`/
@@ -1296,7 +1355,7 @@ def install_or_update(
     except (WorkspaceBusyError, OSError) as exc:
         return [InstallResult(False, str(exc))]
     try:
-        return _install_or_update_locked(entry, workspace_root, build=build, progress=progress)
+        return _install_or_update_locked(entry, workspace_root, build=build, progress=progress, pin=pin)
     finally:
         lock.release()
 
@@ -1307,6 +1366,7 @@ def _install_or_update_locked(
     *,
     build: bool,
     progress: ProgressCallback | None,
+    pin: PinSpec | None = None,
 ) -> list[InstallResult]:
     path = workspace_root / entry.name
     recovered: list[str] = []
@@ -1321,7 +1381,7 @@ def _install_or_update_locked(
     before = installed_state(path)
     results: list[InstallResult] = []
     try:
-        results.append(clone_or_pull(entry, workspace_root, verify_build=build, progress=progress))
+        results.append(clone_or_pull(entry, workspace_root, verify_build=build, progress=progress, pin=pin))
         if results[0].ok and build and not was_existing_checkout:
             built = run_build_script(entry, workspace_root, progress=progress)
             results.append(built)

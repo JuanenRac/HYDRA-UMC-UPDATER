@@ -862,6 +862,21 @@ for _language, _signature_copy in _SIGNATURE_COPY.items():
     TRANSLATIONS[_language].update(_signature_copy)
 
 
+# The hint shown while the version-train switch is on.
+_TRAIN_COPY: dict[str, str] = {
+    "en": "Version trains are on: use `train plan|apply|rollback` in the command line to install a tested set of versions.",
+    "es": "Los trenes de versiones están activados: usa `train plan|apply|rollback` en la línea de órdenes para instalar un conjunto probado de versiones.",
+    "de": "Versionszüge sind aktiv: Mit `train plan|apply|rollback` in der Befehlszeile installierst du einen getesteten Satz von Versionen.",
+    "fr": "Les trains de versions sont activés : utilisez `train plan|apply|rollback` en ligne de commande pour installer un ensemble de versions testé.",
+    "it": "I treni di versioni sono attivi: usa `train plan|apply|rollback` dalla riga di comando per installare un insieme di versioni collaudato.",
+    "ja": "バージョントレインが有効です。コマンドラインで `train plan|apply|rollback` を使うと、検証済みのバージョンの組をまとめてインストールできます。",
+    "zh": "版本列车已启用：在命令行中使用 `train plan|apply|rollback` 可安装一组经过测试的版本。",
+}
+
+for _language, _train_hint in _TRAIN_COPY.items():
+    TRANSLATIONS[_language]["trains_hint"] = _train_hint
+
+
 # The eighth language lives in its own module (see i18n_pt.py's header).
 from .i18n_pt import PT as _PORTUGUESE  # noqa: E402
 

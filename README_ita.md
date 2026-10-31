@@ -19,7 +19,7 @@ GPL-3.0-or-later - see LICENSE
   <img src="https://img.shields.io/badge/Language-Python%203.10%2B-blue.svg" alt="Language">
   <img src="https://img.shields.io/badge/Core-stdlib%20only-brightgreen.svg" alt="Core">
   <img src="https://img.shields.io/badge/Desktop-PySide6%20%7C%20Qt%20Quick-367BF5.svg" alt="Desktop">
-  <img src="https://img.shields.io/badge/Tests-219%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-259%20passing-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.5.0-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-established-2EA44F.svg" alt="Maturity">
 </p>
@@ -36,7 +36,7 @@ GPL-3.0-or-later - see LICENSE
 |---|---|
 | Versione | `0.5.0` |
 | Maturità | Consolidato |
-| Test | 219 (`python -m pytest -q tests`) |
+| Test | 259 (`python -m pytest -q tests`) |
 | Tecnologia | Python 3.10+ / PySide6 / Qt Quick (QML) / Tkinter (legacy fallback) / Git / GitHub raw content |
 | Destinazione | Il PC di chi lo usa |
 | Su hardware reale | Non applicabile: nulla qui gira su hardware |
@@ -52,7 +52,7 @@ Ogni riga è una parte di questo repository e il semaforo dice a che punto è og
 | Area | Stato | Cosa significa qui |
 |---|---|---|
 | Software | 🟢 | Completo per il suo scopo e stabile; la verifica di onestà qui sopra elenca i limiti noti |
-| Test | 🟢 | 219 test automatici, eseguiti a ogni modifica |
+| Test | 🟢 | 259 test automatici, eseguiti a ogni modifica |
 | Hardware reale | 🟢 | Non applicabile: nulla qui gira su hardware |
 | Documentazione | 🟢 | README in otto lingue, verificato rispetto al manifesto a ogni modifica |
 
@@ -245,6 +245,8 @@ selezionata.
 
 - **Ordine di un lotto e annullamento di una promozione:** un progetto il cui manifesto elenca repository in `depends_on` viene installato o aggiornato dopo quelli che nomina e che sono nello stesso lotto (prima l'SDK, l'aggiornatore per ultimo; una dipendenza fuori dal lotto è ignorata e un ciclo non può far perdere un progetto). Dopo una promozione il controllo di salute può essere ripetuto (`HYDRA_UMC_UPDATER_HEALTH_RETRIES`) e, con `HYDRA_UMC_UPDATER_ROLLBACK_ON_UNHEALTHY=1` (disattivo per impostazione predefinita), un controllo che continua a fallire rimette l'installazione precedente e dichiara l'aggiornamento fallito.
 
+- **Treni di versioni (disattivati per impostazione predefinita):** un insieme di versioni collaudato, descritto da un file con la versione e il commit esatto di ogni repository, si può installare in blocco con `train plan|apply|rollback`. Prima di installare qualsiasi cosa, il piano verifica che il file sia ben formato e che il suo digest coincida, che ogni commit fissato faccia parte della cronologia pubblicata con un manifesto della versione e del digest indicati, che le versioni minime e `depends_on` siano soddisfatte e che non ci siano cicli né retrocessioni inattese; un treno difettoso non installa nulla. `apply` e `rollback` sono simulazioni senza `--yes` e richiedono l'interruttore `version_trains`, e lo stato precedente alla prima modifica viene salvato per il ripristino. Il file del treno non è firmato: lo proteggono il digest facoltativo e questi controlli. Provato con repository Git temporanei, non ancora con la famiglia reale.
+
 ## 🔒 Sicurezza e protezione
 
 | Minaccia | Difesa | Dove |
@@ -282,7 +284,7 @@ Richiede Python 3.10 o successivo.
 
 ## 🧪 Test
 
-219 test automatici si eseguono con `python -m pytest -q tests`. Non richiedono hardware né nulla al di fuori di questa macchina.
+259 test automatici si eseguono con `python -m pytest -q tests`. Non richiedono hardware né nulla al di fuori di questa macchina.
 
 La CI esegue `HYDRA_UMC_CI=1 python tools/ci_validate.py`, che controlla il manifesto, i documenti, gli otto README e le immagini.
 

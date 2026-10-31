@@ -32,9 +32,10 @@ import os
 import sys
 from pathlib import Path
 
-from . import __version__, settings
+from . import __version__, settings, train
 from .detect import LocalStatus, discover_workspace
 from .github_client import RemoteStatus, default_etag_cache, discover_remote_projects, fetch_all
+from .registry import ProjectEntry
 from .install import (
     WorkspaceBusyError,
     WorkspaceLock,
@@ -270,6 +271,70 @@ def _install_or_update(args: argparse.Namespace, *, expect_installed: bool) -> i
     return 0 if ok else 1
 
 
+def _train_entries(workspace_root: Path, names: list[str]) -> dict[str, ProjectEntry]:
+    """The project entries a train needs: the local checkouts first, GitHub discovery for the rest."""
+    entries = {status.entry.name: status.entry for status in discover_workspace(workspace_root).projects}
+    if any(name not in entries for name in names):
+        try:
+            remote = discover_remote_projects(cache=default_etag_cache())
+        except RuntimeError as exc:
+            print(f"WARNING: GitHub discovery unavailable: {exc}", file=sys.stderr)
+        else:
+            for status in remote.projects:
+                entries.setdefault(status.entry.name, status.entry)
+    return {name: entries[name] for name in names if name in entries}
+
+
+def _print_plan(plan: train.Plan, *, as_json: bool, dry_run: bool) -> None:
+    if as_json:
+        print(json.dumps(plan.as_dict(), indent=2, ensure_ascii=False))
+    else:
+        print(train.format_plan(plan, dry_run=dry_run))
+
+
+def cmd_train(args: argparse.Namespace) -> int:
+    """`train plan|apply|rollback`: install a tested set of versions instead of the heads. Planning only reads;
+    apply and rollback are dry runs unless `--yes` is given AND the version_trains switch is on."""
+    workspace_root = Path(args.workspace).resolve() if args.workspace else default_workspace_root()
+    fetch = None if args.offline else train.fetch_origin
+    try:
+        if args.train_command == "rollback":
+            previous = train.load_previous(workspace_root)
+            if previous is None:
+                print("There is no saved previous state to go back to.", file=sys.stderr)
+                return 1
+            wanted, allow_downgrade = previous, True
+        else:
+            wanted, allow_downgrade = train.load_train(Path(args.file)), bool(getattr(args, "allow_downgrade", False))
+        plan = train.plan_train(wanted, workspace_root, allow_downgrade=allow_downgrade, fetch=fetch)
+    except train.TrainError as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
+        return 1
+    executing = args.train_command in {"apply", "rollback"} and args.yes
+    _print_plan(plan, as_json=args.json, dry_run=not executing)
+    if args.train_command == "plan":
+        return 0 if plan.ok else 1
+    if not plan.ok:
+        return 1
+    if not args.yes:
+        return 0
+    if not train.trains_enabled():
+        print(
+            "Version trains are switched off: nothing was installed. Turn them on with HYDRA_UMC_UPDATER_TRAINS=1 "
+            "or `version_trains: true` in the settings.",
+            file=sys.stderr,
+        )
+        return 1
+    entries = _train_entries(workspace_root, [item.name for item in plan.changes])
+    outcome = train.apply_train(plan, workspace_root, entries, build=not args.no_build, remember=args.train_command == "apply")
+    for message in outcome.messages:
+        print(message)
+    if outcome.ok and args.train_command == "rollback":
+        train.mark_rolled_back(workspace_root)
+    print(f"{'OK' if outcome.ok else 'FAIL'}: {len(outcome.applied)} repositories installed" + (f", stopped at {outcome.failed}" if outcome.failed else ""))
+    return 0 if outcome.ok else 1
+
+
 def cmd_prune_backups(args: argparse.Namespace) -> int:
     workspace_root = Path(args.workspace).resolve() if args.workspace else default_workspace_root()
     if args.keep < 0:
@@ -320,6 +385,30 @@ def build_parser() -> argparse.ArgumentParser:
     update_p.add_argument("--workspace", help="Workspace root (default: this tool's own parent directory).")
     update_p.add_argument("--no-build", action="store_true", help="Pull only - skip running the project's own build script.")
     update_p.set_defaults(func=cmd_update)
+
+    train_p = subparsers.add_parser(
+        "train",
+        help="Install a tested set of versions (a train) instead of the head of every project; dry run by default.",
+    )
+    train_sub = train_p.add_subparsers(dest="train_command", required=True)
+    for train_name, train_help in (
+        ("plan", "Explain what the train would install and why, changing nothing."),
+        ("apply", "Install what differs from the train (needs --yes and the version_trains switch)."),
+        ("rollback", "Put back the state saved before the last applied train (needs --yes and the switch)."),
+    ):
+        sub = train_sub.add_parser(train_name, help=train_help)
+        if train_name != "rollback":
+            sub.add_argument("file", help="The train file (see docs/CLI_REFERENCE.md for its shape).")
+            sub.add_argument("--allow-downgrade", action="store_true", help="Allow installing an older version than the installed one.")
+        sub.add_argument("--workspace", help="Workspace root (default: this tool's own parent directory).")
+        sub.add_argument("--offline", action="store_true", help="Do not fetch: a pinned commit that is not here yet is a problem.")
+        sub.add_argument("--json", action="store_true", help="Machine-readable plan.")
+        if train_name != "plan":
+            sub.add_argument("--yes", action="store_true", help="Really install (otherwise a dry run).")
+            sub.add_argument("--no-build", action="store_true", help="Skip each project's build-test script.")
+        else:
+            sub.set_defaults(yes=False, no_build=False)
+        sub.set_defaults(func=cmd_train)
 
     prune_p = subparsers.add_parser(
         "prune-backups",

@@ -492,6 +492,7 @@ ApplicationWindow {
                         radius: 8; color: "#3a1418"; border.width: 1; border.color: "#b04050"
                         LabelText { id: warningText; anchors.fill: parent; anchors.margins: 8; text: ui("signature_off_warning"); color: "#ff8f9b"; font.pixelSize: 10; wrapMode: Text.WordWrap }
                     }
+                    LabelText { visible: backend.trainsEnabled; text: ui("trains_hint"); color: window.textMuted; wrapMode: Text.WordWrap; font.pixelSize: 10; Layout.fillWidth: true }
                     LabelText { text: ui("local_footer"); color: window.textMuted; wrapMode: Text.WordWrap; font.pixelSize: 11; Layout.fillWidth: true }
                 }
             }

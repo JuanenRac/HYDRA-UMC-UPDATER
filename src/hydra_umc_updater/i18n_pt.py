@@ -145,4 +145,5 @@ PT: dict[str, str] = {
     "log_file_prefix": "Ficheiro de registo:",
     "checkpoint_signature": "Verificação da assinatura",
     "signature_off_warning": "As assinaturas dos commits NÃO são verificadas: o script de compilação de um projeto é executado sem prova de quem o publicou. Defina HYDRA_UMC_UPDATER_REQUIRE_SIGNED=1 para as exigir.",
+    "trains_hint": "Os comboios de versões estão ativados: use `train plan|apply|rollback` na linha de comandos para instalar um conjunto testado de versões.",
 }

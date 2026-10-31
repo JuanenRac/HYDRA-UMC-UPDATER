@@ -19,7 +19,7 @@ GPL-3.0-or-later - see LICENSE
   <img src="https://img.shields.io/badge/Language-Python%203.10%2B-blue.svg" alt="Language">
   <img src="https://img.shields.io/badge/Core-stdlib%20only-brightgreen.svg" alt="Core">
   <img src="https://img.shields.io/badge/Desktop-PySide6%20%7C%20Qt%20Quick-367BF5.svg" alt="Desktop">
-  <img src="https://img.shields.io/badge/Tests-219%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-259%20passing-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.5.0-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-established-2EA44F.svg" alt="Maturity">
 </p>
@@ -36,7 +36,7 @@ GPL-3.0-or-later - see LICENSE
 |---|---|
 | Versão | `0.5.0` |
 | Maturidade | Estabelecido |
-| Testes | 219 (`python -m pytest -q tests`) |
+| Testes | 259 (`python -m pytest -q tests`) |
 | Tecnologia | Python 3.10+ / PySide6 / Qt Quick (QML) / Tkinter (legacy fallback) / Git / GitHub raw content |
 | Destino | O PC de quem o usa |
 | Em hardware real | Não aplicável: nada aqui corre em hardware |
@@ -52,7 +52,7 @@ Cada linha é uma parte deste repositório e a luz diz até onde chega hoje. É 
 | Área | Estado | O que significa aqui |
 |---|---|---|
 | Software | 🟢 | Completo para o seu propósito e estável; a verificação de honestidade acima lista os limites conhecidos |
-| Testes | 🟢 | 219 testes automáticos, executados a cada alteração |
+| Testes | 🟢 | 259 testes automáticos, executados a cada alteração |
 | Hardware real | 🟢 | Não aplicável: nada aqui corre em hardware |
 | Documentação | 🟢 | README em oito idiomas, verificado contra o manifesto a cada alteração |
 
@@ -233,6 +233,8 @@ O **HYDRA-UMC-UPDATER** encontra, instala e atualiza os projetos HYDRA-UMC na m�
 
 - **Ordem de um lote e anulação de uma promoção:** um projeto cujo manifesto lista repositórios em `depends_on` é instalado ou atualizado depois dos que nomeia e que estão no mesmo lote (primeiro o SDK, o atualizador no fim; uma dependência fora do lote é ignorada e um ciclo não pode fazer perder um projeto). Após uma promoção, a verificação de saúde pode ser repetida (`HYDRA_UMC_UPDATER_HEALTH_RETRIES`) e, com `HYDRA_UMC_UPDATER_ROLLBACK_ON_UNHEALTHY=1` (desativado por omissão), uma verificação que continue a falhar repõe a instalação anterior e dá a atualização por falhada.
 
+- **Comboios de versões (desativados por predefinição):** um conjunto testado de versões, descrito por um ficheiro com a versão e o commit exato de cada repositório, pode ser instalado em conjunto com `train plan|apply|rollback`. Antes de instalar o que quer que seja, o plano verifica que o ficheiro está bem formado e que o seu resumo coincide, que cada commit fixado faz parte do histórico publicado com um manifesto da versão e do resumo indicados, que as versões mínimas e o `depends_on` são cumpridos e que não há ciclos nem descidas de versão inesperadas; um comboio defeituoso não instala nada. `apply` e `rollback` são simulações sem `--yes` e precisam do interruptor `version_trains`, e o estado anterior à primeira alteração é guardado para a reversão. O ficheiro do comboio não está assinado: é protegido pelo resumo opcional e por estas verificações. Testado com repositórios Git temporários, ainda não com a família real.
+
 ## 🔒 Segurança e proteção
 
 | Ameaça | Defesa | Onde |
@@ -270,7 +272,7 @@ Requer Python 3.10 ou superior.
 
 ## 🧪 Testes
 
-219 testes automáticos correm com `python -m pytest -q tests`. Não precisam de hardware nem de nada fora desta máquina.
+259 testes automáticos correm com `python -m pytest -q tests`. Não precisam de hardware nem de nada fora desta máquina.
 
 A CI executa `HYDRA_UMC_CI=1 python tools/ci_validate.py`, que verifica o manifesto, os documentos, os oito README e as imagens.
 

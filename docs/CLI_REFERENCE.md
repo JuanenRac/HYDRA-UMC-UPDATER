@@ -11,17 +11,19 @@ run of the installed CLI — not written from memory.
 ```
 $ hydra-umc-updater --cli -h
 usage: hydra-umc-updater --cli [-h] [--version]
-                               {status,install,update,prune-backups} ...
+                               {status,install,update,train,prune-backups} ...
 
 Detects, installs, and manually updates the HYDRA-UMC ecosystem's own projects
 on this machine.
 
 positional arguments:
-  {status,install,update,prune-backups}
+  {status,install,update,train,prune-backups}
     status              Show what's installed, its version, and the latest
                         GitHub version of every project.
     install             Clone and build ONE project that isn't installed yet.
     update              Pull and rebuild ONE project that's already installed.
+    train               Install a tested set of versions (a train) instead of
+                        the head of every project; dry run by default.
     prune-backups       Remove old '<project>.backup-xxxxxxxx' folders,
                         keeping the newest few of each project.
 
@@ -170,6 +172,69 @@ keeps the newest `--keep` backups of each project (default 2) and removes the
 rest; `--dry-run` only lists what it would remove. It never runs unless asked,
 and refuses to start while an install or update is running in the workspace.
 
+### `train plan|apply|rollback` - install a tested set of versions
+
+By default every project is installed or updated to the head of its repository
+or its latest release, one at a time. A **version train** is a tested set of
+versions, described by one file, that is installed together. It is off unless
+the switch is on: `HYDRA_UMC_UPDATER_TRAINS=1` (or `"version_trains": true` in
+the saved settings; a damaged settings file counts as off). With the switch off
+`install`, `update` and the window behave exactly as before.
+
+```
+train plan     FILE [--workspace PATH] [--offline] [--allow-downgrade] [--json]
+train apply    FILE [--workspace PATH] [--offline] [--allow-downgrade] [--json] [--yes] [--no-build]
+train rollback      [--workspace PATH] [--offline] [--json] [--yes] [--no-build]
+```
+
+- `plan` only reads. It explains, per repository and in `depends_on` order, what
+  would be installed and why (`INSTALL`, `UPDATE`, `DOWNGRADE`, `KEEP`,
+  `BLOCKED`) and exits `1` when the train has problems. For a repository that is
+  already installed and differs it fetches the Git objects (never the files) to
+  check the pinned commit; `--offline` skips the fetch, and a pinned commit that
+  is not already in the checkout is then a problem.
+- `apply` is a **dry run** (the plan is printed, nothing is installed) unless
+  `--yes` is given, and `--yes` also needs the switch on. It installs only what
+  differs, in dependency order, through the same safe flow as `update` (isolated
+  staging clone, build, signature check when required, promotion with a backup)
+  but on the commit of the train instead of the head. It stops at the first
+  failure; the repositories before it stay installed.
+- `rollback` puts back the state saved before the last `apply` (`.hydra-umc-trains/previous.json`
+  in the workspace; the file is renamed, never deleted, once used). It is also a
+  dry run without `--yes`. A repository that the train installed for the first
+  time is left installed: nothing is ever deleted.
+
+**The train file** has the shape of the family's `ecosystem-release.json`
+(`schema_version` `"1.0"`, `ecosystem` `"HYDRA-UMC"`, `repositories` with `name`,
+`version` and the full 40-character `commit`) plus optional fields. Any other key
+is refused, and a malformed train installs nothing:
+
+| Field | Meaning |
+|---|---|
+| `name` (top level) | Label shown in the plan. |
+| `digest` (top level) | sha256 of the canonical `repositories` list; a file whose content no longer matches is refused. |
+| `manifest_sha256` | sha256 of `hydra-umc.project.json` at that commit; a mismatch refuses the repository. |
+| `depends_on` | Must equal the manifest's `depends_on` at that commit. |
+| `requires_min` | Minimum versions of other repositories (for example the SDK) that the train, or what is installed, must satisfy. |
+
+**What is checked before anything is installed:** the file is well formed and its
+digest matches; every `requires_min` is met by the train (or by what is
+installed); every `depends_on` is in the train or installed and the graph has no
+cycle; for each installed repository that differs, the commit exists, is part of
+the published history (an ancestor of the remote head), its manifest validates,
+names the listed version and has the listed digest, and the checkout has no
+uncommitted changes; an installed version newer than the train needs
+`--allow-downgrade` (the anti-rollback rule of `update` is kept). A repository that
+is not installed yet is checked right after the clone and, if any check fails,
+nothing is installed for it. Commit signatures are checked as for `update` when
+they are required. The train file itself is not signed: its protection is the
+optional digest plus the checks above, so keep the file in a place only you can
+write (the family publishes its release file in the documentation repository).
+
+Writing a train: `tools/ecosystem_release.py --write` in the SDK produces the
+file for the checkouts side by side; add the optional fields by hand and
+recompute `digest` (`train_to_json` in `hydra_umc_updater.train` writes it).
+
 ## Safety limits
 
 - One install or update at a time per workspace (the lock file
@@ -217,7 +282,7 @@ and refuses to start while an install or update is running in the workspace.
 `status` always exits `0` (even when projects are outdated — that's
 informational, not a failure). `install`/`update` exit `1` on any real
 failure (unknown project, failed clone/pull, failed build script, a workspace
-that is busy, an unexpected error) and `0` on success. `prune-backups` exits `0`
+that is busy, an unexpected error) and `0` on success. `train` exits `1` for a malformed or inconsistent train, a switched-off `--yes`, a failed installation, and `0` otherwise (a dry run of a good train is `0`). `prune-backups` exits `0`
 unless the workspace is busy or `--keep` is negative.
 
 ## Network resilience

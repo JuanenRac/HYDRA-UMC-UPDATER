@@ -31,7 +31,7 @@ from PySide6.QtCore import Property, QCoreApplication, QEvent, QObject, QUrl, Si
 from PySide6.QtGui import QGuiApplication, QIcon
 from PySide6.QtQml import QQmlApplicationEngine
 
-from . import __version__, i18n, settings
+from . import __version__, i18n, settings, train
 from .detect import LocalStatus, discover_workspace
 from .github_client import RemoteStatus, default_etag_cache, discover_remote_projects, fetch_all
 from .install import InstallResult, format_batch_list, install_or_update, order_batch, signature_required
@@ -184,6 +184,11 @@ class UpdaterBridge(QObject):
         """Whether commits must carry a valid signature before anything they
         bring is built; the window shows a warning banner when they do not."""
         return signature_required()
+
+    @Property(bool, constant=True)
+    def trainsEnabled(self) -> bool:
+        """Whether the version-train switch is on; the window then shows a one-line hint about the train commands."""
+        return train.trains_enabled()
 
     @Property(str, constant=True)
     def logFilePath(self) -> str:
