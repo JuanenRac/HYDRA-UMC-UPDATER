@@ -37,6 +37,8 @@
 # =============================================================================
 from __future__ import annotations
 
+from typing import Any
+
 import queue
 import sys
 import threading
@@ -543,8 +545,8 @@ class UpdaterGUI:
         pre-data call and stayed wrong through both the offline and
         online refresh passes, only correcting itself the next time a
         language switch happened to also call this rebuild."""
-        previous_key = self._filter_by_label.get(self.filter_var.get(), _default_deploy_filter()) \
-            if getattr(self, "_filter_by_label", None) else _default_deploy_filter()
+        previous_key = (self._filter_by_label.get(self.filter_var.get(), _default_deploy_filter())  # type: ignore[has-type]
+            if getattr(self, "_filter_by_label", None) else _default_deploy_filter())
         deploy_labels = [self._deploy_label(key) for key in DEPLOY_ORDER]
         self._filter_by_label = {self._deploy_label(key): key for key in DEPLOY_ORDER}
         self.filter_box.config(values=deploy_labels)
@@ -767,11 +769,11 @@ class UpdaterGUI:
     def _set_busy(self, busy: bool, status: str) -> None:
         self._busy = busy
         state = "disabled" if busy else "normal"
-        self.refresh_btn.config(state=state)
-        self.install_btn.config(state=state)
-        self.update_btn.config(state=state)
-        self.browse_btn.config(state=state)
-        self.open_github_btn.config(state=state)
+        self.refresh_btn.config(state=state)  # type: ignore[call-overload]
+        self.install_btn.config(state=state)  # type: ignore[call-overload]
+        self.update_btn.config(state=state)  # type: ignore[call-overload]
+        self.browse_btn.config(state=state)  # type: ignore[call-overload]
+        self.open_github_btn.config(state=state)  # type: ignore[call-overload]
         self.filter_box.config(state="disabled" if busy else "readonly")
         self.lang_box.config(state="disabled" if busy else "readonly")
         if busy:
@@ -782,6 +784,7 @@ class UpdaterGUI:
 
     def _poll_queue(self) -> None:
         try:
+            payload: Any
             while True:
                 kind, payload = self._work_queue.get_nowait()
                 if kind == "progress":

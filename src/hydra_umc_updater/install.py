@@ -332,14 +332,14 @@ def _run(
     # build script create a surprise console while its output is captured for
     # the in-window checkpoint log.
     if capture_output and os.name == "nt":
-        kwargs["creationflags"] = subprocess.CREATE_NO_WINDOW
+        kwargs["creationflags"] = subprocess.CREATE_NO_WINDOW  # type: ignore[attr-defined]
         # Ecosystem .bat files deliberately finish with `pause` when an
         # operator double-clicks them.  In the GUI they run as a child with
         # captured evidence instead, so provide one harmless newline and do
         # not leave a hidden child waiting forever for a keypress.
         kwargs["input"] = "\n"
     try:
-        return subprocess.run(cmd, **kwargs)  # type: ignore[arg-type]
+        return subprocess.run(cmd, **kwargs)  # type: ignore[arg-type,call-overload]
     except subprocess.TimeoutExpired as exc:
         return subprocess.CompletedProcess(
             cmd, 124, _text(exc.stdout), f"{_text(exc.stderr)}\ntimed out after {int(timeout or 0)} s".strip()
@@ -407,7 +407,7 @@ class WorkspaceLock:
                 import msvcrt
 
                 handle.seek(0)
-                msvcrt.locking(handle.fileno(), msvcrt.LK_NBLCK, 1)
+                msvcrt.locking(handle.fileno(), msvcrt.LK_NBLCK, 1)  # type: ignore[attr-defined]
             else:
                 import fcntl
 
@@ -417,7 +417,7 @@ class WorkspaceLock:
             raise WorkspaceBusyError(
                 f"another install or update is already running in {self._path.parent}"
             ) from exc
-        self._handle = handle
+        self._handle = handle  # type: ignore[assignment]
 
     def release(self) -> None:
         handle, self._handle = self._handle, None
@@ -995,7 +995,7 @@ def clone_or_pull(
         # has moved, so the installation is exactly as it was.
         _rmtree_best_effort(staging_path)
         if journal:
-            journal.complete(promotion_id)
+            journal.complete(promotion_id)  # type: ignore[arg-type]
         return InstallResult(
             False,
             f"could not move the installed {path} aside ({type(exc).__name__}: {exc}) - close every program that is "
@@ -1003,7 +1003,7 @@ def clone_or_pull(
             build_result.output,
         )
     if journal:
-        journal.advance(promotion_id, PromotionPhase.BACKED_UP)
+        journal.advance(promotion_id, PromotionPhase.BACKED_UP)  # type: ignore[arg-type]
     try:
         staging_path.rename(path)
     except OSError as exc:
@@ -1020,7 +1020,7 @@ def clone_or_pull(
             # The in-process self-heal above already fully resolved this -
             # nothing left for a later recover_interrupted_promotions()
             # call to do.
-            journal.complete(promotion_id)
+            journal.complete(promotion_id)  # type: ignore[arg-type]
         return InstallResult(
             False,
             f"promotion failed (exit path unavailable: {exc}) - restored the previous installation at {path}; "
@@ -1028,7 +1028,7 @@ def clone_or_pull(
             build_result.output,
         )
     if journal:
-        journal.advance(promotion_id, PromotionPhase.PROMOTED)
+        journal.advance(promotion_id, PromotionPhase.PROMOTED)  # type: ignore[arg-type]
     sha_label = candidate_sha[:12]
     # The promoted checkout gets its own fresh .venv; the previous one stays inside the backup.
     if recreate_venv_enabled():
@@ -1053,7 +1053,7 @@ def clone_or_pull(
         if not healthy and rollback_on_unhealthy_enabled():
             problem = _roll_back_promotion(path, backup_path)
             if problem is None:
-                journal.complete(promotion_id)
+                journal.complete(promotion_id)  # type: ignore[arg-type]
                 return InstallResult(
                     False,
                     f"Promoted {path} to v{candidate.version} (commit {sha_label}), but its own declared health "
@@ -1076,7 +1076,7 @@ def clone_or_pull(
                 f"{backup_path}",
                 build_result.output,
             )
-        journal.complete(promotion_id)
+        journal.complete(promotion_id)  # type: ignore[arg-type]
         return InstallResult(
             True,
             f"Updated {path} to v{candidate.version} (commit {sha_label}) after a verified build and a real "
@@ -1084,7 +1084,7 @@ def clone_or_pull(
             build_result.output,
         )
     if journal:
-        journal.complete(promotion_id)
+        journal.complete(promotion_id)  # type: ignore[arg-type]
     return InstallResult(
         True,
         f"Updated {path} to v{candidate.version} (commit {sha_label}) after a verified build; "

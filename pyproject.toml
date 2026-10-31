@@ -43,3 +43,9 @@ where = ["src"]
 
 [tool.setuptools.package-data]
 hydra_umc_updater = ["qml/*.qml", "assets/*"]
+
+[tool.ruff.lint]
+select = ["F", "E9", "B"]
+
+[tool.mypy]
+ignore_missing_imports = true

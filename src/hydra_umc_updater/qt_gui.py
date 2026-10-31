@@ -16,6 +16,8 @@ stdlib-only and continues to work on a headless CM5 without Qt installed.
 """
 from __future__ import annotations
 
+from typing import Any
+
 import ctypes
 import logging
 import sys
@@ -535,7 +537,7 @@ class UpdaterBridge(QObject):
 
     # -- Worker completions ----------------------------------------------
     @Slot(object, object, object)
-    def _on_remote_result(self, locals_: object, remotes: object, errors: object) -> None:
+    def _on_remote_result(self, locals_: Any, remotes: Any, errors: Any) -> None:
         self._locals = list(locals_)  # type: ignore[arg-type]
         self._remotes = dict(remotes)  # type: ignore[arg-type]
         error_list = tuple(errors)  # type: ignore[arg-type]
@@ -547,7 +549,7 @@ class UpdaterBridge(QObject):
         self._append_activity(self.text("log_github_ready").format(projects=len(self._locals)))
 
     @Slot(str, object)
-    def _on_action_result(self, name: str, results: object) -> None:
+    def _on_action_result(self, name: str, results: Any) -> None:
         outcome = list(results)  # type: ignore[arg-type]
         ok = all(result.ok for result in outcome)
         self._finish_operation(ok, outcome)
@@ -618,7 +620,7 @@ class UpdaterBridge(QObject):
         self._batch_project = ""
         self.operationChanged.emit()
 
-    def _finish_operation(self, ok: bool, outcome: list[object]) -> None:
+    def _finish_operation(self, ok: bool, outcome: list[Any]) -> None:
         failed_step = next((result for result in outcome if not result.ok), None)
         if ok:
             for step in self._operation_steps:
