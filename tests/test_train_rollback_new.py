@@ -298,3 +298,106 @@ def test_make_tells_how_to_sign_when_a_signature_is_required(world, tmp_path, mo
     monkeypatch.setenv("HYDRA_UMC_UPDATER_REQUIRE_SIGNED_TRAINS", "1")
     code, out, _ = run_cli_make(monkeypatch, capsys, world, "--out", str(tmp_path / "t.json"), "--from-release", str(release))
     assert code == 0 and "train sign" in out
+
+
+# --------------------------------------------------------------- dependents block the removal ----------------------
+
+def test_a_new_repository_that_another_installed_repository_depends_on_is_never_removed(world, tmp_path, monkeypatch, capsys):
+    sdk = world.make(SDK, "0.3.0")
+    aaa = world.make(AAA, "1.0.0")
+    bbb = world.make(BBB, "1.0.0", depends_on=(AAA,))
+    for name in (SDK, BBB):
+        assert all(r.ok for r in install_or_update(world.entries(name)[name], world.workspace, build=False))
+    sdk.publish("0.4.0")
+    file = tmp_path / "t.json"
+    file.write_text(train.train_to_json(make_train([item(sdk, "0.4.0"), item(aaa, "1.0.0")])), encoding="utf-8")
+    assert run_cli(monkeypatch, capsys, world, "apply", str(file), "--yes", "--no-build")[0] == 0
+    code, out, err = run_cli(monkeypatch, capsys, world, "rollback", "--yes", "--no-build", "--remove-new")
+    assert code == 1 and "BLOCKED" in out and BBB in out and AAA in err
+    assert (world.workspace / AAA).is_dir()
+    assert checkout_head(world.workspace, SDK) == sdk.commits["0.4.0"]  # nothing moved, nothing restored
+    assert bbb.commits  # the dependent is untouched
+    # without --remove-new the same rollback still works
+    assert run_cli(monkeypatch, capsys, world, "rollback", "--yes", "--no-build")[0] == 0
+
+
+def test_two_new_repositories_that_depend_on_each_other_go_together(world, tmp_path, monkeypatch, capsys):
+    aaa = world.make(AAA, "1.0.0")
+    bbb = world.make(BBB, "1.0.0", depends_on=(AAA,))
+    file = tmp_path / "t.json"
+    file.write_text(train.train_to_json(make_train([item(aaa, "1.0.0"), item(bbb, "1.0.0", depends_on=[AAA])])), encoding="utf-8")
+    assert run_cli(monkeypatch, capsys, world, "apply", str(file), "--yes", "--no-build")[0] == 0
+    code, out, err = run_cli(monkeypatch, capsys, world, "rollback", "--yes", "--no-build", "--remove-new")
+    assert code == 0, out + err
+    assert not (world.workspace / AAA).exists() and not (world.workspace / BBB).exists()
+
+
+# --------------------------------------------------------------- train trash -------------------------------------
+
+def run_cli_trash(monkeypatch, capsys, world, *argv: str):
+    args = main.build_parser().parse_args(["train", "trash", *argv, "--workspace", str(world.workspace)])
+    code = args.func(args)
+    captured = capsys.readouterr()
+    return code, captured.out, captured.err
+
+
+def trashed_world(world, tmp_path, monkeypatch, capsys):
+    applied_world(world, tmp_path, monkeypatch, capsys)
+    code, out, err = run_cli(monkeypatch, capsys, world, "rollback", "--yes", "--no-build", "--remove-new")
+    assert code == 0, out + err
+    return world.workspace / train.STATE_DIR / train.TRASH_DIR
+
+
+def test_trash_list_shows_what_a_rollback_moved(world, tmp_path, monkeypatch, capsys):
+    trash = trashed_world(world, tmp_path, monkeypatch, capsys)
+    code, out, _ = run_cli_trash(monkeypatch, capsys, world)
+    assert code == 0 and f"{AAA}.removed-" in out
+    code, out, _ = run_cli_trash(monkeypatch, capsys, world, "--list", "--json")
+    data = json.loads(out)
+    assert data["schema_version"] == "1.0" and data["entries"][0]["name"].startswith(AAA) and data["entries"][0]["bytes"] > 0
+    assert any(trash.iterdir())
+
+
+def test_trash_is_empty_when_there_is_none(world, monkeypatch, capsys):
+    code, out, _ = run_cli_trash(monkeypatch, capsys, world)
+    assert code == 0 and "empty" in out
+
+
+def test_emptying_needs_both_confirmations(world, tmp_path, monkeypatch, capsys):
+    trash = trashed_world(world, tmp_path, monkeypatch, capsys)
+    for flags in (("--empty",), ("--empty", "--yes"), ("--empty", "--i-understand")):
+        code, _, err = run_cli_trash(monkeypatch, capsys, world, *flags)
+        assert code == 1 and "Nothing was deleted" in err
+        assert len(list(trash.iterdir())) == 1
+
+
+def test_emptying_deletes_only_inside_the_trash(world, tmp_path, monkeypatch, capsys):
+    trash = trashed_world(world, tmp_path, monkeypatch, capsys)
+    outside = tmp_path / "keep-me"
+    outside.mkdir()
+    (outside / "f.txt").write_text("x", encoding="utf-8")
+    try:
+        (trash / "link").symlink_to(outside, target_is_directory=True)
+    except (OSError, NotImplementedError):
+        pass  # no privilege for links here; the rest of the test still holds
+    sdk_head = checkout_head(world.workspace, SDK)
+    code, out, err = run_cli_trash(monkeypatch, capsys, world, "--empty", "--yes", "--i-understand")
+    assert code == 0, out + err
+    assert trash.is_dir() and list(trash.iterdir()) == []
+    assert (outside / "f.txt").read_text() == "x"  # a link is removed as a link, never followed
+    assert checkout_head(world.workspace, SDK) == sdk_head  # the repositories of the workspace are untouched
+
+
+def test_a_trash_that_is_a_link_is_never_emptied(world, tmp_path, monkeypatch, capsys):
+    outside = tmp_path / "elsewhere"
+    outside.mkdir()
+    (outside / "f.txt").write_text("x", encoding="utf-8")
+    state_dir = world.workspace / train.STATE_DIR
+    state_dir.mkdir()
+    try:
+        (state_dir / train.TRASH_DIR).symlink_to(outside, target_is_directory=True)
+    except (OSError, NotImplementedError):
+        pytest.skip("symbolic links need a privilege on this machine")
+    assert train.list_trash(world.workspace) == []
+    code, _, _ = run_cli_trash(monkeypatch, capsys, world, "--empty", "--yes", "--i-understand")
+    assert (outside / "f.txt").exists()

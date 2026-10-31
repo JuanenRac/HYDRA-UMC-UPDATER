@@ -172,7 +172,7 @@ keeps the newest `--keep` backups of each project (default 2) and removes the
 rest; `--dry-run` only lists what it would remove. It never runs unless asked,
 and refuses to start while an install or update is running in the workspace.
 
-### `train plan|apply|rollback|make` - install a tested set of versions
+### `train plan|apply|rollback|make|trash` - install a tested set of versions
 
 By default every project is installed or updated to the head of its repository
 or its latest release, one at a time. A **version train** is a tested set of
@@ -185,6 +185,7 @@ the saved settings; a damaged settings file counts as off). With the switch off
 train plan     FILE [--workspace PATH] [--offline] [--allow-downgrade] [--json]
 train apply    FILE [--workspace PATH] [--offline] [--allow-downgrade] [--json] [--yes] [--no-build]
 train rollback      [--workspace PATH] [--offline] [--json] [--yes] [--no-build] [--remove-new]
+train trash    [--list] [--json] [--empty --yes --i-understand] [--workspace PATH]
 train make     --out FILE [--name NAME] [--from-release FILE] [--force] [--workspace PATH]
 train sign     FILE --key-file PATH
 train keygen   [--out-dir PATH] [--name NAME]
@@ -212,10 +213,17 @@ train keygen   [--out-dir PATH] [--name NAME]
   as each clone succeeds). Nothing is deleted: each folder is moved to `.hydra-umc-trains/trash/NAME.removed-XXXXXXXX`
   inside the workspace (move it back to restore it). A repository is moved only if it is a plain Git checkout directly
   inside the workspace (no link pointing elsewhere), is still on the exact commit the train installed
-  and has no modified, staged or untracked files. If any one of them fails a check the whole rollback stops with
+  and has no modified, staged or untracked files, and no other installed repository (one that is not being
+  removed too) lists it in the `depends_on` of its manifest. If any one of them fails a check the whole rollback stops with
   `BLOCKED` and exit `1` before anything is restored or moved, and the check is made again right before moving.
   A damaged record stops `--remove-new`; a plain rollback only warns. Repositories that were installed before the
   train are never removed, only put back. The record is renamed (not deleted) once the removal is done.
+- `trash` shows what the rollbacks moved aside (`--list`, the default; `--json` for a reader). The trash is never
+  emptied by itself. `trash --empty` deletes its content **for good and cannot be undone**, so it needs both
+  `--yes` and `--i-understand`; with fewer it deletes nothing and exits `1`. It only touches the children of
+  `.hydra-umc-trains/trash` in the workspace (a link inside is removed as a link, never followed; a trash that is
+  itself a link, or not a real folder there, is left alone), and the repositories of the workspace are not reachable
+  from it. The folder is kept.
 - `make` writes a train for the projects checked out in the workspace: `--out FILE`. Which repository, version
   and commit are listed comes from the release generator of the family (`tools/ecosystem_release.py` of
   `HYDRA-UMC-SDK`, run with `--print`; its logic is not repeated here), or from a published

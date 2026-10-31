@@ -378,6 +378,31 @@ def cmd_train(args: argparse.Namespace) -> int:
     return 0 if ok else 1
 
 
+def cmd_train_trash(args: argparse.Namespace) -> int:
+    """`train trash --list` shows what the rollbacks moved aside; `--empty --yes --i-understand` deletes it for good.
+    The trash is never emptied by itself and the deletion cannot reach outside `.hydra-umc-trains/trash`."""
+    workspace_root = Path(args.workspace).resolve() if args.workspace else default_workspace_root()
+    entries = train.list_trash(workspace_root)
+    if args.json:
+        print(json.dumps({"schema_version": "1.0", "entries": [{"name": n, "bytes": b} for n, b in entries]}, indent=2))
+    elif not entries:
+        print("The updater trash is empty.")
+    else:
+        print(f"The updater trash holds {len(entries)} item(s):")
+        for name, size in entries:
+            print(f"  {name}  ({size / 1048576:.1f} MiB)")
+    if not args.empty:
+        return 0
+    if not (args.yes and args.i_understand):
+        print("Nothing was deleted. Emptying is irreversible: add both --yes and --i-understand to do it.", file=sys.stderr)
+        return 1
+    ok, messages = train.empty_trash(workspace_root)
+    for message in messages:
+        print(message)
+    print("OK: the trash was emptied." if ok else "FAIL: the trash was not emptied completely.")
+    return 0 if ok else 1
+
+
 def cmd_train_make(args: argparse.Namespace) -> int:
     """`train make`: write a train (with its digest) for the checkouts in the workspace, from the release generator
     of the SDK. Signing it is a separate step (`train sign`)."""
@@ -526,6 +551,18 @@ def build_parser() -> argparse.ArgumentParser:
     make_p.add_argument("--force", action="store_true", help="Replace the output file if it exists.")
     make_p.add_argument("--workspace", help="Workspace root (default: this tool's own parent directory).")
     make_p.set_defaults(func=cmd_train_make)
+
+    trash_p = train_sub.add_parser(
+        "trash",
+        help="List what a rollback moved to the updater trash, or empty it by hand (irreversible, double confirmation).",
+    )
+    trash_p.add_argument("--list", action="store_true", help="Show the content of the trash (the default).")
+    trash_p.add_argument("--empty", action="store_true", help="Delete the content of the trash for good (needs --yes and --i-understand).")
+    trash_p.add_argument("--yes", action="store_true", help="First confirmation for --empty.")
+    trash_p.add_argument("--i-understand", action="store_true", help="Second confirmation for --empty: the deletion cannot be undone.")
+    trash_p.add_argument("--json", action="store_true", help="Machine-readable list.")
+    trash_p.add_argument("--workspace", help="Workspace root (default: this tool's own parent directory).")
+    trash_p.set_defaults(func=cmd_train_trash)
 
     sign_p = train_sub.add_parser(
         "sign",

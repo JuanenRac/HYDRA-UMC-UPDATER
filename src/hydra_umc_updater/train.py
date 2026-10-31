@@ -30,6 +30,8 @@ import hashlib
 import json
 import os
 import re
+import shutil
+import stat
 import subprocess
 import sys
 import tempfile
@@ -609,7 +611,35 @@ def plan_removals(workspace_root: Path) -> list[RemovalItem]:
             items.append(RemovalItem(name, "blocked", commit, f"has uncommitted or untracked changes ({shown}); it will not be removed"))
         else:
             items.append(RemovalItem(name, "remove", commit, "was cloned by the train; moves to the updater trash (kept, never deleted)"))
+    going = {item.name for item in items if item.action == "remove"}
+    if going:
+        dependents = _installed_dependents(workspace_root, going)
+        for item in items:
+            if item.action == "remove" and dependents.get(item.name):
+                item.action = "blocked"
+                item.reason = "is a dependency (depends_on) of " + ", ".join(sorted(dependents[item.name])) + ", which stays installed; it will not be removed"
     return items
+
+
+def _installed_dependents(workspace_root: Path, names: set[str]) -> dict[str, set[str]]:
+    """For each name in `names`, the installed repositories NOT being removed whose manifest lists it in depends_on."""
+    found: dict[str, set[str]] = {}
+    try:
+        children = sorted(workspace_root.iterdir())
+    except OSError:
+        return found
+    for child in children:
+        if child.name in names or not _NAME.match(child.name) or not child.is_dir():
+            continue
+        try:
+            depends = json.loads((child / "hydra-umc.project.json").read_text(encoding="utf-8")).get("depends_on") or []
+        except (OSError, ValueError, AttributeError):
+            continue
+        if isinstance(depends, list):
+            for dep in depends:
+                if isinstance(dep, str) and dep in names:
+                    found.setdefault(dep, set()).add(child.name)
+    return found
 
 
 def remove_first_installed(workspace_root: Path) -> tuple[bool, list[str]]:
@@ -635,6 +665,72 @@ def remove_first_installed(workspace_root: Path) -> tuple[bool, list[str]]:
             messages.append(f"{name}: could not move it to the trash ({exc}); the ones before it were moved")
             return False, messages
         messages.append(f"{name}: removed from the workspace, kept in {target} (move it back to restore it)")
+    return True, messages
+
+
+# ---------------------------------------------------------------------------------------------------------------------
+# The updater trash: listed and emptied only by hand
+# ---------------------------------------------------------------------------------------------------------------------
+
+def _trash_dir(workspace_root: Path) -> Path | None:
+    """The trash folder when it exists and is a real folder inside the workspace's state folder, else None."""
+    trash = state_dir(workspace_root) / TRASH_DIR
+    if not trash.is_dir() or trash.is_symlink() or state_dir(workspace_root).is_symlink():
+        return None
+    try:
+        if trash.resolve(strict=True).parent != state_dir(workspace_root).resolve(strict=True):
+            return None
+    except OSError:
+        return None
+    return trash
+
+
+def _tree_size(path: Path) -> int:
+    total = 0
+    for root, _dirs, files in os.walk(path, followlinks=False):
+        for name in files:
+            try:
+                total += os.lstat(os.path.join(root, name)).st_size
+            except OSError:
+                pass
+    return total
+
+
+def list_trash(workspace_root: Path) -> list[tuple[str, int]]:
+    """(entry name, size in bytes) of what the trash holds; [] when there is no trash."""
+    trash = _trash_dir(workspace_root)
+    if trash is None:
+        return []
+    return [(entry.name, _tree_size(entry) if entry.is_dir() and not entry.is_symlink() else 0) for entry in sorted(trash.iterdir())]
+
+
+def _make_writable_and_retry(function: Callable[..., object], path: str, _excinfo: object) -> None:
+    os.chmod(path, stat.S_IWRITE)  # Git object files are read-only on Windows
+    function(path)
+
+
+def empty_trash(workspace_root: Path) -> tuple[bool, list[str]]:
+    """Permanently delete what is in the updater trash (irreversible). Only the children of
+    `<workspace>/.hydra-umc-trains/trash` are touched; a link is removed as a link and never followed; the folder
+    itself is kept. Nothing outside the trash can be reached: a trash that is not a real folder there stops it."""
+    trash = _trash_dir(workspace_root)
+    if trash is None:
+        return True, ["the trash is empty (there is none)"]
+    messages: list[str] = []
+    for entry in sorted(trash.iterdir()):
+        try:
+            if entry.is_symlink() or not entry.is_dir():
+                entry.unlink()
+            else:
+                real = entry.resolve(strict=True)
+                if real.parent != trash.resolve(strict=True):
+                    messages.append(f"{entry.name}: not directly inside the trash; left alone")
+                    return False, messages
+                shutil.rmtree(entry, onerror=_make_writable_and_retry)
+        except OSError as exc:
+            messages.append(f"{entry.name}: could not be deleted ({exc}); stopped")
+            return False, messages
+        messages.append(f"{entry.name}: deleted")
     return True, messages
 
 
