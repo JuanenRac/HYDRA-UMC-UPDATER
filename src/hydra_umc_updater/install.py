@@ -109,6 +109,75 @@ def recreate_venv_enabled() -> bool:
     return settings.get_recreate_venv()
 
 
+#: The health check after a promotion. By default it is one attempt, as it always was. A service that needs a few
+#: seconds to come up after its checkout is replaced can be given more attempts, with a growing wait between them
+#: (`HYDRA_UMC_UPDATER_HEALTH_RETRIES` attempts at most 10, `HYDRA_UMC_UPDATER_HEALTH_RETRY_DELAY` seconds before the
+#: second attempt, doubled each time up to 30). The roll back is off by default: with
+#: `HYDRA_UMC_UPDATER_ROLLBACK_ON_UNHEALTHY=1` a promotion whose health check still fails after the last attempt puts the
+#: previous installation back and reports the update as failed.
+HEALTH_RETRIES_ENV = "HYDRA_UMC_UPDATER_HEALTH_RETRIES"
+HEALTH_RETRY_DELAY_ENV = "HYDRA_UMC_UPDATER_HEALTH_RETRY_DELAY"
+ROLLBACK_ON_UNHEALTHY_ENV = "HYDRA_UMC_UPDATER_ROLLBACK_ON_UNHEALTHY"
+HEALTH_RETRIES_MAX = 10
+HEALTH_RETRY_DELAY_DEFAULT_S = 2.0
+HEALTH_RETRY_DELAY_CAP_S = 30.0
+
+
+def health_retries() -> int:
+    """Attempts of the post-promotion health check: 1 unless the environment asks for more (never more than 10)."""
+    raw = os.environ.get(HEALTH_RETRIES_ENV, "").strip()
+    if not raw.isdigit():
+        return 1
+    return max(1, min(int(raw), HEALTH_RETRIES_MAX))
+
+
+def health_retry_delay() -> float:
+    raw = os.environ.get(HEALTH_RETRY_DELAY_ENV, "").strip()
+    try:
+        value = float(raw)
+    except ValueError:
+        return HEALTH_RETRY_DELAY_DEFAULT_S
+    return value if 0 <= value <= HEALTH_RETRY_DELAY_CAP_S else HEALTH_RETRY_DELAY_DEFAULT_S
+
+
+def rollback_on_unhealthy_enabled() -> bool:
+    return os.environ.get(ROLLBACK_ON_UNHEALTHY_ENV, "").strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _check_health_with_retries(url: str, *, sleep: Callable[[float], None] = time.sleep) -> tuple[bool, str]:
+    """`check_service_health` up to `health_retries()` times, waiting `health_retry_delay()` and then twice as long between attempts."""
+    attempts = health_retries()
+    delay = health_retry_delay()
+    healthy, reason = _check_service_health(url)
+    for _ in range(attempts - 1):
+        if healthy:
+            break
+        sleep(min(delay, HEALTH_RETRY_DELAY_CAP_S))
+        delay = min(delay * 2 if delay > 0 else 0, HEALTH_RETRY_DELAY_CAP_S)
+        healthy, reason = _check_service_health(url)
+    if attempts > 1:
+        reason = f"{reason}, {attempts} attempt(s) at most"
+    return healthy, reason
+
+
+def _roll_back_promotion(path: Path, backup_path: Path) -> str | None:
+    """Puts the previous installation back at `path`; the promoted one is kept next to it. None when it worked, else why not."""
+    unhealthy_path = path.with_name(f"{path.name}.unhealthy-{uuid4().hex[:8]}")
+    try:
+        path.rename(unhealthy_path)
+    except OSError as exc:
+        return f"could not move the promoted checkout aside ({type(exc).__name__}: {exc})"
+    try:
+        backup_path.rename(path)
+    except OSError as exc:
+        try:
+            unhealthy_path.rename(path)
+        except OSError:
+            return f"could not restore the previous installation ({exc}); it is at {backup_path} and the promoted one at {unhealthy_path}"
+        return f"could not restore the previous installation ({type(exc).__name__}: {exc}); the promoted one was put back"
+    return None
+
+
 def _python_for_venv() -> str | None:
     """The interpreter that creates a virtual environment: the one running this updater, or, when it is a frozen application, one found on the PATH."""
     if not getattr(sys, "frozen", False):
@@ -980,7 +1049,24 @@ def clone_or_pull(
     # dependency isn't installed at all (no journal to even record the
     # check against - see this module's own header comment).
     if journal and health_check_url:
-        healthy, reason = _check_service_health(health_check_url)
+        healthy, reason = _check_health_with_retries(health_check_url)
+        if not healthy and rollback_on_unhealthy_enabled():
+            problem = _roll_back_promotion(path, backup_path)
+            if problem is None:
+                journal.complete(promotion_id)
+                return InstallResult(
+                    False,
+                    f"Promoted {path} to v{candidate.version} (commit {sha_label}), but its own declared health "
+                    f"check at {health_check_url} still fails ({reason}); the previous installation was put back "
+                    f"and the promoted checkout was kept next to it for inspection",
+                    build_result.output,
+                )
+            return InstallResult(
+                False,
+                f"Promoted {path} to v{candidate.version} (commit {sha_label}), but its own declared health check at "
+                f"{health_check_url} still fails ({reason}), and putting the previous installation back failed: {problem}",
+                build_result.output,
+            )
         if not healthy:
             return InstallResult(
                 False,

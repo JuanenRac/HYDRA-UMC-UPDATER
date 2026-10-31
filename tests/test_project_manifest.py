@@ -61,6 +61,18 @@ def test_rejects_an_identity_mismatch():
         parse_manifest(json.dumps(valid_manifest()), expected_name="HYDRA-UMC-OTHER")
 
 
+def test_the_ecosystem_to_accept_can_be_given():
+    """The same contract serves another family: the ecosystem named is a parameter, HYDRA-UMC by default."""
+    data = valid_manifest()
+    data["ecosystem"] = "URTC"
+    with pytest.raises(ManifestValidationError, match="ecosystem must be 'HYDRA-UMC'"):
+        parse_manifest(json.dumps(data))
+    manifest = parse_manifest(json.dumps(data), ecosystem_id="URTC")
+    assert manifest.ecosystem == "URTC"
+    with pytest.raises(ManifestValidationError, match="ecosystem must be 'URTC'"):
+        parse_manifest(json.dumps(valid_manifest()), ecosystem_id="URTC")
+
+
 def test_rejects_an_unsupported_maturity():
     data = valid_manifest()
     data["maturity"] = "almost-production"

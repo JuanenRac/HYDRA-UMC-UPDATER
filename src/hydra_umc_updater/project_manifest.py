@@ -94,8 +94,11 @@ def _parse_depends_on(raw: Any, own_name: Any) -> tuple[str, ...]:
     return tuple(raw)
 
 
-def parse_manifest(text: str, *, expected_name: str | None = None) -> ProjectManifest:
-    """Parse and validate a v1 manifest without a third-party JSON Schema lib."""
+def parse_manifest(text: str, *, expected_name: str | None = None, ecosystem_id: str = ECOSYSTEM_ID) -> ProjectManifest:
+    """Parse and validate a v1 manifest without a third-party JSON Schema lib.
+
+    `ecosystem_id` is the ecosystem the manifest must name; it defaults to HYDRA-UMC, and a tool that reads the
+    manifests of another family passes its own (the rest of the contract is the same)."""
     try:
         data = json.loads(text)
     except json.JSONDecodeError as exc:
@@ -137,9 +140,9 @@ def parse_manifest(text: str, *, expected_name: str | None = None) -> ProjectMan
         )
 
     ecosystem = _require_string(data, "ecosystem")
-    if ecosystem != ECOSYSTEM_ID:
+    if ecosystem != ecosystem_id:
         raise ManifestValidationError(
-            f"ecosystem must be {ECOSYSTEM_ID!r}, got {ecosystem!r}"
+            f"ecosystem must be {ecosystem_id!r}, got {ecosystem!r}"
         )
 
     name = _require_string(data, "name")

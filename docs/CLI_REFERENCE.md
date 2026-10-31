@@ -183,6 +183,17 @@ and refuses to start while an install or update is running in the workspace.
   accepts, for a first install as well as for an update. An ssh signature is
   checked against the file named by `allowed_signers_file` in the same
   settings, when it is set.
+- A project that declares a service port and a health path is checked after its
+  checkout is replaced, and the update counts as done only when the check
+  answers with a 2xx. By default that is one attempt.
+  `HYDRA_UMC_UPDATER_HEALTH_RETRIES=N` (at most 10) makes it up to N attempts,
+  waiting `HYDRA_UMC_UPDATER_HEALTH_RETRY_DELAY` seconds (default 2, at most
+  30) before the second one and twice as long before each next one, for a
+  service that needs a few seconds to start. With
+  `HYDRA_UMC_UPDATER_ROLLBACK_ON_UNHEALTHY=1` (off by default) a check that
+  still fails after the last attempt puts the previous installation back and
+  reports the update as failed; the promoted checkout stays next to it as
+  `<name>.unhealthy-xxxxxxxx`. The updater itself never restarts a service.
 - `HYDRA_UMC_WORKSPACE` names the workspace when `--workspace` is not given.
   When the updater is installed as a package inside a Python environment, the
   current directory is used instead of a folder inside that environment.

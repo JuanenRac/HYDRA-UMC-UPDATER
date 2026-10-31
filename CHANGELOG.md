@@ -4,6 +4,9 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The health check after a promotion can be repeated, and the promotion can be undone:** `HYDRA_UMC_UPDATER_HEALTH_RETRIES` (at most 10 attempts, default 1 as before) with a growing wait between them (`HYDRA_UMC_UPDATER_HEALTH_RETRY_DELAY`, default 2 s, doubled each time, at most 30 s) gives a service time to start; with `HYDRA_UMC_UPDATER_ROLLBACK_ON_UNHEALTHY=1` (off by default) a check that still fails puts the previous installation back and reports the update as failed, keeping the promoted checkout next to it. Tested with a real promotion.
+- **The manifest parser can be pointed at another family:** `parse_manifest(..., ecosystem_id=...)` names the ecosystem a manifest must carry (HYDRA-UMC by default), the first step to share the core with the updaters of the other families.
+
 - **A batch follows `depends_on`:** a project whose manifest lists other repositories in `depends_on` is installed or updated after the ones it names that are part of the same batch; the SDK still goes first and the updater last, a dependency outside the batch is ignored and a cycle cannot lose a project. The confirmation list shows the same order. The manifest parser accepts the field (unique repository names, never its own).
 
 ## [0.5.0] - The Qt window tested without a screen, the docs and node roles, an optional evidence field, the mcu target and the universal README

@@ -776,6 +776,141 @@ def test_i13_promotion_stays_pending_when_the_health_check_fails(tmp_path: Path)
         _reload_install_without_sdk()
 
 
+def test_health_settings_default_to_one_attempt_and_no_rollback(monkeypatch):
+    from hydra_umc_updater import install as module
+    for name in (module.HEALTH_RETRIES_ENV, module.HEALTH_RETRY_DELAY_ENV, module.ROLLBACK_ON_UNHEALTHY_ENV):
+        monkeypatch.delenv(name, raising=False)
+    assert module.health_retries() == 1
+    assert module.health_retry_delay() == module.HEALTH_RETRY_DELAY_DEFAULT_S
+    assert module.rollback_on_unhealthy_enabled() is False
+
+
+def test_health_settings_are_read_and_bounded(monkeypatch):
+    from hydra_umc_updater import install as module
+    monkeypatch.setenv(module.HEALTH_RETRIES_ENV, "4")
+    assert module.health_retries() == 4
+    monkeypatch.setenv(module.HEALTH_RETRIES_ENV, "999")
+    assert module.health_retries() == module.HEALTH_RETRIES_MAX
+    for bad in ("0", "-3", "many", ""):
+        monkeypatch.setenv(module.HEALTH_RETRIES_ENV, bad)
+        assert module.health_retries() == 1
+    monkeypatch.setenv(module.HEALTH_RETRY_DELAY_ENV, "0.5")
+    assert module.health_retry_delay() == 0.5
+    for bad in ("-1", "9999", "soon"):
+        monkeypatch.setenv(module.HEALTH_RETRY_DELAY_ENV, bad)
+        assert module.health_retry_delay() == module.HEALTH_RETRY_DELAY_DEFAULT_S
+    monkeypatch.setenv(module.ROLLBACK_ON_UNHEALTHY_ENV, "yes")
+    assert module.rollback_on_unhealthy_enabled() is True
+    monkeypatch.setenv(module.ROLLBACK_ON_UNHEALTHY_ENV, "0")
+    assert module.rollback_on_unhealthy_enabled() is False
+
+
+def test_the_health_check_is_repeated_with_a_growing_wait_until_it_passes(monkeypatch):
+    from hydra_umc_updater import install as module
+    answers = iter([(False, "HTTP 503"), (False, "HTTP 503"), (True, "HTTP 200")])
+    calls = []
+    monkeypatch.setattr(module, "_check_service_health", lambda url: (calls.append(url), next(answers))[1], raising=False)
+    monkeypatch.setenv(module.HEALTH_RETRIES_ENV, "5")
+    monkeypatch.setenv(module.HEALTH_RETRY_DELAY_ENV, "1")
+    waits: list[float] = []
+    healthy, reason = module._check_health_with_retries("http://127.0.0.1:1/health", sleep=waits.append)
+    assert healthy and "HTTP 200" in reason
+    assert len(calls) == 3
+    assert waits == [1.0, 2.0]
+
+
+def test_the_health_check_gives_up_after_the_last_attempt(monkeypatch):
+    from hydra_umc_updater import install as module
+    calls = []
+    monkeypatch.setattr(module, "_check_service_health", lambda url: (calls.append(url), (False, "HTTP 503"))[1], raising=False)
+    monkeypatch.setenv(module.HEALTH_RETRIES_ENV, "3")
+    monkeypatch.setenv(module.HEALTH_RETRY_DELAY_ENV, "0")
+    healthy, reason = module._check_health_with_retries("http://127.0.0.1:1/health", sleep=lambda _s: None)
+    assert not healthy and "3 attempt(s)" in reason
+    assert len(calls) == 3
+
+
+def test_a_single_attempt_is_made_by_default(monkeypatch):
+    from hydra_umc_updater import install as module
+    calls = []
+    monkeypatch.setattr(module, "_check_service_health", lambda url: (calls.append(url), (False, "refused"))[1], raising=False)
+    monkeypatch.delenv(module.HEALTH_RETRIES_ENV, raising=False)
+    healthy, reason = module._check_health_with_retries("http://127.0.0.1:1/health", sleep=lambda _s: 1 / 0)
+    assert not healthy and reason == "refused"
+    assert len(calls) == 1
+
+
+def test_roll_back_promotion_puts_the_previous_installation_back(tmp_path: Path):
+    from hydra_umc_updater import install as module
+    live = tmp_path / "PROJECT"
+    backup = tmp_path / "PROJECT.backup-abc"
+    live.mkdir()
+    backup.mkdir()
+    (live / "version.txt").write_text("new", encoding="utf-8")
+    (backup / "version.txt").write_text("old", encoding="utf-8")
+    assert module._roll_back_promotion(live, backup) is None
+    assert (live / "version.txt").read_text(encoding="utf-8") == "old"
+    assert not backup.exists()
+    kept = [item for item in tmp_path.iterdir() if ".unhealthy-" in item.name]
+    assert len(kept) == 1 and (kept[0] / "version.txt").read_text(encoding="utf-8") == "new"
+
+
+def test_roll_back_promotion_keeps_the_promoted_checkout_when_the_backup_is_gone(tmp_path: Path):
+    from hydra_umc_updater import install as module
+    live = tmp_path / "PROJECT"
+    live.mkdir()
+    (live / "version.txt").write_text("new", encoding="utf-8")
+    problem = module._roll_back_promotion(live, tmp_path / "PROJECT.backup-missing")
+    assert problem is not None and "promoted one was put back" in problem
+    assert (live / "version.txt").read_text(encoding="utf-8") == "new"
+
+
+def test_an_unhealthy_promotion_is_rolled_back_only_when_asked(tmp_path: Path, monkeypatch):
+    if not _sdk_available():
+        import pytest
+        pytest.skip("hydra-umc-sdk is neither a sibling checkout nor installed")
+    import socket
+
+    probe = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    probe.bind(("127.0.0.1", 0))
+    closed_port = probe.getsockname()[1]
+    probe.close()
+
+    reloaded = _reload_install_with_sdk_on_path()
+    try:
+        monkeypatch.setenv(reloaded.ROLLBACK_ON_UNHEALTHY_ENV, "1")
+        remote = tmp_path / "remote.git"
+        git("init", "--bare", str(remote), cwd=tmp_path)
+        seed = tmp_path / "seed"
+        git("clone", str(remote), str(seed), cwd=tmp_path)
+        git("config", "user.email", "contract@example.invalid", cwd=seed)
+        git("config", "user.name", "Contract", cwd=seed)
+        write_manifest(seed, "1.0.0")
+        write_build_script(seed, ok=True)
+        git("add", "-A", cwd=seed)
+        git("commit", "-m", "base", cwd=seed)
+        git("push", "origin", "HEAD", cwd=seed)
+
+        local = tmp_path / entry().name
+        git("clone", str(remote), str(local), cwd=tmp_path)
+
+        write_manifest(seed, "1.1.0")
+        git("add", "-A", cwd=seed)
+        git("commit", "-m", "new release", cwd=seed)
+        git("push", "origin", "HEAD", cwd=seed)
+
+        result = reloaded.clone_or_pull(_entry_with_health(port=closed_port), tmp_path)
+
+        assert not result.ok
+        assert "put back" in result.message
+        assert (local / "hydra-umc.project.json").read_text(encoding="utf-8").count("1.0.0") >= 1
+        journal = reloaded.PromotionJournal(tmp_path / reloaded._JOURNAL_FILENAME)
+        assert journal.pending() == []
+        assert any(".unhealthy-" in item.name for item in tmp_path.iterdir())
+    finally:
+        _reload_install_without_sdk()
+
+
 def test_recover_interrupted_promotions_heals_a_real_crash_left_backed_up(tmp_path: Path):
     if not _sdk_available():
         import pytest
