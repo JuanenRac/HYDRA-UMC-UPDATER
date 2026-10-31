@@ -19,7 +19,7 @@ GPL-3.0-or-later - see LICENSE
   <img src="https://img.shields.io/badge/Language-Python%203.10%2B-blue.svg" alt="Language">
   <img src="https://img.shields.io/badge/Core-stdlib%20only-brightgreen.svg" alt="Core">
   <img src="https://img.shields.io/badge/Desktop-PySide6%20%7C%20Qt%20Quick-367BF5.svg" alt="Desktop">
-  <img src="https://img.shields.io/badge/Tests-181%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-219%20passing-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.5.0-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-established-2EA44F.svg" alt="Maturity">
 </p>
@@ -36,7 +36,7 @@ GPL-3.0-or-later - see LICENSE
 |---|---|
 | Version | `0.5.0` |
 | Maturité | Établi |
-| Tests | 181 (`python -m pytest -q tests`) |
+| Tests | 219 (`python -m pytest -q tests`) |
 | Technologie | Python 3.10+ / PySide6 / Qt Quick (QML) / Tkinter (legacy fallback) / Git / GitHub raw content |
 | Cible | Le PC de la personne qui l'utilise |
 | Sur matériel réel | Sans objet : rien ici ne s'exécute sur du matériel |
@@ -52,7 +52,7 @@ Chaque ligne est une partie de ce dépôt et le feu dit où elle en est aujourd'
 | Domaine | État | Ce que cela veut dire ici |
 |---|---|---|
 | Logiciel | 🟢 | Complet pour son usage et stable ; la vérification d'honnêteté ci-dessus liste les limites connues |
-| Tests | 🟢 | 181 tests automatiques, exécutés à chaque modification |
+| Tests | 🟢 | 219 tests automatiques, exécutés à chaque modification |
 | Matériel réel | 🟢 | Sans objet : rien ici ne s'exécute sur du matériel |
 | Documentation | 🟢 | README en huit langues, vérifié par rapport au manifeste à chaque modification |
 
@@ -240,6 +240,8 @@ ligne sélectionnée.
   peu près à jour ?", pas un remplacement du propre
   `firmware_manifest.json` de `build_firmware.sh` pour un vrai flashage.
 
+- **Ordre d'un lot et annulation d'une promotion :** un projet dont le manifeste liste des dépôts dans `depends_on` est installé ou mis à jour après ceux qu'il nomme et qui sont dans le même lot (le SDK d'abord, l'outil de mise à jour en dernier ; une dépendance hors du lot est ignorée et un cycle ne peut pas faire perdre un projet). Après une promotion, le contrôle de santé peut être répété (`HYDRA_UMC_UPDATER_HEALTH_RETRIES`) et, avec `HYDRA_UMC_UPDATER_ROLLBACK_ON_UNHEALTHY=1` (désactivé par défaut), un contrôle qui échoue encore remet l'installation précédente et déclare la mise à jour en échec.
+
 ## 🔒 Sécurité et protection
 
 | Menace | Défense | Où |
@@ -258,6 +260,9 @@ ligne sélectionnée.
 | `HYDRA_UMC_UPDATER_REQUIRE_SIGNED` | `0` | `1`, `true`, `yes` ou `on` exige une signature valide sur le commit cloné |
 | `HYDRA_UMC_UPDATER_RECREATE_VENV` | activé | `0` garde l'ancien environnement virtuel au lieu d'en créer un neuf après une promotion |
 | `--workspace` | le dossier parent de celui-ci | dossier qui contient un sous-dossier par projet |
+| `HYDRA_UMC_UPDATER_HEALTH_RETRIES` | `1` | Tentatives du contrôle de santé après une promotion (10 au plus), avec une attente croissante entre elles (`HYDRA_UMC_UPDATER_HEALTH_RETRY_DELAY`, 2 s doublées à chaque fois, 30 s au plus), pour laisser un service démarrer |
+| `HYDRA_UMC_UPDATER_ROLLBACK_ON_UNHEALTHY` | désactivé | `1` remet l'installation précédente quand le contrôle de santé échoue encore et déclare la mise à jour en échec, en gardant à côté la copie promue |
+| `HYDRA_UMC_UPDATER_NO_CACHE` | désactivé | `1` désactive le cache conservé dans le dossier personnel à côté du fichier de réglages |
 
 ## 🚀 Démarrage rapide
 
@@ -274,7 +279,7 @@ Nécessite Python 3.10 ou plus récent.
 
 ## 🧪 Tests
 
-181 tests automatiques s'exécutent avec `python -m pytest -q tests`. Ils n'ont besoin ni de matériel ni de rien en dehors de cette machine.
+219 tests automatiques s'exécutent avec `python -m pytest -q tests`. Ils n'ont besoin ni de matériel ni de rien en dehors de cette machine.
 
 La CI exécute `HYDRA_UMC_CI=1 python tools/ci_validate.py`, qui vérifie le manifeste, les documents, les huit README et les images.
 

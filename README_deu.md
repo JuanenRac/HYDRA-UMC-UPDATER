@@ -19,7 +19,7 @@ GPL-3.0-or-later - see LICENSE
   <img src="https://img.shields.io/badge/Language-Python%203.10%2B-blue.svg" alt="Language">
   <img src="https://img.shields.io/badge/Core-stdlib%20only-brightgreen.svg" alt="Core">
   <img src="https://img.shields.io/badge/Desktop-PySide6%20%7C%20Qt%20Quick-367BF5.svg" alt="Desktop">
-  <img src="https://img.shields.io/badge/Tests-181%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-219%20passing-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.5.0-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-established-2EA44F.svg" alt="Maturity">
 </p>
@@ -36,7 +36,7 @@ GPL-3.0-or-later - see LICENSE
 |---|---|
 | Version | `0.5.0` |
 | Reifegrad | Etabliert |
-| Tests | 181 (`python -m pytest -q tests`) |
+| Tests | 219 (`python -m pytest -q tests`) |
 | Technik | Python 3.10+ / PySide6 / Qt Quick (QML) / Tkinter (legacy fallback) / Git / GitHub raw content |
 | Ziel | Der PC der Person, die es benutzt |
 | Auf echter Hardware | Nicht zutreffend: nichts hiervon läuft auf Hardware |
@@ -52,7 +52,7 @@ Jede Zeile ist ein Teil dieses Repositorys, und die Ampel sagt, wie weit er heut
 | Bereich | Stand | Was das hier bedeutet |
 |---|---|---|
 | Software | 🟢 | Für seinen Zweck vollständig und stabil; die Ehrlichkeitsprüfung oben nennt die bekannten Grenzen |
-| Tests | 🟢 | 181 automatische Tests, bei jeder Änderung ausgeführt |
+| Tests | 🟢 | 219 automatische Tests, bei jeder Änderung ausgeführt |
 | Echte Hardware | 🟢 | Nicht zutreffend: nichts hiervon läuft auf Hardware |
 | Dokumentation | 🟢 | README in acht Sprachen, bei jeder Änderung gegen das Manifest geprüft |
 
@@ -244,6 +244,8 @@ für die ausgewählte Zeile.
   `build_firmware.sh`s eigene `firmware_manifest.json` für ein echtes
   Flashen.
 
+- **Reihenfolge eines Stapels und Rücknahme einer Übernahme:** Ein Projekt, dessen Manifest Repositorys in `depends_on` nennt, wird nach den genannten Projekten installiert oder aktualisiert, soweit sie im selben Stapel sind (zuerst das SDK, der Updater zuletzt; eine Abhängigkeit außerhalb des Stapels wird ignoriert, ein Zyklus kann kein Projekt verlieren). Nach einer Übernahme lässt sich die Gesundheitsprüfung wiederholen (`HYDRA_UMC_UPDATER_HEALTH_RETRIES`); mit `HYDRA_UMC_UPDATER_ROLLBACK_ON_UNHEALTHY=1` (standardmäßig aus) stellt eine weiter fehlschlagende Prüfung die vorherige Installation wieder her und meldet das Update als fehlgeschlagen.
+
 ## 🔒 Sicherheit und Schutz
 
 | Bedrohung | Abwehr | Wo |
@@ -262,6 +264,9 @@ für die ausgewählte Zeile.
 | `HYDRA_UMC_UPDATER_REQUIRE_SIGNED` | `0` | `1`, `true`, `yes` oder `on` verlangt eine gültige Signatur am geklonten Commit |
 | `HYDRA_UMC_UPDATER_RECREATE_VENV` | an | `0` behält die alte virtuelle Umgebung, statt nach einer Übernahme eine neue anzulegen |
 | `--workspace` | der übergeordnete Ordner dieses Ordners | Ordner mit einem Unterordner je Projekt |
+| `HYDRA_UMC_UPDATER_HEALTH_RETRIES` | `1` | Versuche der Gesundheitsprüfung nach einer Übernahme (höchstens 10) mit wachsender Wartezeit dazwischen (`HYDRA_UMC_UPDATER_HEALTH_RETRY_DELAY`, 2 s, jedes Mal verdoppelt, höchstens 30 s), damit ein Dienst Zeit zum Starten hat |
+| `HYDRA_UMC_UPDATER_ROLLBACK_ON_UNHEALTHY` | aus | `1` stellt die vorherige Installation wieder her, wenn die Gesundheitsprüfung weiter fehlschlägt, und meldet das Update als fehlgeschlagen; der übernommene Stand bleibt daneben erhalten |
+| `HYDRA_UMC_UPDATER_NO_CACHE` | aus | `1` schaltet den Cache im Home-Verzeichnis neben der Einstellungsdatei ab |
 
 ## 🚀 Schnellstart
 
@@ -278,7 +283,7 @@ Benötigt Python 3.10 oder neuer.
 
 ## 🧪 Tests
 
-181 automatische Tests laufen mit `python -m pytest -q tests`. Sie brauchen weder Hardware noch etwas außerhalb dieses Rechners.
+219 automatische Tests laufen mit `python -m pytest -q tests`. Sie brauchen weder Hardware noch etwas außerhalb dieses Rechners.
 
 Die CI führt `HYDRA_UMC_CI=1 python tools/ci_validate.py` aus; das prüft das Manifest, die Dokumente, die acht READMEs und die Bilder.
 

@@ -19,7 +19,7 @@ GPL-3.0-or-later - see LICENSE
   <img src="https://img.shields.io/badge/Language-Python%203.10%2B-blue.svg" alt="Language">
   <img src="https://img.shields.io/badge/Core-stdlib%20only-brightgreen.svg" alt="Core">
   <img src="https://img.shields.io/badge/Desktop-PySide6%20%7C%20Qt%20Quick-367BF5.svg" alt="Desktop">
-  <img src="https://img.shields.io/badge/Tests-181%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-219%20passing-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.5.0-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-established-2EA44F.svg" alt="Maturity">
 </p>
@@ -36,7 +36,7 @@ GPL-3.0-or-later - see LICENSE
 |---|---|
 | Versão | `0.5.0` |
 | Maturidade | Estabelecido |
-| Testes | 181 (`python -m pytest -q tests`) |
+| Testes | 219 (`python -m pytest -q tests`) |
 | Tecnologia | Python 3.10+ / PySide6 / Qt Quick (QML) / Tkinter (legacy fallback) / Git / GitHub raw content |
 | Destino | O PC de quem o usa |
 | Em hardware real | Não aplicável: nada aqui corre em hardware |
@@ -52,7 +52,7 @@ Cada linha é uma parte deste repositório e a luz diz até onde chega hoje. É 
 | Área | Estado | O que significa aqui |
 |---|---|---|
 | Software | 🟢 | Completo para o seu propósito e estável; a verificação de honestidade acima lista os limites conhecidos |
-| Testes | 🟢 | 181 testes automáticos, executados a cada alteração |
+| Testes | 🟢 | 219 testes automáticos, executados a cada alteração |
 | Hardware real | 🟢 | Não aplicável: nada aqui corre em hardware |
 | Documentação | 🟢 | README em oito idiomas, verificado contra o manifesto a cada alteração |
 
@@ -231,6 +231,8 @@ O **HYDRA-UMC-UPDATER** encontra, instala e atualiza os projetos HYDRA-UMC na m�
   mais ou menos atualizado», não um substituto do `firmware_manifest.json` do
   próprio `build_firmware.sh` para uma gravação real.
 
+- **Ordem de um lote e anulação de uma promoção:** um projeto cujo manifesto lista repositórios em `depends_on` é instalado ou atualizado depois dos que nomeia e que estão no mesmo lote (primeiro o SDK, o atualizador no fim; uma dependência fora do lote é ignorada e um ciclo não pode fazer perder um projeto). Após uma promoção, a verificação de saúde pode ser repetida (`HYDRA_UMC_UPDATER_HEALTH_RETRIES`) e, com `HYDRA_UMC_UPDATER_ROLLBACK_ON_UNHEALTHY=1` (desativado por omissão), uma verificação que continue a falhar repõe a instalação anterior e dá a atualização por falhada.
+
 ## 🔒 Segurança e proteção
 
 | Ameaça | Defesa | Onde |
@@ -249,6 +251,9 @@ O **HYDRA-UMC-UPDATER** encontra, instala e atualiza os projetos HYDRA-UMC na m�
 | `HYDRA_UMC_UPDATER_REQUIRE_SIGNED` | `0` | `1`, `true`, `yes` ou `on` exige uma assinatura válida no commit clonado |
 | `HYDRA_UMC_UPDATER_RECREATE_VENV` | ativo | `0` mantém o ambiente virtual antigo em vez de criar um novo depois de uma promoção |
 | `--workspace` | a pasta que contém esta | pasta que contém uma subpasta por projeto |
+| `HYDRA_UMC_UPDATER_HEALTH_RETRIES` | `1` | Tentativas da verificação de saúde após uma promoção (no máximo 10), com uma espera crescente entre elas (`HYDRA_UMC_UPDATER_HEALTH_RETRY_DELAY`, 2 s duplicados de cada vez, no máximo 30 s), para dar tempo a um serviço para arrancar |
+| `HYDRA_UMC_UPDATER_ROLLBACK_ON_UNHEALTHY` | desativado | `1` repõe a instalação anterior quando a verificação de saúde continua a falhar e dá a atualização por falhada, mantendo ao lado a cópia promovida |
+| `HYDRA_UMC_UPDATER_NO_CACHE` | desativado | `1` desativa a cache guardada na pasta pessoal junto do ficheiro de definições |
 
 ## 🚀 Início rápido
 
@@ -265,7 +270,7 @@ Requer Python 3.10 ou superior.
 
 ## 🧪 Testes
 
-181 testes automáticos correm com `python -m pytest -q tests`. Não precisam de hardware nem de nada fora desta máquina.
+219 testes automáticos correm com `python -m pytest -q tests`. Não precisam de hardware nem de nada fora desta máquina.
 
 A CI executa `HYDRA_UMC_CI=1 python tools/ci_validate.py`, que verifica o manifesto, os documentos, os oito README e as imagens.
 

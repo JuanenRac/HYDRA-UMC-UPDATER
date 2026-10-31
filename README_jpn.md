@@ -19,7 +19,7 @@ GPL-3.0-or-later - see LICENSE
   <img src="https://img.shields.io/badge/Language-Python%203.10%2B-blue.svg" alt="Language">
   <img src="https://img.shields.io/badge/Core-stdlib%20only-brightgreen.svg" alt="Core">
   <img src="https://img.shields.io/badge/Desktop-PySide6%20%7C%20Qt%20Quick-367BF5.svg" alt="Desktop">
-  <img src="https://img.shields.io/badge/Tests-181%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-219%20passing-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.5.0-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-established-2EA44F.svg" alt="Maturity">
 </p>
@@ -36,7 +36,7 @@ GPL-3.0-or-later - see LICENSE
 |---|---|
 | バージョン | `0.5.0` |
 | 成熟度 | 確立 |
-| テスト | 181 (`python -m pytest -q tests`) |
+| テスト | 219 (`python -m pytest -q tests`) |
 | 技術 | Python 3.10+ / PySide6 / Qt Quick (QML) / Tkinter (legacy fallback) / Git / GitHub raw content |
 | 対象 | 利用者の PC |
 | 実機での確認 | 対象外：ここにあるものはハードウェア上では動きません |
@@ -52,7 +52,7 @@ GPL-3.0-or-later - see LICENSE
 | 領域 | 状態 | ここでの意味 |
 |---|---|---|
 | ソフトウェア | 🟢 | 目的に対して完成していて安定しています。既知の制限は上の正直さの確認に書かれています |
-| テスト | 🟢 | 自動テスト 181 件。変更のたびに実行されます |
+| テスト | 🟢 | 自動テスト 219 件。変更のたびに実行されます |
 | 実機 | 🟢 | 対象外：ここにあるものはハードウェア上では動きません |
 | ドキュメント | 🟢 | 8 言語の README。変更のたびにマニフェストと照合されます |
 
@@ -157,6 +157,8 @@ OK  Updated /home/pi/HYDRA-UMC/HYDRA-UMC-SERVER to v0.0.9 (commit 1a2b3c4d5e6f) 
 - **標準ライブラリのみ。** GitHub の取得には `urllib`（`github_client.py`）、git/ビルドスクリプトの呼び出しには `subprocess`（`install.py`）を使用し、それ以外は何もありません——他の*すべての*プロジェクトの依存関係を健全に保つ責任を持つツール自体が依存関係を持たないでいることは、意図的なものです。
 - **既知の簡略化**：HYDRA-UMC と URTC は、実際には複数コンポーネントからなるファームウェアリポジトリです（それぞれ 6 個と 4 個の独立してバージョン管理されるバイナリを持ちます——それぞれの `VERSION_CHECKLIST.txt`/`build_firmware.sh` を参照）。単一の「これが」バージョン番号というものは存在しません。`registry.py` はリポジトリごとに 1 つの代表的なコンポーネントのみを追跡します——「このリポジトリはおおむね最新か」に答えるには十分ですが、実際のフラッシュ用の `build_firmware.sh` 自身の `firmware_manifest.json` の代替にはなりません。
 
+- **バッチの順序と昇格の取り消し:** マニフェストの `depends_on` にリポジトリを挙げたプロジェクトは、同じバッチにある依存先の後でインストール・更新されます（SDK が最初、アップデーターが最後。バッチ外の依存は無視され、循環があってもプロジェクトは失われません）。昇格後はヘルスチェックを繰り返せます（`HYDRA_UMC_UPDATER_HEALTH_RETRIES`）。`HYDRA_UMC_UPDATER_ROLLBACK_ON_UNHEALTHY=1`（既定はオフ）なら、チェックが失敗し続けた場合に以前のインストールを戻し、更新を失敗として報告します。
+
 ## 🔒 セキュリティと安全
 
 | 脅威 | 防御 | 場所 |
@@ -175,6 +177,9 @@ OK  Updated /home/pi/HYDRA-UMC/HYDRA-UMC-SERVER to v0.0.9 (commit 1a2b3c4d5e6f) 
 | `HYDRA_UMC_UPDATER_REQUIRE_SIGNED` | `0` | `1`、`true`、`yes`、`on` でクローンしたコミットに有効な署名を要求 |
 | `HYDRA_UMC_UPDATER_RECREATE_VENV` | オン | `0` で、昇格後に新しい仮想環境を作らず古いものを使い続けます |
 | `--workspace` | このフォルダーの親 | プロジェクトごとのサブフォルダーを持つフォルダー |
+| `HYDRA_UMC_UPDATER_HEALTH_RETRIES` | `1` | 昇格後のヘルスチェックの試行回数（最大 10）。試行の間隔は徐々に長くなり（`HYDRA_UMC_UPDATER_HEALTH_RETRY_DELAY`、2 秒を毎回倍にし最大 30 秒）、サービスが起動する時間を与えます |
+| `HYDRA_UMC_UPDATER_ROLLBACK_ON_UNHEALTHY` | オフ | `1` にすると、ヘルスチェックが失敗し続ける場合に以前のインストールを戻し、更新を失敗として報告します（昇格したチェックアウトは隣に残します） |
+| `HYDRA_UMC_UPDATER_NO_CACHE` | オフ | `1` にすると、設定ファイルの隣のホームディレクトリにあるキャッシュを使いません |
 
 ## 🚀 クイックスタート
 
@@ -191,7 +196,7 @@ Python 3.10 以上が必要です。
 
 ## 🧪 テスト
 
-`python -m pytest -q tests` で自動テスト 181 件を実行します。 ハードウェアも、このマシンの外にあるものも必要ありません。
+`python -m pytest -q tests` で自動テスト 219 件を実行します。 ハードウェアも、このマシンの外にあるものも必要ありません。
 
 CI は `HYDRA_UMC_CI=1 python tools/ci_validate.py` を実行し、マニフェスト、文書、8 つの README、図を検査します。
 

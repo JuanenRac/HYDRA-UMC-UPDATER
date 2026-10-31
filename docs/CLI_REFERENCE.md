@@ -198,6 +198,20 @@ and refuses to start while an install or update is running in the workspace.
   When the updater is installed as a package inside a Python environment, the
   current directory is used instead of a folder inside that environment.
 
+## Order of a batch and one run at a time
+
+- A project whose `hydra-umc.project.json` lists other repositories in
+  `depends_on` is installed or updated after the ones it names that are part of
+  the same batch. The SDK still goes first and the updater last; a dependency
+  outside the batch is ignored and a cycle cannot lose a project. The
+  confirmation list shows the same order. The manifest parser accepts the field
+  (unique repository names, never the project's own).
+- A lock file in the workspace allows one install or update at a time: two
+  windows, a window and the command line, or this tool and another one cannot
+  run the promotion renames and write the journal together.
+- The cache in the user's home directory (next to the settings file) is turned
+  off with `HYDRA_UMC_UPDATER_NO_CACHE=1`.
+
 ## Exit codes
 
 `status` always exits `0` (even when projects are outdated — that's

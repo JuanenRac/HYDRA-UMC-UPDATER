@@ -19,7 +19,7 @@ GPL-3.0-or-later - see LICENSE
   <img src="https://img.shields.io/badge/Language-Python%203.10%2B-blue.svg" alt="Language">
   <img src="https://img.shields.io/badge/Core-stdlib%20only-brightgreen.svg" alt="Core">
   <img src="https://img.shields.io/badge/Desktop-PySide6%20%7C%20Qt%20Quick-367BF5.svg" alt="Desktop">
-  <img src="https://img.shields.io/badge/Tests-181%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-219%20passing-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.5.0-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-established-2EA44F.svg" alt="Maturity">
 </p>
@@ -36,7 +36,7 @@ GPL-3.0-or-later - see LICENSE
 |---|---|
 | 版本 | `0.5.0` |
 | 成熟度 | 成熟 |
-| 测试 | 181 (`python -m pytest -q tests`) |
+| 测试 | 219 (`python -m pytest -q tests`) |
 | 技术栈 | Python 3.10+ / PySide6 / Qt Quick (QML) / Tkinter (legacy fallback) / Git / GitHub raw content |
 | 目标 | 使用者的电脑 |
 | 真实硬件 | 不适用：这里的内容不在硬件上运行 |
@@ -52,7 +52,7 @@ GPL-3.0-or-later - see LICENSE
 | 领域 | 状态 | 在这里的含义 |
 |---|---|---|
 | 软件 | 🟢 | 就其用途而言已完整且稳定；上面的诚实性检查列出了已知限制 |
-| 测试 | 🟢 | 181 项自动测试，每次变更都会运行 |
+| 测试 | 🟢 | 219 项自动测试，每次变更都会运行 |
 | 真实硬件 | 🟢 | 不适用：这里的内容不在硬件上运行 |
 | 文档 | 🟢 | 八种语言的 README，每次变更都会与清单核对 |
 
@@ -149,6 +149,8 @@ OK  Updated /home/pi/HYDRA-UMC/HYDRA-UMC-SERVER to v0.0.9 (commit 1a2b3c4d5e6f) 
 - **仅使用标准库。** `urllib` 用于 GitHub 抓取（`github_client.py`），`subprocess` 用于 git/构建脚本调用（`install.py`），仅此而已——一个负责维护其他*所有*项目依赖健全性的工具，其自身保持零依赖，这是刻意为之的。
 - **已知的简化处理**：HYDRA-UMC 和 URTC 是真正的多组件固件仓库（各自分别有 6 个和 4 个独立版本管理的二进制文件——见各自的 `VERSION_CHECKLIST.txt`/`build_firmware.sh`），并不存在单一的"那个"版本号。`registry.py` 每个仓库只跟踪*一个*代表性组件——足以回答"这个仓库大致是否是最新的"，但不能替代 `build_firmware.sh` 自身的 `firmware_manifest.json` 用于真实的刷写场景。
 
+- **批次顺序与撤销升级：** 清单的 `depends_on` 列出仓库的项目，会在同一批次中其所依赖的项目之后安装或更新（SDK 最先，更新器最后；批次之外的依赖被忽略，出现环也不会丢失项目）。升级之后可以重复健康检查（`HYDRA_UMC_UPDATER_HEALTH_RETRIES`）；设置 `HYDRA_UMC_UPDATER_ROLLBACK_ON_UNHEALTHY=1`（默认关闭）后，检查仍失败时会恢复之前的安装并将更新报告为失败。
+
 ## 🔒 安全与防护
 
 | 威胁 | 防御 | 位置 |
@@ -167,6 +169,9 @@ OK  Updated /home/pi/HYDRA-UMC/HYDRA-UMC-SERVER to v0.0.9 (commit 1a2b3c4d5e6f) 
 | `HYDRA_UMC_UPDATER_REQUIRE_SIGNED` | `0` | `1`、`true`、`yes` 或 `on` 要求克隆的提交带有有效签名 |
 | `HYDRA_UMC_UPDATER_RECREATE_VENV` | 开启 | `0` 表示升级后保留旧虚拟环境，而不是新建一个 |
 | `--workspace` | 本文件夹的上级文件夹 | 每个项目一个子文件夹的父文件夹 |
+| `HYDRA_UMC_UPDATER_HEALTH_RETRIES` | `1` | 升级后健康检查的尝试次数（最多 10 次），每次之间等待时间递增（`HYDRA_UMC_UPDATER_HEALTH_RETRY_DELAY`，2 秒，每次翻倍，最多 30 秒），给服务留出启动时间 |
+| `HYDRA_UMC_UPDATER_ROLLBACK_ON_UNHEALTHY` | 关闭 | `1` 表示健康检查仍然失败时恢复之前的安装并将更新报告为失败，同时在旁边保留已升级的检出 |
+| `HYDRA_UMC_UPDATER_NO_CACHE` | 关闭 | `1` 关闭保存在主目录中、紧挨设置文件的缓存 |
 
 ## 🚀 快速开始
 
@@ -183,7 +188,7 @@ OK  Updated /home/pi/HYDRA-UMC/HYDRA-UMC-SERVER to v0.0.9 (commit 1a2b3c4d5e6f) 
 
 ## 🧪 测试
 
-运行 `python -m pytest -q tests` 会执行 181 个自动测试。 不需要硬件，也不需要这台机器以外的任何东西。
+运行 `python -m pytest -q tests` 会执行 219 个自动测试。 不需要硬件，也不需要这台机器以外的任何东西。
 
 CI 运行 `HYDRA_UMC_CI=1 python tools/ci_validate.py`，检查清单、文档、八个 README 和图片。
 
