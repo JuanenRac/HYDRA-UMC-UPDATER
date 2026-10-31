@@ -30,7 +30,11 @@ import hashlib
 import json
 import os
 import re
+import subprocess
+import sys
 import tempfile
+import time
+import uuid
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -57,6 +61,9 @@ TRAINS_ENV = "HYDRA_UMC_UPDATER_TRAINS"
 STATE_DIR = ".hydra-umc-trains"
 PREVIOUS_FILE = "previous.json"
 CURRENT_FILE = "current.json"
+FIRST_INSTALLED_FILE = "first-installed.json"
+TRASH_DIR = "trash"
+PLAN_SCHEMA_VERSION = "1.0"
 
 _NAME = re.compile(r"^HYDRA-UMC(-[A-Z0-9-]+)?$")
 _VERSION = re.compile(r"^\d+(?:\.\d+){2,3}$")
@@ -265,6 +272,7 @@ class Plan:
 
     def as_dict(self) -> dict[str, object]:
         return {
+            "schema_version": PLAN_SCHEMA_VERSION,
             "train": self.train.name,
             "ok": self.ok,
             "problems": list(self.problems),
@@ -482,6 +490,9 @@ def apply_train(
         if previous is not None:
             _write_atomic(state_dir(workspace_root) / PREVIOUS_FILE, train_to_json(previous))
     outcome = ApplyOutcome(True)
+    first_installed: list[dict[str, str]] = []
+    if remember:
+        _write_first_installed(workspace_root, plan.train.name, first_installed)
     for item in plan.changes:
         pin = PinSpec(item.commit, item.version, _manifest_digest_of(plan.train, item.name), allow_downgrade=item.action == "downgrade")
         results = installer(entries[item.name], workspace_root, build=build, progress=progress, pin=pin)
@@ -493,6 +504,11 @@ def apply_train(
             )
             return outcome
         outcome.applied.append(item.name)
+        if remember and item.action == "install":
+            commit = _installed(workspace_root, item.name)[1]
+            if commit:
+                first_installed.append({"name": item.name, "commit": commit})
+                _write_first_installed(workspace_root, plan.train.name, first_installed)
     if remember:
         _write_atomic(state_dir(workspace_root) / CURRENT_FILE, train_to_json(plan.train))
     return outcome
@@ -509,8 +525,173 @@ def load_previous(workspace_root: Path) -> Train | None:
     return load_train(path)
 
 
-def mark_rolled_back(workspace_root: Path) -> None:
-    """The saved state was used: keep it under another name (nothing is ever deleted) so it is not applied twice."""
-    source = state_dir(workspace_root) / PREVIOUS_FILE
-    target = state_dir(workspace_root) / f"rolled-back-{os.getpid()}-{int(source.stat().st_mtime)}.json"
-    os.replace(source, target)
+def mark_rolled_back(workspace_root: Path, *, include_first_installed: bool = True) -> None:
+    """The saved state was used: keep it under another name (nothing is ever deleted) so it is not applied twice.
+    The record of the repositories the train installed for the first time is kept the same way."""
+    tag = f"{os.getpid()}-{int(time.time())}"
+    names = [(PREVIOUS_FILE, "rolled-back")]
+    if include_first_installed:
+        names.append((FIRST_INSTALLED_FILE, "rolled-back-first-installed"))
+    for source_name, prefix in names:
+        source = state_dir(workspace_root) / source_name
+        if source.is_file():
+            os.replace(source, state_dir(workspace_root) / f"{prefix}-{tag}.json")
+
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Repositories the train installed for the first time: how a rollback takes them away
+# ---------------------------------------------------------------------------------------------------------------------
+
+def _write_first_installed(workspace_root: Path, train_name: str, repos: list[dict[str, str]]) -> None:
+    data = {"schema_version": "1.0", "train": train_name, "repositories": repos}
+    _write_atomic(state_dir(workspace_root) / FIRST_INSTALLED_FILE, json.dumps(data, indent=2, ensure_ascii=True) + "\n")
+
+
+def load_first_installed(workspace_root: Path) -> list[tuple[str, str]]:
+    """(name, commit) of each repository the last applied train cloned for the first time; [] when there is none.
+    A damaged record is an error, never 'nothing to remove' hidden from the user."""
+    path = state_dir(workspace_root) / FIRST_INSTALLED_FILE
+    if not path.is_file():
+        return []
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+        found = [(str(entry["name"]), str(entry["commit"])) for entry in data["repositories"]]
+    except (OSError, ValueError, KeyError, TypeError) as exc:
+        raise TrainError(f"the record of first installs {path} is damaged ({exc}); nothing was removed") from exc
+    return found
+
+
+@dataclass
+class RemovalItem:
+    name: str
+    action: str  # remove | gone | blocked
+    commit: str
+    reason: str
+
+    def as_dict(self) -> dict[str, object]:
+        return dict(self.__dict__)
+
+
+def _is_inside(workspace_root: Path, name: str) -> bool:
+    """True when `workspace_root/name` is a real folder directly inside the workspace (no link pointing elsewhere)."""
+    path = workspace_root / name
+    try:
+        real, root = path.resolve(strict=True), workspace_root.resolve(strict=True)
+    except OSError:
+        return False
+    return not path.is_symlink() and real.parent == root and real.name == name
+
+
+def plan_removals(workspace_root: Path) -> list[RemovalItem]:
+    """What a rollback may take away: only a repository the train cloned, still on that exact commit, with a clean
+    working tree (nothing modified, staged or untracked), directly inside the workspace. Anything else is `blocked`
+    with the reason, and one blocked item stops the whole removal."""
+    items: list[RemovalItem] = []
+    for name, commit in load_first_installed(workspace_root):
+        if not _NAME.match(name) or not _COMMIT.match(commit):
+            items.append(RemovalItem(name, "blocked", commit, "the record names something that is not a repository of the family"))
+            continue
+        path = workspace_root / name
+        if not os.path.lexists(path):
+            items.append(RemovalItem(name, "gone", commit, "already absent; nothing to remove"))
+            continue
+        if not _is_inside(workspace_root, name) or not (path / ".git").is_dir():
+            items.append(RemovalItem(name, "blocked", commit, "is not a plain Git checkout directly inside the workspace; it will not be touched"))
+            continue
+        if _installed(workspace_root, name)[1] != commit:
+            items.append(RemovalItem(name, "blocked", commit, "is no longer on the commit the train installed; it will not be removed"))
+            continue
+        status = _run(["git", "status", "--porcelain", "-z", "--untracked-files=normal"], cwd=path, capture_output=True, timeout=GIT_TIMEOUT_S)
+        if status.returncode != 0:
+            items.append(RemovalItem(name, "blocked", commit, "could not verify that it has no uncommitted changes; it will not be removed"))
+        elif status.stdout:
+            shown = ", ".join(entry[3:] for entry in status.stdout.split("\0")[:5] if entry)
+            items.append(RemovalItem(name, "blocked", commit, f"has uncommitted or untracked changes ({shown}); it will not be removed"))
+        else:
+            items.append(RemovalItem(name, "remove", commit, "was cloned by the train; moves to the updater trash (kept, never deleted)"))
+    return items
+
+
+def remove_first_installed(workspace_root: Path) -> tuple[bool, list[str]]:
+    """Move each repository the train cloned to the updater's own trash inside the workspace (a rename; nothing is
+    deleted). The plan is made again right before moving, so a change since the preview stops everything."""
+    current = plan_removals(workspace_root)
+    blocked = [item.name for item in current if item.action == "blocked"]
+    if blocked:
+        return False, [f"not removed: {', '.join(blocked)} cannot be removed safely; nothing was moved"]
+    wanted = [item.name for item in current if item.action == "remove"]
+    if not wanted:
+        return True, []
+    trash = state_dir(workspace_root) / TRASH_DIR
+    if trash.is_symlink():
+        return False, ["not removed: the updater trash is a link; nothing was moved"]
+    trash.mkdir(parents=True, exist_ok=True)
+    messages: list[str] = []
+    for name in reversed(order_batch(wanted)):
+        target = trash / f"{name}.removed-{uuid.uuid4().hex[:8]}"
+        try:
+            os.replace(workspace_root / name, target)
+        except OSError as exc:
+            messages.append(f"{name}: could not move it to the trash ({exc}); the ones before it were moved")
+            return False, messages
+        messages.append(f"{name}: removed from the workspace, kept in {target} (move it back to restore it)")
+    return True, messages
+
+
+# ---------------------------------------------------------------------------------------------------------------------
+# `train make`: the train file with its digest, from the release generator of the family
+# ---------------------------------------------------------------------------------------------------------------------
+
+GENERATOR = Path("HYDRA-UMC-SDK") / "tools" / "ecosystem_release.py"
+MAKE_TIMEOUT_S = 120
+
+
+def make_train(workspace_root: Path, *, name: str, release_file: Path | None = None) -> str:
+    """The text of a train for the repositories checked out in `workspace_root`.
+
+    Which repository, which version and which commit come from the one generator the family has, `tools/
+    ecosystem_release.py` of the SDK, run with `--print`: none of its logic is repeated here. With `release_file`
+    (the published `ecosystem-release.json`) that file is read instead of running the generator. The result is parsed
+    again with `parse_train` before it is returned, so what is written is what the updater reads."""
+    if release_file is not None:
+        try:
+            raw = release_file.read_text(encoding="utf-8")
+        except OSError as exc:
+            raise TrainError(f"cannot read the release file {release_file}: {exc}") from exc
+    else:
+        generator = workspace_root / GENERATOR
+        if not generator.is_file():
+            raise TrainError(
+                f"the release generator was not found at {generator}; check out HYDRA-UMC-SDK next to the other projects or give --from-release"
+            )
+        try:
+            done = subprocess.run(
+                [sys.executable, "-I", str(generator), "--print", "--workspace", str(workspace_root)],
+                capture_output=True, text=True, timeout=MAKE_TIMEOUT_S, check=False,
+            )
+        except (OSError, subprocess.SubprocessError) as exc:
+            raise TrainError(f"the release generator could not run: {exc}") from exc
+        if done.returncode != 0:
+            raise TrainError(f"the release generator failed: {(done.stderr or done.stdout).strip()[:300]}")
+        raw = done.stdout
+    try:
+        data = json.loads(raw)
+    except ValueError as exc:
+        raise TrainError(f"the release data is not valid JSON: {exc}") from exc
+    if not isinstance(data, dict) or not isinstance(data.get("repositories"), list) or not data["repositories"]:
+        raise TrainError("the release data has no repositories list")
+    repositories: list[object] = []
+    for entry in data["repositories"]:
+        if not isinstance(entry, dict) or not {"name", "version", "commit"} <= set(entry):
+            raise TrainError("the release data has an entry without name, version and commit")
+        repositories.append({key: entry[key] for key in ("name", "version", "commit")})
+    built = {
+        "schema_version": SCHEMA_VERSION,
+        "ecosystem": data.get("ecosystem", ECOSYSTEM),
+        "name": name,
+        "digest": canonical_digest(repositories),
+        "repositories": repositories,
+    }
+    text = json.dumps(built, indent=2, ensure_ascii=True) + "\n"
+    parse_train(text)  # fail closed: never hand out a train the updater itself would refuse
+    return text

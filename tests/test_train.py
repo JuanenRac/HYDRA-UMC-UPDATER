@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pytest
 
-from hydra_umc_updater import install, main, settings, train
+from hydra_umc_updater import main, settings, train
 from hydra_umc_updater.install import install_or_update
 from train_helpers import SimRepo, checkout_head, entry_for, git
 
@@ -26,36 +26,6 @@ def make_train(repos: list[dict[str, object]], **extra: object) -> train.Train:
 
 def item(repo: SimRepo, version: str, **extra: object) -> dict[str, object]:
     return {"name": repo.name, "version": version, "commit": repo.commits[version], **extra}
-
-
-@pytest.fixture
-def world(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
-    repos: dict[str, SimRepo] = {}
-    workspace = tmp_path / "ws"
-    workspace.mkdir()
-    monkeypatch.setattr(install, "github_repo_url", lambda entry: str(repos[entry.name].remote))
-
-    class World:
-        pass
-
-    w = World()
-    w.workspace = workspace  # type: ignore[attr-defined]
-    w.repos = repos  # type: ignore[attr-defined]
-
-    def make(name: str, *versions: str, depends_on: tuple[str, ...] = ()) -> SimRepo:
-        repo = SimRepo(name, tmp_path, depends_on).create()
-        for version in versions:
-            repo.publish(version)
-        repos[name] = repo
-        return repo
-
-    w.make = make  # type: ignore[attr-defined]
-
-    def entries(*names: str) -> dict:
-        return {name: entry_for(name, repos[name].depends_on) for name in names}
-
-    w.entries = entries  # type: ignore[attr-defined]
-    return w
 
 
 # ----------------------------------------------------------------------------- the file ---------------------------

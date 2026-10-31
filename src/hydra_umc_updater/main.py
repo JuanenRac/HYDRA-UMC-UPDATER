@@ -285,25 +285,51 @@ def _train_entries(workspace_root: Path, names: list[str]) -> dict[str, ProjectE
     return {name: entries[name] for name in names if name in entries}
 
 
-def _print_plan(plan: train.Plan, *, as_json: bool, dry_run: bool) -> None:
+def _print_plan(
+    plan: train.Plan,
+    *,
+    as_json: bool,
+    dry_run: bool,
+    removals: list[train.RemovalItem] | None = None,
+    remove_new: bool = False,
+) -> None:
     if as_json:
-        print(json.dumps(plan.as_dict(), indent=2, ensure_ascii=False))
-    else:
-        print(train.format_plan(plan, dry_run=dry_run))
+        data = plan.as_dict()
+        if removals is not None:
+            data["removals"] = [item.as_dict() for item in removals]
+            data["remove_new"] = remove_new
+        print(json.dumps(data, indent=2, ensure_ascii=False))
+        return
+    print(train.format_plan(plan, dry_run=dry_run))
+    if removals:
+        print("")
+        print("Repositories the train cloned for the first time:" + ("" if remove_new else " (kept unless you add --remove-new)"))
+        for item in removals:
+            print(f"  {item.action.upper():<8} {item.name} - {item.reason}")
 
 
 def cmd_train(args: argparse.Namespace) -> int:
     """`train plan|apply|rollback`: install a tested set of versions instead of the heads. Planning only reads;
-    apply and rollback are dry runs unless `--yes` is given AND the version_trains switch is on."""
+    apply and rollback are dry runs unless `--yes` is given AND the version_trains switch is on. `rollback
+    --remove-new` also takes away the repositories the train cloned for the first time (to the updater trash)."""
     workspace_root = Path(args.workspace).resolve() if args.workspace else default_workspace_root()
     fetch = None if args.offline else train.fetch_origin
+    remove_new = bool(getattr(args, "remove_new", False))
+    removals: list[train.RemovalItem] | None = None
     try:
         if args.train_command == "rollback":
             previous = train.load_previous(workspace_root)
-            if previous is None:
+            try:
+                removals = train.plan_removals(workspace_root)
+            except train.TrainError as exc:
+                if remove_new:
+                    raise
+                print(f"WARNING: {exc}", file=sys.stderr)
+                removals = []
+            if previous is None and not removals:
                 print("There is no saved previous state to go back to.", file=sys.stderr)
                 return 1
-            wanted, allow_downgrade = previous, True
+            wanted, allow_downgrade = previous if previous is not None else train.Train("previous", ()), True
         else:
             if train_signing.require_signed_trains():
                 wanted = train.load_signed_train(Path(args.file), train_signing.configured_public_key())
@@ -315,10 +341,14 @@ def cmd_train(args: argparse.Namespace) -> int:
         print(f"ERROR: {exc}", file=sys.stderr)
         return 1
     executing = args.train_command in {"apply", "rollback"} and args.yes
-    _print_plan(plan, as_json=args.json, dry_run=not executing)
+    _print_plan(plan, as_json=args.json, dry_run=not executing, removals=removals, remove_new=remove_new)
     if args.train_command == "plan":
         return 0 if plan.ok else 1
     if not plan.ok:
+        return 1
+    blocked = [item for item in (removals or []) if item.action == "blocked"]
+    if remove_new and blocked:
+        print("ERROR: " + ", ".join(item.name for item in blocked) + " cannot be removed safely; nothing was changed.", file=sys.stderr)
         return 1
     if not args.yes:
         return 0
@@ -333,10 +363,42 @@ def cmd_train(args: argparse.Namespace) -> int:
     outcome = train.apply_train(plan, workspace_root, entries, build=not args.no_build, remember=args.train_command == "apply")
     for message in outcome.messages:
         print(message)
-    if outcome.ok and args.train_command == "rollback":
-        train.mark_rolled_back(workspace_root)
-    print(f"{'OK' if outcome.ok else 'FAIL'}: {len(outcome.applied)} repositories installed" + (f", stopped at {outcome.failed}" if outcome.failed else ""))
-    return 0 if outcome.ok else 1
+    ok = outcome.ok
+    if ok and args.train_command == "rollback" and remove_new:
+        try:
+            removed_ok, removal_messages = train.remove_first_installed(workspace_root)
+        except train.TrainError as exc:
+            removed_ok, removal_messages = False, [str(exc)]
+        for message in removal_messages:
+            print(message)
+        ok = removed_ok
+    if ok and args.train_command == "rollback":
+        train.mark_rolled_back(workspace_root, include_first_installed=remove_new)
+    print(f"{'OK' if ok else 'FAIL'}: {len(outcome.applied)} repositories installed" + (f", stopped at {outcome.failed}" if outcome.failed else ""))
+    return 0 if ok else 1
+
+
+def cmd_train_make(args: argparse.Namespace) -> int:
+    """`train make`: write a train (with its digest) for the checkouts in the workspace, from the release generator
+    of the SDK. Signing it is a separate step (`train sign`)."""
+    workspace_root = Path(args.workspace).resolve() if args.workspace else default_workspace_root()
+    out = Path(args.out)
+    if out.exists() and not args.force:
+        print(f"ERROR: {out} already exists; choose another --out or add --force to replace it.", file=sys.stderr)
+        return 1
+    try:
+        text = train.make_train(
+            workspace_root, name=args.name or out.stem, release_file=Path(args.from_release) if args.from_release else None
+        )
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text(text, encoding="utf-8", newline="\n")
+    except (train.TrainError, OSError) as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
+        return 1
+    print(f"Wrote {out} ({len(train.parse_train(text).repos)} repositories, with its digest).")
+    if train_signing.require_signed_trains():
+        print(f"It is not signed yet: sign it with `train sign {out} --key-file PATH` before `train plan|apply` accepts it.")
+    return 0
 
 
 def cmd_train_sign(args: argparse.Namespace) -> int:
@@ -440,12 +502,30 @@ def build_parser() -> argparse.ArgumentParser:
         sub.add_argument("--workspace", help="Workspace root (default: this tool's own parent directory).")
         sub.add_argument("--offline", action="store_true", help="Do not fetch: a pinned commit that is not here yet is a problem.")
         sub.add_argument("--json", action="store_true", help="Machine-readable plan.")
+        if train_name == "rollback":
+            sub.add_argument(
+                "--remove-new",
+                action="store_true",
+                help="Also move the repositories the train cloned for the first time to the updater trash (needs --yes; "
+                "refused if one has uncommitted changes or moved on).",
+            )
         if train_name != "plan":
             sub.add_argument("--yes", action="store_true", help="Really install (otherwise a dry run).")
             sub.add_argument("--no-build", action="store_true", help="Skip each project's build-test script.")
         else:
             sub.set_defaults(yes=False, no_build=False)
         sub.set_defaults(func=cmd_train)
+
+    make_p = train_sub.add_parser(
+        "make",
+        help="Write a train file (with its digest) for the projects checked out in the workspace, from the SDK release generator.",
+    )
+    make_p.add_argument("--out", required=True, help="Where to write the train file.")
+    make_p.add_argument("--name", help="Name shown in the plan (default: the file name).")
+    make_p.add_argument("--from-release", help="Read this ecosystem-release.json instead of running the generator.")
+    make_p.add_argument("--force", action="store_true", help="Replace the output file if it exists.")
+    make_p.add_argument("--workspace", help="Workspace root (default: this tool's own parent directory).")
+    make_p.set_defaults(func=cmd_train_make)
 
     sign_p = train_sub.add_parser(
         "sign",

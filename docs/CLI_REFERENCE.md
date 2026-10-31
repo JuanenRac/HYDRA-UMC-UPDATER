@@ -172,7 +172,7 @@ keeps the newest `--keep` backups of each project (default 2) and removes the
 rest; `--dry-run` only lists what it would remove. It never runs unless asked,
 and refuses to start while an install or update is running in the workspace.
 
-### `train plan|apply|rollback` - install a tested set of versions
+### `train plan|apply|rollback|make` - install a tested set of versions
 
 By default every project is installed or updated to the head of its repository
 or its latest release, one at a time. A **version train** is a tested set of
@@ -184,7 +184,8 @@ the saved settings; a damaged settings file counts as off). With the switch off
 ```
 train plan     FILE [--workspace PATH] [--offline] [--allow-downgrade] [--json]
 train apply    FILE [--workspace PATH] [--offline] [--allow-downgrade] [--json] [--yes] [--no-build]
-train rollback      [--workspace PATH] [--offline] [--json] [--yes] [--no-build]
+train rollback      [--workspace PATH] [--offline] [--json] [--yes] [--no-build] [--remove-new]
+train make     --out FILE [--name NAME] [--from-release FILE] [--force] [--workspace PATH]
 train sign     FILE --key-file PATH
 train keygen   [--out-dir PATH] [--name NAME]
 ```
@@ -204,8 +205,23 @@ train keygen   [--out-dir PATH] [--name NAME]
 - `rollback` puts back the state saved before the last `apply` (`.hydra-umc-trains/previous.json`
   in the workspace; the file is renamed, never deleted, once used). It is also a
   dry run without `--yes`. A repository that the train installed for the first
-  time is left installed: nothing is ever deleted. The saved state is written by
+  time is left installed unless `--remove-new` is given. The saved state is written by
   the updater itself, so it is not checked against a signature.
+- `rollback --remove-new` (with `--yes` and the switch on) also takes away the repositories the
+  last `apply` cloned for the first time (`.hydra-umc-trains/first-installed.json`, written one by one
+  as each clone succeeds). Nothing is deleted: each folder is moved to `.hydra-umc-trains/trash/NAME.removed-XXXXXXXX`
+  inside the workspace (move it back to restore it). A repository is moved only if it is a plain Git checkout directly
+  inside the workspace (no link pointing elsewhere), is still on the exact commit the train installed
+  and has no modified, staged or untracked files. If any one of them fails a check the whole rollback stops with
+  `BLOCKED` and exit `1` before anything is restored or moved, and the check is made again right before moving.
+  A damaged record stops `--remove-new`; a plain rollback only warns. Repositories that were installed before the
+  train are never removed, only put back. The record is renamed (not deleted) once the removal is done.
+- `make` writes a train for the projects checked out in the workspace: `--out FILE`. Which repository, version
+  and commit are listed comes from the release generator of the family (`tools/ecosystem_release.py` of
+  `HYDRA-UMC-SDK`, run with `--print`; its logic is not repeated here), or from a published
+  `ecosystem-release.json` with `--from-release`. The `digest` is added and the result is parsed again, so the updater
+  accepts what it writes; a missing or failing generator writes nothing, and an existing file is not replaced without
+  `--force`. It does not sign: when a signature is required it prints the next step, `train sign FILE --key-file PATH`.
 - `sign` writes `FILE.sig`, an Ed25519 signature of the exact bytes of the train, with a private key read
   from a file (`--key-file`, or `HYDRA_UMC_UPDATER_TRAIN_KEY_FILE`). It refuses a train the updater would
   not read, a key file that is not 64 hexadecimal characters and, on Linux, a key file readable by anyone
@@ -258,9 +274,21 @@ Because the key is pinned in the configuration of each machine, a signature made
 a train signed after someone replaced the file) is refused. The signature covers the file, not the
 contents of the repositories: those are still checked against the pinned commits.
 
-Writing a train: `tools/ecosystem_release.py --write` in the SDK produces the
-file for the checkouts side by side; add the optional fields by hand and
-recompute `digest` (`train_to_json` in `hydra_umc_updater.train` writes it).
+Writing a train: `train make --out FILE` (see above). The optional fields (`manifest_sha256`, `depends_on`,
+`requires_min`) are added by hand; `train_to_json` in `hydra_umc_updater.train` writes the file again with its `digest`.
+
+**`train plan --json` (stable output).** A single JSON object; a reader (such as a read-only view) can rely on these keys:
+
+| Key | Meaning |
+|---|---|
+| `schema_version` | `"1.0"`. Keys are only ever added in a minor change; a removed or renamed key raises the major number. |
+| `train` | Name of the train. |
+| `ok` | `true` when the train has no problems (exit code `0`). |
+| `problems` | List of texts; empty when `ok`. |
+| `items` | One object per repository in `depends_on` order: `name`, `action` (`install`, `update`, `downgrade`, `keep` or `blocked`), `version` and `commit` (the train's), `installed_version` and `installed_commit` (`null` when not installed), `reason`. |
+
+`rollback --json` adds `removals` (objects with `name`, `action` = `remove`, `gone` or `blocked`, `commit`, `reason`)
+and `remove_new`.
 
 ## Safety limits
 
