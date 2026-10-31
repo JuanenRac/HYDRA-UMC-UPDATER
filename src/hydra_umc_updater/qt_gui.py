@@ -165,11 +165,11 @@ class UpdaterBridge(QObject):
     def workspaceRoot(self) -> str:
         return str(self._workspace_root)
 
-    @Property("QStringList", notify=activityChanged)
+    @Property("QStringList", notify=activityChanged)  # type: ignore[arg-type]
     def activity(self) -> list[str]:
         return self._activity[-8:]
 
-    @Property("QStringList", notify=activityChanged)
+    @Property("QStringList", notify=activityChanged)  # type: ignore[arg-type]
     def fullActivity(self) -> list[str]:
         """Every real activity line this session, unbounded - unlike
         `activity` above (deliberately capped to the last 8 for the
@@ -189,7 +189,7 @@ class UpdaterBridge(QObject):
     def logFilePath(self) -> str:
         return self._logFilePath
 
-    @Property("QVariantList", notify=operationChanged)
+    @Property("QVariantList", notify=operationChanged)  # type: ignore[arg-type]
     def operationSteps(self) -> list[dict[str, str]]:
         return self._operation_steps
 
@@ -248,11 +248,11 @@ class UpdaterBridge(QObject):
 
     @Property(bool, notify=summaryChanged)
     def canInstallAll(self) -> bool:
-        return self.missingCount > 0
+        return self.missingCount > 0  # type: ignore[operator]
 
     @Property(bool, notify=summaryChanged)
     def canUpdateAll(self) -> bool:
-        return self.updateCount > 0
+        return self.updateCount > 0  # type: ignore[operator]
 
     @Property(int, notify=summaryChanged)
     def discoveredCount(self) -> int:
@@ -269,14 +269,14 @@ class UpdaterBridge(QObject):
             if _state_key(item, self._remotes.get(item.entry.name)) == "state_outdated"
         )
 
-    @Property("QVariantList", notify=deployOptionsChanged)
+    @Property("QVariantList", notify=deployOptionsChanged)  # type: ignore[arg-type]
     def deployOptions(self) -> list[dict[str, str]]:
         return [
             {"key": key, "label": self._t("deploy_all", count=len(self._locals)) if key == "all" else self._t(f"deploy_{key}")}
             for key in DEPLOY_ORDER
         ]
 
-    @Property("QVariantList", notify=projectsChanged)
+    @Property("QVariantList", notify=projectsChanged)  # type: ignore[arg-type]
     def projects(self) -> list[dict[str, object]]:
         ordered = sorted(
             self._locals,
@@ -673,7 +673,7 @@ def launch_qt_gui(workspace_root: Path) -> int:
     _set_windows_app_id()
     app = QGuiApplication.instance() or QGuiApplication(sys.argv)
     app.setApplicationName("HYDRA-UMC-UPDATER")
-    app.setApplicationDisplayName("HYDRA-UMC Updater")
+    app.setApplicationDisplayName("HYDRA-UMC Updater")  # type: ignore[attr-defined]
     # Windows receives a native .ico rendered from the official SVG identity
     # asset. The SVG is a safe fallback for a fresh source checkout where the
     # generated ICO has not yet been produced.
@@ -682,7 +682,7 @@ def launch_qt_gui(workspace_root: Path) -> int:
     icon = assets / "HYDRA_UMC_ICON.ico"
     if not icon.is_file():
         icon = assets / "HYDRA_UMC_ICON.svg"
-    app.setWindowIcon(QIcon(str(icon)))
+    app.setWindowIcon(QIcon(str(icon)))  # type: ignore[attr-defined]
     engine = QQmlApplicationEngine()
     bridge = UpdaterBridge(workspace_root, log_path)
     engine.rootContext().setContextProperty("backend", bridge)
@@ -693,7 +693,7 @@ def launch_qt_gui(workspace_root: Path) -> int:
     # The window is given the icon itself as well, so it does not depend on the application-wide one being picked up.
     for window in engine.rootObjects():
         if hasattr(window, "setIcon"):
-            window.setIcon(app.windowIcon())
+            window.setIcon(app.windowIcon())  # type: ignore[attr-defined]
     code = app.exec()
     # The windows go first, while the bridge their bindings read still exists: the other way round every binding of the window reads a null `backend` while it closes and the
     # console fills with "Cannot read property ... of null".
