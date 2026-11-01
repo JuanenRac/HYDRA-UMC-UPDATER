@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+## [0.5.3] - train make fills in manifest_sha256 and depends_on from the repositories
+
 - **`train make` fills in `manifest_sha256` and `depends_on`:** for every repository that is checked out in the workspace it reads `hydra-umc.project.json` at the listed commit and writes its sha256 and the dependencies the manifest declares (`[]` when it declares none), after the same verification `train plan` makes (the commit exists and belongs to the history of the checkout, the manifest is valid and names the listed version); the finished train must be consistent (every dependency in the train or installed, no cycle) and any failing check writes nothing. A repository that is not checked out is left without the two fields and named in a note, or refused with the new `--require-manifests`; `--no-manifest-fill` writes only name, version and commit as before. Removing repositories that have untracked files stays as strict as it was.
 
 ## [0.5.2] - Version trains can be signed with Ed25519 with a key pair made by the updater and a signature required by default while trains are on, a rollback that safely removes first installs, train make and a trash that is only emptied by hand
