@@ -54,6 +54,8 @@ Each line is one part of this repository and the light says how far it is today.
 | Software | 🟢 | Complete for its purpose and stable; the honesty check above lists the known limits |
 | Tests | 🟢 | 318 automated tests, run on every change |
 | Real hardware | 🟢 | Not applicable: nothing here runs on hardware |
+| Security | 🟡 | Access control, input limits or signatures are implemented and tested on a computer; nobody outside the project has reviewed them |
+| Deployment | 🟠 | Published as a release; installing it on a clean machine is documented but not recorded |
 | Documentation | 🟢 | README in eight languages, checked against the manifest on every change |
 
 ## 🎯 Overview
