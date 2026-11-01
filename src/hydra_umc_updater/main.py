@@ -411,15 +411,23 @@ def cmd_train_make(args: argparse.Namespace) -> int:
     if out.exists() and not args.force:
         print(f"ERROR: {out} already exists; choose another --out or add --force to replace it.", file=sys.stderr)
         return 1
+    notes: list[str] = []
     try:
         text = train.make_train(
-            workspace_root, name=args.name or out.stem, release_file=Path(args.from_release) if args.from_release else None
+            workspace_root,
+            name=args.name or out.stem,
+            release_file=Path(args.from_release) if args.from_release else None,
+            fill_manifests=not args.no_manifest_fill,
+            require_manifests=args.require_manifests,
+            notes=notes,
         )
         out.parent.mkdir(parents=True, exist_ok=True)
         out.write_text(text, encoding="utf-8", newline="\n")
     except (train.TrainError, OSError) as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
         return 1
+    for note in notes:
+        print(f"NOTE: {note}", file=sys.stderr)
     print(f"Wrote {out} ({len(train.parse_train(text).repos)} repositories, with its digest).")
     if train_signing.require_signed_trains():
         print(f"It is not signed yet: sign it with `train sign {out} --key-file PATH` before `train plan|apply` accepts it.")
@@ -549,6 +557,16 @@ def build_parser() -> argparse.ArgumentParser:
     make_p.add_argument("--name", help="Name shown in the plan (default: the file name).")
     make_p.add_argument("--from-release", help="Read this ecosystem-release.json instead of running the generator.")
     make_p.add_argument("--force", action="store_true", help="Replace the output file if it exists.")
+    make_p.add_argument(
+        "--require-manifests",
+        action="store_true",
+        help="Refuse the train when a repository is not checked out, so its manifest_sha256 and depends_on cannot be filled in (default: it is left out with a note).",
+    )
+    make_p.add_argument(
+        "--no-manifest-fill",
+        action="store_true",
+        help="Do not read the manifests: write only name, version and commit (the digest is still added).",
+    )
     make_p.add_argument("--workspace", help="Workspace root (default: this tool's own parent directory).")
     make_p.set_defaults(func=cmd_train_make)
 

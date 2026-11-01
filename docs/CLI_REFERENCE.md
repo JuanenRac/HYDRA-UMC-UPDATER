@@ -186,7 +186,7 @@ train plan     FILE [--workspace PATH] [--offline] [--allow-downgrade] [--json]
 train apply    FILE [--workspace PATH] [--offline] [--allow-downgrade] [--json] [--yes] [--no-build]
 train rollback      [--workspace PATH] [--offline] [--json] [--yes] [--no-build] [--remove-new]
 train trash    [--list] [--json] [--empty --yes --i-understand] [--workspace PATH]
-train make     --out FILE [--name NAME] [--from-release FILE] [--force] [--workspace PATH]
+train make     --out FILE [--name NAME] [--from-release FILE] [--force] [--require-manifests] [--no-manifest-fill] [--workspace PATH]
 train sign     FILE --key-file PATH
 train keygen   [--out-dir PATH] [--name NAME]
 ```
@@ -229,7 +229,13 @@ train keygen   [--out-dir PATH] [--name NAME]
   `HYDRA-UMC-SDK`, run with `--print`; its logic is not repeated here), or from a published
   `ecosystem-release.json` with `--from-release`. The `digest` is added and the result is parsed again, so the updater
   accepts what it writes; a missing or failing generator writes nothing, and an existing file is not replaced without
-  `--force`. It does not sign: when a signature is required it prints the next step, `train sign FILE --key-file PATH`.
+  `--force`. For every repository that is checked out in the workspace it also fills in `manifest_sha256` (the sha256 of
+  `hydra-umc.project.json` at the listed commit) and `depends_on` (the list that manifest declares, `[]` when it declares
+  none), after the same verification `plan` makes: the commit exists and belongs to the history of the checkout, the
+  manifest there is valid and names the listed version. The finished train must also be consistent (every dependency is
+  in the train or installed, no cycle). Any failing check writes nothing and exits `1`. A repository that is not checked
+  out cannot be verified: it is left without the two fields and named in a `NOTE:` on the error output, or refused with
+  `--require-manifests`; `--no-manifest-fill` skips the reading of the manifests altogether. It does not sign: when a signature is required it prints the next step, `train sign FILE --key-file PATH`.
 - `sign` writes `FILE.sig`, an Ed25519 signature of the exact bytes of the train, with a private key read
   from a file (`--key-file`, or `HYDRA_UMC_UPDATER_TRAIN_KEY_FILE`). It refuses a train the updater would
   not read, a key file that is not 64 hexadecimal characters and, on Linux, a key file readable by anyone
@@ -248,8 +254,8 @@ is refused, and a malformed train installs nothing:
 |---|---|
 | `name` (top level) | Label shown in the plan. |
 | `digest` (top level) | sha256 of the canonical `repositories` list; a file whose content no longer matches is refused. |
-| `manifest_sha256` | sha256 of `hydra-umc.project.json` at that commit; a mismatch refuses the repository. |
-| `depends_on` | Must equal the manifest's `depends_on` at that commit. |
+| `manifest_sha256` | sha256 of `hydra-umc.project.json` at that commit; a mismatch refuses the repository. `train make` fills it in. |
+| `depends_on` | Must equal the manifest's `depends_on` at that commit. `train make` fills it in. |
 | `requires_min` | Minimum versions of other repositories (for example the SDK) that the train, or what is installed, must satisfy. |
 
 **What is checked before anything is installed:** the file is well formed and its

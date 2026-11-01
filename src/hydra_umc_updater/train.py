@@ -37,7 +37,7 @@ import sys
 import tempfile
 import time
 import uuid
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -104,7 +104,7 @@ def version_key(value: str) -> tuple[int, ...]:
     return parts + (0,) * (4 - len(parts))
 
 
-def canonical_digest(repositories: list[object]) -> str:
+def canonical_digest(repositories: Sequence[object]) -> str:
     """sha256 of the repositories list written canonically (sorted keys, no spaces, ASCII)."""
     text = json.dumps(repositories, sort_keys=True, separators=(",", ":"), ensure_ascii=True)
     return hashlib.sha256(text.encode("ascii")).hexdigest()
@@ -742,12 +742,65 @@ GENERATOR = Path("HYDRA-UMC-SDK") / "tools" / "ecosystem_release.py"
 MAKE_TIMEOUT_S = 120
 
 
-def make_train(workspace_root: Path, *, name: str, release_file: Path | None = None) -> str:
+def _manifest_digest(path: Path, commit: str) -> str:
+    """sha256 of `hydra-umc.project.json` as it is at `commit` (the bytes git stores, the same ones `plan` compares)."""
+    shown = subprocess.run(
+        ["git", "show", f"{commit}:hydra-umc.project.json"], cwd=path, capture_output=True, timeout=GIT_TIMEOUT_S, check=False
+    )
+    if shown.returncode != 0:
+        raise TrainError(f"{path.name}: the manifest could not be read at commit {commit[:12]}")
+    return hashlib.sha256(shown.stdout).hexdigest()
+
+
+def fill_from_manifests(
+    repositories: list[dict[str, object]], workspace_root: Path, *, require: bool = False
+) -> tuple[list[dict[str, object]], list[str]]:
+    """Adds `manifest_sha256` and `depends_on` to each repository that is checked out in `workspace_root`.
+
+    Both come from the manifest the repository holds at the listed commit, and the commit is verified first with the same
+    check `plan` runs (the commit exists and belongs to the history of the checkout, its manifest is valid and names the
+    listed version), so a train made here passes `plan` for those fields. A repository that is not checked out cannot be
+    verified: it is left without the two fields and named in the returned notes, or refused when `require` is set.
+    Any check that fails is a `TrainError` and nothing is written."""
+    filled: list[dict[str, object]] = []
+    notes: list[str] = []
+    for entry in repositories:
+        name = str(entry["name"])
+        path = workspace_root / name
+        if not (path / ".git").is_dir():
+            if require:
+                raise TrainError(f"{name}: not checked out in {workspace_root}, so its manifest cannot be read")
+            notes.append(f"{name}: not checked out, so manifest_sha256 and depends_on were left out")
+            filled.append(dict(entry))
+            continue
+        manifest, problem = _check_pin(path, PinSpec(str(entry["commit"]), str(entry["version"])), ProjectEntry(name, "", "", ""), "HEAD")
+        if manifest is None:
+            raise TrainError(f"{name}: {problem or 'the commit could not be checked'}")
+        item = dict(entry)
+        item["manifest_sha256"] = _manifest_digest(path, str(entry["commit"]))
+        item["depends_on"] = sorted(manifest.depends_on)
+        filled.append(item)
+    return filled, notes
+
+
+def make_train(
+    workspace_root: Path,
+    *,
+    name: str,
+    release_file: Path | None = None,
+    fill_manifests: bool = True,
+    require_manifests: bool = False,
+    notes: list[str] | None = None,
+) -> str:
     """The text of a train for the repositories checked out in `workspace_root`.
 
     Which repository, which version and which commit come from the one generator the family has, `tools/
     ecosystem_release.py` of the SDK, run with `--print`: none of its logic is repeated here. With `release_file`
-    (the published `ecosystem-release.json`) that file is read instead of running the generator. The result is parsed
+    (the published `ecosystem-release.json`) that file is read instead of running the generator. Each repository that
+    is checked out also gets `manifest_sha256` and `depends_on` from its manifest at the listed commit, after the same
+    verification `plan` makes (`fill_manifests=False` skips it; `require_manifests` refuses a repository that is not
+    checked out instead of leaving the two fields out; the names of the ones left out are appended to `notes`). The
+    dependencies must also be consistent (every one in the train or installed, no cycle). The result is parsed
     again with `parse_train` before it is returned, so what is written is what the updater reads."""
     if release_file is not None:
         try:
@@ -776,11 +829,15 @@ def make_train(workspace_root: Path, *, name: str, release_file: Path | None = N
         raise TrainError(f"the release data is not valid JSON: {exc}") from exc
     if not isinstance(data, dict) or not isinstance(data.get("repositories"), list) or not data["repositories"]:
         raise TrainError("the release data has no repositories list")
-    repositories: list[object] = []
+    repositories: list[dict[str, object]] = []
     for entry in data["repositories"]:
         if not isinstance(entry, dict) or not {"name", "version", "commit"} <= set(entry):
             raise TrainError("the release data has an entry without name, version and commit")
         repositories.append({key: entry[key] for key in ("name", "version", "commit")})
+    if fill_manifests:
+        repositories, left_out = fill_from_manifests(repositories, workspace_root, require=require_manifests)
+        if notes is not None:
+            notes.extend(left_out)
     built = {
         "schema_version": SCHEMA_VERSION,
         "ecosystem": data.get("ecosystem", ECOSYSTEM),
@@ -789,5 +846,9 @@ def make_train(workspace_root: Path, *, name: str, release_file: Path | None = N
         "repositories": repositories,
     }
     text = json.dumps(built, indent=2, ensure_ascii=True) + "\n"
-    parse_train(text)  # fail closed: never hand out a train the updater itself would refuse
+    made = parse_train(text)  # fail closed: never hand out a train the updater itself would refuse
+    if fill_manifests:
+        problems = _check_compatibility(made, workspace_root)
+        if problems:
+            raise TrainError("the train would not be consistent: " + "; ".join(problems))
     return text
