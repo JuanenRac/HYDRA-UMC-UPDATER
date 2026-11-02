@@ -410,6 +410,29 @@
           }
         },
         {
+          "name": "image_release.py",
+          "desc": {
+            "en": "Check of signed image releases",
+            "es": "Comprobación de releases de imagen firmadas",
+            "de": "Prüfung signierter Image-Releases",
+            "fr": "Contrôle des releases d'image signées",
+            "it": "Verifica delle release di immagine firmate",
+            "ja": "署名付きイメージリリースの検証",
+            "zh": "已签名镜像发布的校验",
+            "pt": "Verificação de versões de imagem assinadas"
+          },
+          "tree_desc": {
+            "en": "Checks release.json, its Ed25519 signature against a file of trusted public keys, the SHA-256 of the image and, if asked, the signed tag; reads only and refuses on any doubt",
+            "es": "Comprueba release.json, su firma Ed25519 contra un fichero de claves públicas de confianza, el SHA-256 de la imagen y, si se pide, la etiqueta firmada; solo lee y rechaza ante cualquier duda",
+            "de": "Prüft release.json, dessen Ed25519-Signatur gegen eine Datei vertrauenswürdiger öffentlicher Schlüssel, das SHA-256 des Images und auf Wunsch das signierte Tag; nur lesend, lehnt bei jedem Zweifel ab",
+            "fr": "Contrôle release.json, sa signature Ed25519 face à un fichier de clés publiques de confiance, le SHA-256 de l'image et, sur demande, le tag signé ; lecture seule, refus au moindre doute",
+            "it": "Verifica release.json, la sua firma Ed25519 con un file di chiavi pubbliche fidate, lo SHA-256 dell'immagine e, se richiesto, il tag firmato; solo lettura e rifiuto al minimo dubbio",
+            "ja": "release.json、信頼する公開鍵のファイルに対するその Ed25519 署名、イメージの SHA-256、指定時は署名付きタグを検証します。読み取り専用で、疑わしければ拒否します",
+            "zh": "校验 release.json、其相对于受信任公钥文件的 Ed25519 签名、镜像的 SHA-256，需要时还校验已签名标签；只读，有任何疑问即拒绝",
+            "pt": "Verifica o release.json, a sua assinatura Ed25519 contra um ficheiro de chaves públicas de confiança, o SHA-256 da imagem e, se pedido, a etiqueta assinada; só lê e recusa perante qualquer dúvida"
+          }
+        },
+        {
           "name": "assets/",
           "desc": {
             "en": "The application icons",

@@ -19,7 +19,7 @@ GPL-3.0-or-later - see LICENSE
   <img src="https://img.shields.io/badge/Language-Python%203.10%2B-blue.svg" alt="Language">
   <img src="https://img.shields.io/badge/Core-stdlib%20only-brightgreen.svg" alt="Core">
   <img src="https://img.shields.io/badge/Desktop-PySide6%20%7C%20Qt%20Quick-367BF5.svg" alt="Desktop">
-  <img src="https://img.shields.io/badge/Tests-363%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-388%20passing-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.5.4-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-established-2EA44F.svg" alt="Maturity">
 </p>
@@ -36,7 +36,7 @@ GPL-3.0-or-later - see LICENSE
 |---|---|
 | Versión | `0.5.4` |
 | Madurez | Establecido |
-| Tests | 363 (`python -m pytest -q tests`) |
+| Tests | 388 (`python -m pytest -q tests`) |
 | Tecnología | Python 3.10+ / PySide6 / Qt Quick (QML) / Tkinter (legacy fallback) / Git / GitHub raw content |
 | Destino | El PC de quien lo usa |
 | En hardware real | No aplica: nada de esto se ejecuta en hardware |
@@ -52,7 +52,7 @@ Cada línea es una parte de este repositorio y la luz dice hasta dónde llega ho
 | Área | Estado | Qué significa aquí |
 |---|---|---|
 | Software | 🟢 | Completo para su propósito y estable; la comprobación de honestidad de arriba lista los límites conocidos |
-| Pruebas | 🟢 | 363 pruebas automáticas, ejecutadas en cada cambio |
+| Pruebas | 🟢 | 388 pruebas automáticas, ejecutadas en cada cambio |
 | Hardware real | 🟢 | No aplica: nada de esto se ejecuta en hardware |
 | Seguridad | 🟡 | El control de acceso, los límites de entrada o las firmas están implementados y probados en un ordenador; nadie ajeno al proyecto los ha revisado |
 | Despliegue | 🟠 | Publicado como release; instalarlo en un equipo limpio está documentado pero no consta |
@@ -250,6 +250,8 @@ seleccionada.
 
 - **Trenes de versiones (desactivados por defecto):** un conjunto probado de versiones, descrito por un fichero con la versión y el commit exacto de cada repositorio, se puede instalar junto con `train plan|apply|rollback`. Antes de instalar nada, el plan comprueba que el fichero está bien formado y que su resumen coincide, que cada commit fijado forma parte del historial publicado con un manifiesto de la versión y el resumen indicados, que se cumplen las versiones mínimas y `depends_on` y que no hay ciclos ni bajadas de versión inesperadas; un tren defectuoso no instala nada. `apply` y `rollback` son simulaciones sin `--yes` y necesitan el interruptor `version_trains`, y el estado anterior al primer cambio se guarda para la reversión. El fichero del tren se puede firmar (`train sign` escribe junto a él una firma Ed25519) y, mientras los trenes están activados, se exige por defecto una firma válida de la clave pública fijada en la configuración (interruptor `require_signed_trains`); sin ella, con una firma incorrecta o sin el paquete `cryptography`, el tren se rechaza. La firma se ha probado solo con claves efímeras. Probado con repositorios Git temporales, aún no con la familia real. `train make --out FICHERO` escribe un tren con su resumen a partir del generador de versiones del SDK (fírmalo después con `train sign`), y `train rollback --remove-new --yes` mueve además a la papelera del actualizador, dentro del espacio de trabajo, los repositorios que el tren clonó por primera vez (nunca se borran; se rechaza si alguno tiene cambios sin confirmar o ha avanzado). Tampoco se retira un repositorio del que depende otro repositorio instalado (`depends_on`), y `train trash --list` muestra la papelera mientras `train trash --empty --yes --i-understand` la borra para siempre (irreversible, solo dentro de esa papelera, nunca por sí sola).
 
+- **Comprobar una release de imagen firmada (solo lee):** `image verify release.json IMAGEN --trusted-keys FICHERO` comprueba la firma Ed25519 de la release de una imagen del sistema operativo (formato `hydra-image-release/1`, con su propio dominio) contra un fichero de claves públicas de confianza, que puede tener varias claves y revocar las antiguas, y después el nombre, el tamaño y el SHA-256 de la imagen y, con `--require-tag`, que la etiqueta esté firmada (`git verify-tag`) y sobre el mismo commit. Sin claves de confianza, sin firma o si algo no coincide, la rechaza con el motivo en los ocho idiomas y código de salida 1, y no se aplica nada. Probado con claves efímeras; no se ha ejecutado con una imagen real ni con el dispositivo.
+
 ## 🖼️ Capturas de pantalla
 
 Capturadas en un banco de pruebas con datos de ejemplo inventados y sin ninguna instalación real detrás.
@@ -298,7 +300,7 @@ Requiere Python 3.10 o superior.
 
 ## 🧪 Pruebas
 
-363 pruebas automáticas se ejecutan con `python -m pytest -q tests`. No necesitan hardware ni nada fuera de esta máquina.
+388 pruebas automáticas se ejecutan con `python -m pytest -q tests`. No necesitan hardware ni nada fuera de esta máquina.
 
 El CI ejecuta `HYDRA_UMC_CI=1 python tools/ci_validate.py`, que comprueba el manifiesto, los documentos, los ocho README y las imágenes.
 
@@ -368,6 +370,7 @@ HYDRA-UMC-UPDATER/
 │   ├── updater_core.py        Los nombres que cambian entre los actualizadores de las familias (id del ecosistema, fichero de manifiesto, prefijo de variables, carpeta de estado) en un solo perfil
 │   ├── evidence_export.py     Exporta la evidencia de los intentos a un fichero de salida encadenado por hash y, si se pide, al lago de datos; apagado por defecto
 │   ├── deploy_plan.py         Compara los manifiestos del espacio de trabajo con lo que ejecuta el dispositivo y lista los pasos de despliegue en orden de dependencias; solo lee
+│   ├── image_release.py       Comprueba release.json, su firma Ed25519 contra un fichero de claves públicas de confianza, el SHA-256 de la imagen y, si se pide, la etiqueta firmada; solo lee y rechaza ante cualquier duda
 │   ├── assets/                Los iconos de la aplicación (HYDRA_UMC_ICON.ico y .svg)
 │   ├── i18n_pt.py             Traducción al portugués de la interfaz
 │   └── settings.py            Ajustes del usuario guardados (la raíz del espacio de trabajo y las demás elecciones que la interfaz recuerda entre arranques)

@@ -19,7 +19,7 @@ GPL-3.0-or-later - see LICENSE
   <img src="https://img.shields.io/badge/Language-Python%203.10%2B-blue.svg" alt="Language">
   <img src="https://img.shields.io/badge/Core-stdlib%20only-brightgreen.svg" alt="Core">
   <img src="https://img.shields.io/badge/Desktop-PySide6%20%7C%20Qt%20Quick-367BF5.svg" alt="Desktop">
-  <img src="https://img.shields.io/badge/Tests-363%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-388%20passing-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.5.4-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-established-2EA44F.svg" alt="Maturity">
 </p>
@@ -36,7 +36,7 @@ GPL-3.0-or-later - see LICENSE
 |---|---|
 | バージョン | `0.5.4` |
 | 成熟度 | 確立 |
-| テスト | 363 (`python -m pytest -q tests`) |
+| テスト | 388 (`python -m pytest -q tests`) |
 | 技術 | Python 3.10+ / PySide6 / Qt Quick (QML) / Tkinter (legacy fallback) / Git / GitHub raw content |
 | 対象 | 利用者の PC |
 | 実機での確認 | 対象外：ここにあるものはハードウェア上では動きません |
@@ -52,7 +52,7 @@ GPL-3.0-or-later - see LICENSE
 | 領域 | 状態 | ここでの意味 |
 |---|---|---|
 | ソフトウェア | 🟢 | 目的に対して完成していて安定しています。既知の制限は上の正直さの確認に書かれています |
-| テスト | 🟢 | 自動テスト 363 件。変更のたびに実行されます |
+| テスト | 🟢 | 自動テスト 388 件。変更のたびに実行されます |
 | 実機 | 🟢 | 対象外：ここにあるものはハードウェア上では動きません |
 | セキュリティ | 🟡 | アクセス制御、入力の制限、署名のいずれかは実装されコンピューター上で試験済みですが、プロジェクト外の誰もレビューしていません |
 | デプロイ | 🟠 | リリースとして公開されています。新しい環境へのインストールは文書化されていますが記録はありません |
@@ -164,6 +164,8 @@ OK  Updated /home/pi/HYDRA-UMC/HYDRA-UMC-SERVER to v0.0.9 (commit 1a2b3c4d5e6f) 
 
 - **バージョントレイン（既定ではオフ）：** 各リポジトリのバージョンと正確なコミットを記したファイルで表される、検証済みのバージョンの組を、`train plan|apply|rollback` でまとめてインストールできます。何かをインストールする前に、プランは次を確認します。ファイルの形式が正しくダイジェストが一致すること、固定された各コミットが公開済みの履歴に含まれ、記載されたバージョンとダイジェストのマニフェストを持つこと、最低バージョンと `depends_on` が満たされていること、循環や想定外のダウングレードがないこと。不正なトレインは何もインストールしません。`apply` と `rollback` は `--yes` なしでは試行のみで、`version_trains` スイッチが必要です。最初の変更の前の状態はロールバック用に保存されます。トレインのファイルには署名でき（`train sign` が隣に Ed25519 署名を書き出します）、トレインが有効な間は、設定で固定した公開鍵による有効な署名が既定で必須です（スイッチ `require_signed_trains`）。署名がない、署名が誤っている、または `cryptography` パッケージがない場合、トレインは拒否されます。署名は一時的な鍵でのみテストしています。一時的な Git リポジトリでテスト済みで、実際のファミリーではまだ試していません。 `train make --out FILE` は SDK のリリース生成ツールからダイジェスト付きのトレインを書き出し（その後 `train sign` で署名）、`train rollback --remove-new --yes` はトレインが初めてクローンしたリポジトリも、ワークスペース内のアップデーターのごみ箱へ移動します（削除はしません。未コミットの変更がある、または先に進んでいる場合は拒否）。 他のインストール済みリポジトリが `depends_on` で依存しているリポジトリは削除されません。`train trash --list` でごみ箱を表示し、`train trash --empty --yes --i-understand` で完全に削除します（元に戻せず、そのごみ箱の中だけが対象で、自動では実行されません）。
 
+- **署名付きイメージリリースの検証（読み取り専用）：** `image verify release.json IMAGE --trusted-keys FILE` は、OS イメージのリリース（形式 `hydra-image-release/1`、専用のドメインタグ）の Ed25519 署名を、複数の鍵を持ち古い鍵を失効できる信頼する公開鍵のファイルで検証し、続いてイメージの名前・サイズ・SHA-256 を確認します。`--require-tag` を付けると、タグが署名済み（`git verify-tag`）で同じコミットにあることも確認します。信頼する鍵がない、署名がない、または不一致の場合は、8言語の理由と終了コード 1 で拒否し、何も適用しません。一時的な鍵でテスト済みで、実際のイメージやデバイスでは実行していません。
+
 ## 🖼️ スクリーンショット
 
 テストベンチで架空のサンプルデータを使って撮影したもので、実際の設備は接続されていません。
@@ -212,7 +214,7 @@ Python 3.10 以上が必要です。
 
 ## 🧪 テスト
 
-`python -m pytest -q tests` で自動テスト 363 件を実行します。 ハードウェアも、このマシンの外にあるものも必要ありません。
+`python -m pytest -q tests` で自動テスト 388 件を実行します。 ハードウェアも、このマシンの外にあるものも必要ありません。
 
 CI は `HYDRA_UMC_CI=1 python tools/ci_validate.py` を実行し、マニフェスト、文書、8 つの README、図を検査します。
 
@@ -281,6 +283,7 @@ HYDRA-UMC-UPDATER/
 │   ├── updater_core.py        ファミリー間で異なる名前 (エコシステムID、マニフェストファイル、変数の接頭辞、状態フォルダ) を1つのプロファイルにまとめたもの
 │   ├── evidence_export.py     試行の証跡をハッシュで連鎖した出力ファイルへ、指定時はデータレイクへも出力します。既定ではオフ
 │   ├── deploy_plan.py         ワークスペースのマニフェストとデバイスで動作中のものを比較し、依存順に展開手順を一覧します。読み取り専用
+│   ├── image_release.py       release.json、信頼する公開鍵のファイルに対するその Ed25519 署名、イメージの SHA-256、指定時は署名付きタグを検証します。読み取り専用で、疑わしければ拒否します
 │   ├── assets/                アプリケーションのアイコン (HYDRA_UMC_ICON.ico と .svg)
 │   ├── i18n_pt.py             GUI のポルトガル語訳
 │   └── settings.py            保存されるユーザー設定 (ワークスペースのルートなど、GUI が起動間で記憶する選択)

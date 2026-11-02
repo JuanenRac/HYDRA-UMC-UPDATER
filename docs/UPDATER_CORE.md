@@ -40,3 +40,9 @@ The other updaters live in other repositories and are not touched from this one.
 
 The core becomes its own package only when two updaters have adopted the profile; until then it is copied and
 kept in step, one file at a time, so nobody depends on a package that does not exist yet.
+
+## Pending ports
+
+`image verify` (`image_release.py`, the check of the signed image releases of the image builder) exists only in this updater
+so far. The updaters of the other families and the general updater still have to take it: the module has no names of this
+family except the environment prefix, which it reads from the profile through the command.

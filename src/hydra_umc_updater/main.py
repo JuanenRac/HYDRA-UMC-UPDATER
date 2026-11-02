@@ -32,7 +32,7 @@ import os
 import sys
 from pathlib import Path
 
-from . import __version__, deploy_plan, evidence_export, settings, train, train_signing
+from . import __version__, deploy_plan, evidence_export, i18n, image_release, settings, train, train_signing
 from .detect import LocalStatus, discover_workspace
 from .github_client import RemoteStatus, default_etag_cache, discover_remote_projects, fetch_all
 from .registry import ProjectEntry
@@ -492,6 +492,36 @@ def cmd_deploy_plan(args: argparse.Namespace) -> int:
     return 0 if outcome.ok else 1
 
 
+def cmd_image_verify(args: argparse.Namespace) -> int:
+    """`image verify RELEASE_JSON IMAGE`: check a signed release of an operating-system image. It only reads: nothing is applied or written.
+    Exit 0 when the release holds; 1 with the reason (in the language of the window, or --lang) when it does not."""
+    lang = args.lang or i18n.resolve_initial_lang()
+
+    def say(code: str, english: str, **params: object) -> str:
+        return i18n.t(lang, "imgrel_" + code, **params) if "imgrel_" + code in i18n.TRANSLATIONS["en"] else english
+
+    profile = evidence_export.HYDRA_PROFILE
+    keys_source = args.trusted_keys or profile.env_text("IMAGE_TRUSTED_KEYS") or settings.get_image_release_trusted_keys()
+    flag = profile.env_flag("IMAGE_REQUIRE_TAG")
+    require_tag = bool(args.require_tag) or (flag if flag is not None else settings.get_image_release_require_tag())
+    repo_text = args.repo or profile.env_text("IMAGE_RELEASE_REPO") or settings.get_image_release_repo()
+    try:
+        keys = image_release.load_trusted_keys(keys_source)
+        result = image_release.verify_release(
+            Path(args.release), Path(args.image), keys, require_tag=require_tag, repo=Path(repo_text) if repo_text else None
+        )
+    except image_release.ImageReleaseError as exc:
+        print("ERROR: " + say(exc.code, str(exc), **exc.params), file=sys.stderr)
+        print(say("rejected", "The release was rejected: nothing was applied."), file=sys.stderr)
+        return 1
+    if args.json:
+        print(json.dumps({"ok": True, "version": result.version, "tag": result.tag, "commit": result.commit,
+                          "key_fingerprint": result.fingerprint, "checked": result.checked}, indent=2))
+    else:
+        print(say("ok", "The release holds.", version=result.version, tag=result.tag, checks=", ".join(result.checked), fingerprint=result.fingerprint))
+    return 0
+
+
 def cmd_evidence(args: argparse.Namespace) -> int:
     """`evidence verify|export`: check the chain of the outbox, or append the new attempts to it (and push them to the data lake
     when its address is set). Exporting is off unless the evidence_export switch is on; verifying only reads."""
@@ -687,6 +717,18 @@ def build_parser() -> argparse.ArgumentParser:
     verify_p.add_argument("--workspace", help="Workspace root (default: this tool's own parent directory).")
     for evidence_parser in (export_p, verify_p):
         evidence_parser.set_defaults(func=cmd_evidence)
+
+    image_p = subparsers.add_parser("image", help="Check a signed release of an operating-system image (reads only).")
+    image_sub = image_p.add_subparsers(dest="image_command", required=True)
+    image_verify_p = image_sub.add_parser("verify", help="Check release.json, its signature, the SHA-256 of the image and, if asked, the signed tag.")
+    image_verify_p.add_argument("release", help="The release.json file (release.json.sig must be next to it).")
+    image_verify_p.add_argument("image", help="The image file the release describes.")
+    image_verify_p.add_argument("--trusted-keys", help="File of trusted public keys (default: the image_release_trusted_keys setting).")
+    image_verify_p.add_argument("--require-tag", action="store_true", help="Also require a signed git tag on the same commit (git verify-tag).")
+    image_verify_p.add_argument("--repo", help="Local clone in which the tag is checked (default: the image_release_repo setting).")
+    image_verify_p.add_argument("--lang", choices=sorted(i18n.TRANSLATIONS), help="Language of the messages (default: the saved one).")
+    image_verify_p.add_argument("--json", action="store_true", help="Print the result as JSON when the release holds.")
+    image_verify_p.set_defaults(func=cmd_image_verify)
 
     prune_p = subparsers.add_parser(
         "prune-backups",

@@ -19,7 +19,7 @@ GPL-3.0-or-later - see LICENSE
   <img src="https://img.shields.io/badge/Language-Python%203.10%2B-blue.svg" alt="Language">
   <img src="https://img.shields.io/badge/Core-stdlib%20only-brightgreen.svg" alt="Core">
   <img src="https://img.shields.io/badge/Desktop-PySide6%20%7C%20Qt%20Quick-367BF5.svg" alt="Desktop">
-  <img src="https://img.shields.io/badge/Tests-363%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-388%20passing-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.5.4-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-established-2EA44F.svg" alt="Maturity">
 </p>
@@ -36,7 +36,7 @@ GPL-3.0-or-later - see LICENSE
 |---|---|
 | Version | `0.5.4` |
 | Maturité | Établi |
-| Tests | 363 (`python -m pytest -q tests`) |
+| Tests | 388 (`python -m pytest -q tests`) |
 | Technologie | Python 3.10+ / PySide6 / Qt Quick (QML) / Tkinter (legacy fallback) / Git / GitHub raw content |
 | Cible | Le PC de la personne qui l'utilise |
 | Sur matériel réel | Sans objet : rien ici ne s'exécute sur du matériel |
@@ -52,7 +52,7 @@ Chaque ligne est une partie de ce dépôt et le feu dit où elle en est aujourd'
 | Domaine | État | Ce que cela veut dire ici |
 |---|---|---|
 | Logiciel | 🟢 | Complet pour son usage et stable ; la vérification d'honnêteté ci-dessus liste les limites connues |
-| Tests | 🟢 | 363 tests automatiques, exécutés à chaque modification |
+| Tests | 🟢 | 388 tests automatiques, exécutés à chaque modification |
 | Matériel réel | 🟢 | Sans objet : rien ici ne s'exécute sur du matériel |
 | Sécurité | 🟡 | Le contrôle d'accès, les limites d'entrée ou les signatures sont implémentés et testés sur un ordinateur ; personne hors du projet ne les a relus |
 | Déploiement | 🟠 | Publié comme release ; l'installation sur une machine propre est documentée mais non consignée |
@@ -247,6 +247,8 @@ ligne sélectionnée.
 
 - **Trains de versions (désactivés par défaut) :** un ensemble de versions testé, décrit par un fichier indiquant la version et le commit exact de chaque dépôt, peut être installé en une fois avec `train plan|apply|rollback`. Avant toute installation, le plan vérifie que le fichier est bien formé et que son empreinte correspond, que chaque commit fixé fait partie de l'historique publié avec un manifeste de la version et de l'empreinte indiquées, que les versions minimales et `depends_on` sont satisfaites et qu'il n'y a ni cycle ni rétrogradation inattendue ; un train défectueux n'installe rien. `apply` et `rollback` sont des simulations sans `--yes` et demandent l'interrupteur `version_trains`, et l'état précédant le premier changement est sauvegardé pour le retour arrière. Le fichier du train peut être signé (`train sign` écrit à côté une signature Ed25519) et, tant que les trains sont activés, une signature valide de la clé publique fixée dans la configuration est exigée par défaut (interrupteur `require_signed_trains`) ; sans elle, avec une signature incorrecte ou sans le paquet `cryptography`, le train est refusé. La signature n'a été testée qu'avec des clés éphémères. Testé avec des dépôts Git temporaires, pas encore avec la vraie famille. `train make --out FICHIER` écrit un train avec son empreinte à partir du générateur de versions du SDK (signez-le ensuite avec `train sign`), et `train rollback --remove-new --yes` déplace en plus vers la corbeille de l'updater, dans l'espace de travail, les dépôts que le train a clonés pour la première fois (jamais supprimés ; refusé si l'un a des modifications non validées ou a avancé). Un dépôt dont dépend un autre dépôt installé (`depends_on`) n'est jamais retiré, et `train trash --list` montre la corbeille tandis que `train trash --empty --yes --i-understand` la supprime définitivement (irréversible, uniquement dans cette corbeille, jamais d'elle-même).
 
+- **Contrôle d'une release d'image signée (lecture seule) :** `image verify release.json IMAGE --trusted-keys FICHIER` contrôle la signature Ed25519 de la release d'une image de système d'exploitation (format `hydra-image-release/1`, domaine propre) face à un fichier de clés publiques de confiance, qui peut contenir plusieurs clés et révoquer les anciennes, puis le nom, la taille et le SHA-256 de l'image et, avec `--require-tag`, que le tag est signé (`git verify-tag`) et sur le même commit. Sans clés de confiance, sans signature ou en cas de différence, elle est refusée avec le motif dans les huit langues et le code de sortie 1, et rien n'est appliqué. Testé avec des clés éphémères ; non exécuté sur une vraie image ni sur l'appareil.
+
 ## 🖼️ Captures d'écran
 
 Capturées sur un banc d'essai avec des données d'exemple fictives et sans installation réelle derrière.
@@ -295,7 +297,7 @@ Nécessite Python 3.10 ou plus récent.
 
 ## 🧪 Tests
 
-363 tests automatiques s'exécutent avec `python -m pytest -q tests`. Ils n'ont besoin ni de matériel ni de rien en dehors de cette machine.
+388 tests automatiques s'exécutent avec `python -m pytest -q tests`. Ils n'ont besoin ni de matériel ni de rien en dehors de cette machine.
 
 La CI exécute `HYDRA_UMC_CI=1 python tools/ci_validate.py`, qui vérifie le manifeste, les documents, les huit README et les images.
 
@@ -365,6 +367,7 @@ HYDRA-UMC-UPDATER/
 │   ├── updater_core.py        Les noms qui diffèrent entre les mises à jour des familles (id d'écosystème, fichier de manifeste, préfixe des variables, dossier d'état) dans un seul profil
 │   ├── evidence_export.py     Exporte les preuves des tentatives vers un fichier de sortie chaîné par hash et, sur demande, vers le lac de données ; désactivé par défaut
 │   ├── deploy_plan.py         Compare les manifestes de l'espace de travail à ce que l'appareil exécute et liste les étapes de déploiement dans l'ordre des dépendances ; lecture seule
+│   ├── image_release.py       Contrôle release.json, sa signature Ed25519 face à un fichier de clés publiques de confiance, le SHA-256 de l'image et, sur demande, le tag signé ; lecture seule, refus au moindre doute
 │   ├── assets/                Les icônes de l'application (HYDRA_UMC_ICON.ico et .svg)
 │   ├── i18n_pt.py             Traduction portugaise de l'interface
 │   └── settings.py            Réglages utilisateur conservés (la racine de l'espace de travail et les autres choix que l'interface retient d'un lancement à l'autre)

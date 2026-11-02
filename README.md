@@ -19,7 +19,7 @@ GPL-3.0-or-later - see LICENSE
   <img src="https://img.shields.io/badge/Language-Python%203.10%2B-blue.svg" alt="Language">
   <img src="https://img.shields.io/badge/Core-stdlib%20only-brightgreen.svg" alt="Core">
   <img src="https://img.shields.io/badge/Desktop-PySide6%20%7C%20Qt%20Quick-367BF5.svg" alt="Desktop">
-  <img src="https://img.shields.io/badge/Tests-363%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-388%20passing-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.5.4-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-established-2EA44F.svg" alt="Maturity">
 </p>
@@ -36,7 +36,7 @@ GPL-3.0-or-later - see LICENSE
 |---|---|
 | Version | `0.5.4` |
 | Maturity | Established |
-| Tests | 363 (`python -m pytest -q tests`) |
+| Tests | 388 (`python -m pytest -q tests`) |
 | Stack | Python 3.10+ / PySide6 / Qt Quick (QML) / Tkinter (legacy fallback) / Git / GitHub raw content |
 | Target | The PC of the person using it |
 | On real hardware | Not applicable: nothing here runs on hardware |
@@ -52,7 +52,7 @@ Each line is one part of this repository and the light says how far it is today.
 | Area | State | What it means here |
 |---|---|---|
 | Software | 🟢 | Complete for its purpose and stable; the honesty check above lists the known limits |
-| Tests | 🟢 | 363 automated tests, run on every change |
+| Tests | 🟢 | 388 automated tests, run on every change |
 | Real hardware | 🟢 | Not applicable: nothing here runs on hardware |
 | Security | 🟡 | Access control, input limits or signatures are implemented and tested on a computer; nobody outside the project has reviewed them |
 | Deployment | 🟠 | Published as a release; installing it on a clean machine is documented but not recorded |
@@ -230,6 +230,8 @@ is written to `~/.hydra_umc_updater/logs/`.
 
 - **Version trains (off by default):** a tested set of versions, described by one file with the version and exact commit of each repository, can be installed together with `train plan|apply|rollback`. Before anything is installed the plan checks that the file is well formed and its digest matches, that every pinned commit is part of the published history with a manifest of the listed version and digest, that minimum versions and `depends_on` are met and that nothing is a cycle or an unexpected downgrade; a bad train installs nothing. `apply` and `rollback` are dry runs without `--yes` and need the `version_trains` switch, and the state before the first change is saved for the rollback. The train file can be signed (`train sign` writes an Ed25519 signature next to it) and, while trains are on, a valid signature from the public key pinned in the configuration is required by default (switch `require_signed_trains`); without it, a wrong signature or no `cryptography` package the train is refused. Signing was tested with ephemeral keys only. Tested against temporary Git repositories, not yet against the real family. `train make --out FILE` writes a train with its digest from the release generator of the SDK (sign it afterwards with `train sign`), and `train rollback --remove-new --yes` also moves the repositories the train cloned for the first time to the updater trash inside the workspace (never deleted; refused if one has uncommitted changes or moved on). A repository that another installed repository depends on (`depends_on`) is never removed, and `train trash --list` shows the trash while `train trash --empty --yes --i-understand` deletes it for good (irreversible, only inside that trash, never by itself).
 
+- **Checking a signed image release (reads only):** `image verify release.json IMAGE --trusted-keys FILE` checks the Ed25519 signature of the release of an operating-system image (format `hydra-image-release/1`, own domain tag) against a file of trusted public keys that can hold several keys and revoke old ones, then the name, size and SHA-256 of the image and, with `--require-tag`, that the tag is signed (`git verify-tag`) and on the same commit. Without trusted keys, a signature, or a match it refuses with a reason in the eight languages and exit code 1, and nothing is applied. Tested with ephemeral keys; not run against a real image or the device.
+
 ## 🖼️ Screenshots
 
 Captured on a test bench with made-up sample data and no real installation behind them.
@@ -278,7 +280,7 @@ Requires Python 3.10 or newer.
 
 ## 🧪 Testing
 
-363 automated tests run with `python -m pytest -q tests`. They need no hardware and nothing outside this machine.
+388 automated tests run with `python -m pytest -q tests`. They need no hardware and nothing outside this machine.
 
 The CI runs `HYDRA_UMC_CI=1 python tools/ci_validate.py`, which checks the manifest, the documents, the eight READMEs and the pictures.
 
@@ -348,6 +350,7 @@ HYDRA-UMC-UPDATER/
 │   ├── updater_core.py        The names that differ between the updaters of the families (ecosystem id, manifest file, variable prefix, state folder) in one profile
 │   ├── evidence_export.py     Exports the evidence of the attempts to a hash-chained outbox and, if asked, to the data lake; off by default
 │   ├── deploy_plan.py         Compares the manifests of the workspace with what the device runs and lists the deployment steps in dependency order; reads only
+│   ├── image_release.py       Checks release.json, its Ed25519 signature against a file of trusted public keys, the SHA-256 of the image and, if asked, the signed tag; reads only and refuses on any doubt
 │   ├── assets/                The application icons (HYDRA_UMC_ICON.ico and .svg)
 │   ├── i18n_pt.py             Portuguese GUI translation
 │   └── settings.py            Persisted user settings (the workspace root and the other choices the GUI remembers between launches)

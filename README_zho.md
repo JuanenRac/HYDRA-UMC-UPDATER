@@ -19,7 +19,7 @@ GPL-3.0-or-later - see LICENSE
   <img src="https://img.shields.io/badge/Language-Python%203.10%2B-blue.svg" alt="Language">
   <img src="https://img.shields.io/badge/Core-stdlib%20only-brightgreen.svg" alt="Core">
   <img src="https://img.shields.io/badge/Desktop-PySide6%20%7C%20Qt%20Quick-367BF5.svg" alt="Desktop">
-  <img src="https://img.shields.io/badge/Tests-363%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-388%20passing-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.5.4-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-established-2EA44F.svg" alt="Maturity">
 </p>
@@ -36,7 +36,7 @@ GPL-3.0-or-later - see LICENSE
 |---|---|
 | 版本 | `0.5.4` |
 | 成熟度 | 成熟 |
-| 测试 | 363 (`python -m pytest -q tests`) |
+| 测试 | 388 (`python -m pytest -q tests`) |
 | 技术栈 | Python 3.10+ / PySide6 / Qt Quick (QML) / Tkinter (legacy fallback) / Git / GitHub raw content |
 | 目标 | 使用者的电脑 |
 | 真实硬件 | 不适用：这里的内容不在硬件上运行 |
@@ -52,7 +52,7 @@ GPL-3.0-or-later - see LICENSE
 | 领域 | 状态 | 在这里的含义 |
 |---|---|---|
 | 软件 | 🟢 | 就其用途而言已完整且稳定；上面的诚实性检查列出了已知限制 |
-| 测试 | 🟢 | 363 项自动测试，每次变更都会运行 |
+| 测试 | 🟢 | 388 项自动测试，每次变更都会运行 |
 | 真实硬件 | 🟢 | 不适用：这里的内容不在硬件上运行 |
 | 安全性 | 🟡 | 访问控制、输入限制或签名已实现并在计算机上测试；项目之外无人审查过 |
 | 部署 | 🟠 | 已作为发布版本公开；在干净机器上安装有文档，但没有记录 |
@@ -156,6 +156,8 @@ OK  Updated /home/pi/HYDRA-UMC/HYDRA-UMC-SERVER to v0.0.9 (commit 1a2b3c4d5e6f) 
 
 - **版本列车（默认关闭）：** 由一个记录各仓库版本和确切提交的文件描述、经过测试的一组版本，可以用 `train plan|apply|rollback` 一起安装。安装任何内容之前，计划会检查：文件格式正确且摘要一致；每个固定的提交都属于已发布的历史，并带有所列版本和摘要的清单；最低版本和 `depends_on` 已满足；不存在循环或意外降级。有问题的列车不会安装任何东西。不带 `--yes` 时 `apply` 和 `rollback` 只是试运行，并且需要 `version_trains` 开关；第一次更改之前的状态会被保存以便回滚。列车文件可以签名（`train sign` 会在其旁边写入 Ed25519 签名），并且在列车启用期间，默认要求提供由配置中固定的公钥所作的有效签名（开关 `require_signed_trains`）；没有签名、签名错误或缺少 `cryptography` 包时，该列车会被拒绝。签名仅用临时密钥测试过。已用临时 Git 仓库测试，尚未在真实的整个系列上测试。 `train make --out FILE` 会根据 SDK 的发布生成器写出带摘要的列车（之后用 `train sign` 签名）；`train rollback --remove-new --yes` 还会把列车首次克隆的仓库移到工作区内更新器的回收站（绝不删除；若其中有未提交的更改或已前进则拒绝）。 被其他已安装仓库通过 `depends_on` 依赖的仓库绝不会被移除；`train trash --list` 显示回收站，`train trash --empty --yes --i-understand` 将其永久删除（不可撤销，仅限该回收站内部，绝不自动执行）。
 
+- **校验已签名的镜像发布（只读）：** `image verify release.json IMAGE --trusted-keys FILE` 会用一个受信任公钥文件（可含多个密钥，并可吊销旧密钥）校验操作系统镜像发布（格式 `hydra-image-release/1`，使用专属域标签）的 Ed25519 签名，然后检查镜像的名称、大小和 SHA-256；加上 `--require-tag` 时还会检查标签已签名（`git verify-tag`）且位于同一提交上。没有受信任密钥、没有签名或不一致时，会以八种语言给出原因并以退出码 1 拒绝，不会应用任何内容。已用临时密钥测试，未在真实镜像或设备上运行。
+
 ## 🖼️ 屏幕截图
 
 在测试台上使用虚构的示例数据截取，背后没有真实的安装。
@@ -204,7 +206,7 @@ OK  Updated /home/pi/HYDRA-UMC/HYDRA-UMC-SERVER to v0.0.9 (commit 1a2b3c4d5e6f) 
 
 ## 🧪 测试
 
-运行 `python -m pytest -q tests` 会执行 363 个自动测试。 不需要硬件，也不需要这台机器以外的任何东西。
+运行 `python -m pytest -q tests` 会执行 388 个自动测试。 不需要硬件，也不需要这台机器以外的任何东西。
 
 CI 运行 `HYDRA_UMC_CI=1 python tools/ci_validate.py`，检查清单、文档、八个 README 和图片。
 
@@ -272,6 +274,7 @@ HYDRA-UMC-UPDATER/
 │   ├── updater_core.py        各家族更新器之间不同的名称 (生态系统 ID、清单文件、变量前缀、状态文件夹) 集中在一个配置中
 │   ├── evidence_export.py     把尝试的证据导出到带哈希链的输出文件，需要时再发送到数据湖；默认关闭
 │   ├── deploy_plan.py         把工作区的清单与设备正在运行的版本对比，并按依赖顺序列出部署步骤；只读
+│   ├── image_release.py       校验 release.json、其相对于受信任公钥文件的 Ed25519 签名、镜像的 SHA-256，需要时还校验已签名标签；只读，有任何疑问即拒绝
 │   ├── assets/                应用程序图标 (HYDRA_UMC_ICON.ico 和 .svg)
 │   ├── i18n_pt.py             界面的葡萄牙语翻译
 │   └── settings.py            持久保存的用户设置 (工作区根目录等界面在两次启动之间记住的选择)

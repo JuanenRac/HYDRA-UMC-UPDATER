@@ -188,6 +188,42 @@ object per project (`project`, `state`, `checkoutVersion`, `deviceVersion`, `uni
 first step that does not hold and leaves one line of evidence per step. Exit code `0` when the plan was read (or
 every step deployed), `1` when the table cannot be read or a step failed.
 
+### `image verify RELEASE_JSON IMAGE [--trusted-keys FILE] [--require-tag] [--repo DIR] [--lang CODE] [--json]` - check a signed image release
+
+The updater does not download or install operating-system images; this command is the contract for whoever hands it one.
+It checks a release made by the image builder (`release-manifest` + `release-sign`): `release.json` (format
+`hydra-image-release/1`), `release.json.sig` next to it, and the image. It only reads: nothing is written, applied or
+installed. Exit code `0` when the release holds; `1` with the reason on stderr (in the language of the window, or `--lang`)
+and the line "nothing was applied" when it does not.
+
+Checks, in this order, and any failure refuses the release:
+
+1. the file of trusted keys loads and holds at least one unrevoked key (no file, an unreadable or malformed one: refused);
+2. `release.json` is valid JSON of format `hydra-image-release/1`;
+3. `release.json.sig` is an Ed25519 signature, by one of the trusted keys, of the domain tag
+   `hydra-umc-os-rebuilder-release/1` plus the SHA-256 of the exact bytes of `release.json` (a signature made for another
+   purpose, such as a signed profile, does not verify; a key marked `revoke` is refused as revoked);
+4. only then are the fields trusted: `image` (a plain file name), `size`, `sha256`, `version`, `commit` (40 hexadecimal
+   characters) and `tag` must be well formed, and the image given must have that name, size and SHA-256;
+5. with `--require-tag` (or `image_release_require_tag`): `git verify-tag TAG` succeeds in `--repo` and the tag points at
+   exactly the `commit` of the release.
+
+The trusted keys are PUBLIC keys in a file you control: one per line, 64 hexadecimal characters (a raw 32-byte Ed25519 key),
+an optional label, `#` for comments, and `revoke KEY` to withdraw one. Several keys may be trusted together, so a key is
+rotated by adding the new one, publishing with it and then revoking the old one. The fingerprint of the key that signed the
+release is printed (compare it with the one the maintainer publishes). No private key is ever read, and nothing is printed
+that could be one.
+
+| Setting | Environment | Meaning |
+|---|---|---|
+| `image_release_trusted_keys` | `HYDRA_UMC_UPDATER_IMAGE_TRUSTED_KEYS` | The file of trusted public keys. Without it the command refuses everything. |
+| `image_release_require_tag` | `HYDRA_UMC_UPDATER_IMAGE_REQUIRE_TAG` | `true`/`false`; off by default. The signature of the manifest is always required, whatever this says. |
+| `image_release_repo` | `HYDRA_UMC_UPDATER_IMAGE_RELEASE_REPO` | The local clone in which the tag is checked. |
+
+Needs the optional `cryptography` package (`pip install "hydra-umc-updater[signing]"`); without it the release is refused.
+Tested with releases built in the tests with ephemeral keys in the format of the image builder; never run against a real
+image, a real release or the device.
+
 ### `evidence export|verify` - hand the evidence of the attempts to the fleet
 
 `evidence.jsonl` (in `.hydra-umc-updater` of the workspace) holds one line per install or update attempt.

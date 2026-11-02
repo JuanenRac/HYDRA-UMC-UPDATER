@@ -19,7 +19,7 @@ GPL-3.0-or-later - see LICENSE
   <img src="https://img.shields.io/badge/Language-Python%203.10%2B-blue.svg" alt="Language">
   <img src="https://img.shields.io/badge/Core-stdlib%20only-brightgreen.svg" alt="Core">
   <img src="https://img.shields.io/badge/Desktop-PySide6%20%7C%20Qt%20Quick-367BF5.svg" alt="Desktop">
-  <img src="https://img.shields.io/badge/Tests-363%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-388%20passing-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.5.4-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-established-2EA44F.svg" alt="Maturity">
 </p>
@@ -36,7 +36,7 @@ GPL-3.0-or-later - see LICENSE
 |---|---|
 | Versione | `0.5.4` |
 | Maturità | Consolidato |
-| Test | 363 (`python -m pytest -q tests`) |
+| Test | 388 (`python -m pytest -q tests`) |
 | Tecnologia | Python 3.10+ / PySide6 / Qt Quick (QML) / Tkinter (legacy fallback) / Git / GitHub raw content |
 | Destinazione | Il PC di chi lo usa |
 | Su hardware reale | Non applicabile: nulla qui gira su hardware |
@@ -52,7 +52,7 @@ Ogni riga è una parte di questo repository e il semaforo dice a che punto è og
 | Area | Stato | Cosa significa qui |
 |---|---|---|
 | Software | 🟢 | Completo per il suo scopo e stabile; la verifica di onestà qui sopra elenca i limiti noti |
-| Test | 🟢 | 363 test automatici, eseguiti a ogni modifica |
+| Test | 🟢 | 388 test automatici, eseguiti a ogni modifica |
 | Hardware reale | 🟢 | Non applicabile: nulla qui gira su hardware |
 | Sicurezza | 🟡 | Il controllo degli accessi, i limiti d'ingresso o le firme sono implementati e provati su un computer; nessuno al di fuori del progetto li ha rivisti |
 | Distribuzione | 🟠 | Pubblicato come release; l'installazione su una macchina pulita è documentata ma non registrata |
@@ -250,6 +250,8 @@ selezionata.
 
 - **Treni di versioni (disattivati per impostazione predefinita):** un insieme di versioni collaudato, descritto da un file con la versione e il commit esatto di ogni repository, si può installare in blocco con `train plan|apply|rollback`. Prima di installare qualsiasi cosa, il piano verifica che il file sia ben formato e che il suo digest coincida, che ogni commit fissato faccia parte della cronologia pubblicata con un manifesto della versione e del digest indicati, che le versioni minime e `depends_on` siano soddisfatte e che non ci siano cicli né retrocessioni inattese; un treno difettoso non installa nulla. `apply` e `rollback` sono simulazioni senza `--yes` e richiedono l'interruttore `version_trains`, e lo stato precedente alla prima modifica viene salvato per il ripristino. Il file del treno può essere firmato (`train sign` scrive accanto una firma Ed25519) e, finché i treni sono attivi, per impostazione predefinita è richiesta una firma valida della chiave pubblica fissata nella configurazione (interruttore `require_signed_trains`); senza di essa, con una firma errata o senza il pacchetto `cryptography`, il treno viene rifiutato. La firma è stata provata solo con chiavi effimere. Provato con repository Git temporanei, non ancora con la famiglia reale. `train make --out FILE` scrive un treno con il suo digest dal generatore di versioni dell'SDK (poi firmalo con `train sign`), e `train rollback --remove-new --yes` sposta inoltre nel cestino dell'updater, nell'area di lavoro, i repository che il treno ha clonato per la prima volta (mai eliminati; rifiutato se uno ha modifiche non committate o è andato avanti). Un repository da cui dipende un altro repository installato (`depends_on`) non viene mai rimosso, e `train trash --list` mostra il cestino mentre `train trash --empty --yes --i-understand` lo elimina definitivamente (irreversibile, solo dentro quel cestino, mai da solo).
 
+- **Verifica di una release di immagine firmata (solo lettura):** `image verify release.json IMMAGINE --trusted-keys FILE` verifica la firma Ed25519 della release di un'immagine del sistema operativo (formato `hydra-image-release/1`, dominio proprio) con un file di chiavi pubbliche fidate, che può contenere più chiavi e revocare quelle vecchie, poi nome, dimensione e SHA-256 dell'immagine e, con `--require-tag`, che il tag sia firmato (`git verify-tag`) e sullo stesso commit. Senza chiavi fidate, senza firma o in caso di differenza viene rifiutata con il motivo nelle otto lingue e codice di uscita 1, e non viene applicato nulla. Provato con chiavi effimere; non eseguito su un'immagine reale né sul dispositivo.
+
 ## 🖼️ Schermate
 
 Catturate su un banco di prova con dati di esempio inventati e senza alcuna installazione reale dietro.
@@ -298,7 +300,7 @@ Richiede Python 3.10 o successivo.
 
 ## 🧪 Test
 
-363 test automatici si eseguono con `python -m pytest -q tests`. Non richiedono hardware né nulla al di fuori di questa macchina.
+388 test automatici si eseguono con `python -m pytest -q tests`. Non richiedono hardware né nulla al di fuori di questa macchina.
 
 La CI esegue `HYDRA_UMC_CI=1 python tools/ci_validate.py`, che controlla il manifesto, i documenti, gli otto README e le immagini.
 
@@ -368,6 +370,7 @@ HYDRA-UMC-UPDATER/
 │   ├── updater_core.py        I nomi che cambiano tra gli updater delle famiglie (id dell'ecosistema, file del manifesto, prefisso delle variabili, cartella di stato) in un unico profilo
 │   ├── evidence_export.py     Esporta le evidenze dei tentativi in un file di uscita concatenato con hash e, se richiesto, nel data lake; spento per impostazione predefinita
 │   ├── deploy_plan.py         Confronta i manifesti dell'area di lavoro con ciò che esegue il dispositivo ed elenca i passi di distribuzione in ordine di dipendenza; solo lettura
+│   ├── image_release.py       Verifica release.json, la sua firma Ed25519 con un file di chiavi pubbliche fidate, lo SHA-256 dell'immagine e, se richiesto, il tag firmato; solo lettura e rifiuto al minimo dubbio
 │   ├── assets/                Le icone dell'applicazione (HYDRA_UMC_ICON.ico e .svg)
 │   ├── i18n_pt.py             Traduzione portoghese dell'interfaccia
 │   └── settings.py            Impostazioni utente salvate (la radice dell'area di lavoro e le altre scelte che l'interfaccia ricorda tra un avvio e l'altro)

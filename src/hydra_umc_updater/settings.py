@@ -201,3 +201,21 @@ def get_node_name() -> str | None:
 def get_device_root() -> str | None:
     """Folder that holds the installed programs of the device when it is not `/opt/hydra-umc` (a mounted image, a test tree)."""
     return _text_setting("device_root")
+
+
+def get_image_release_trusted_keys() -> str | None:
+    """File with the trusted PUBLIC keys that may sign a release of an operating-system image (never a private key)."""
+    return _text_setting("image_release_trusted_keys")
+
+
+def get_image_release_require_tag() -> bool:
+    """Whether a release of an image must also have a signed git tag on the same commit. Off by default; a damaged file keeps it off
+    (the signature of the manifest is always required, whatever this says)."""
+    if settings_file_is_damaged():
+        return False
+    return load_settings().get("image_release_require_tag") is True
+
+
+def get_image_release_repo() -> str | None:
+    """Local clone in which the signed tag of a release is checked."""
+    return _text_setting("image_release_repo")

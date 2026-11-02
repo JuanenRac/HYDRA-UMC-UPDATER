@@ -19,7 +19,7 @@ GPL-3.0-or-later - see LICENSE
   <img src="https://img.shields.io/badge/Language-Python%203.10%2B-blue.svg" alt="Language">
   <img src="https://img.shields.io/badge/Core-stdlib%20only-brightgreen.svg" alt="Core">
   <img src="https://img.shields.io/badge/Desktop-PySide6%20%7C%20Qt%20Quick-367BF5.svg" alt="Desktop">
-  <img src="https://img.shields.io/badge/Tests-363%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-388%20passing-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.5.4-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-established-2EA44F.svg" alt="Maturity">
 </p>
@@ -36,7 +36,7 @@ GPL-3.0-or-later - see LICENSE
 |---|---|
 | Version | `0.5.4` |
 | Reifegrad | Etabliert |
-| Tests | 363 (`python -m pytest -q tests`) |
+| Tests | 388 (`python -m pytest -q tests`) |
 | Technik | Python 3.10+ / PySide6 / Qt Quick (QML) / Tkinter (legacy fallback) / Git / GitHub raw content |
 | Ziel | Der PC der Person, die es benutzt |
 | Auf echter Hardware | Nicht zutreffend: nichts hiervon läuft auf Hardware |
@@ -52,7 +52,7 @@ Jede Zeile ist ein Teil dieses Repositorys, und die Ampel sagt, wie weit er heut
 | Bereich | Stand | Was das hier bedeutet |
 |---|---|---|
 | Software | 🟢 | Für seinen Zweck vollständig und stabil; die Ehrlichkeitsprüfung oben nennt die bekannten Grenzen |
-| Tests | 🟢 | 363 automatische Tests, bei jeder Änderung ausgeführt |
+| Tests | 🟢 | 388 automatische Tests, bei jeder Änderung ausgeführt |
 | Echte Hardware | 🟢 | Nicht zutreffend: nichts hiervon läuft auf Hardware |
 | Sicherheit | 🟡 | Zugriffskontrolle, Eingabegrenzen oder Signaturen sind umgesetzt und auf einem Rechner getestet; niemand außerhalb des Projekts hat sie geprüft |
 | Bereitstellung | 🟠 | Als Release veröffentlicht; die Installation auf einem frischen Rechner ist dokumentiert, aber nicht vermerkt |
@@ -251,6 +251,8 @@ für die ausgewählte Zeile.
 
 - **Versionszüge (standardmäßig aus):** Ein getesteter Satz von Versionen, beschrieben durch eine Datei mit Version und genauem Commit jedes Repositorys, lässt sich mit `train plan|apply|rollback` gemeinsam installieren. Bevor etwas installiert wird, prüft der Plan, dass die Datei wohlgeformt ist und ihr Digest stimmt, dass jeder festgelegte Commit zur veröffentlichten Historie gehört und ein Manifest mit der genannten Version und dem Digest hat, dass Mindestversionen und `depends_on` erfüllt sind und weder ein Zyklus noch ein unerwartetes Downgrade vorliegt; ein fehlerhafter Zug installiert nichts. `apply` und `rollback` sind ohne `--yes` Probeläufe und brauchen den Schalter `version_trains`; der Zustand vor der ersten Änderung wird für den Rollback gesichert. Die Zugdatei kann signiert werden (`train sign` schreibt daneben eine Ed25519-Signatur), und solange Züge aktiv sind, ist standardmäßig eine gültige Signatur des in der Konfiguration festgelegten öffentlichen Schlüssels Pflicht (Schalter `require_signed_trains`); ohne sie, bei falscher Signatur oder ohne das Paket `cryptography` wird der Zug abgelehnt. Das Signieren wurde nur mit flüchtigen Schlüsseln getestet. Getestet mit temporären Git-Repositorys, noch nicht mit der echten Familie. `train make --out DATEI` schreibt einen Zug mit seinem Digest aus dem Release-Generator des SDK (danach mit `train sign` signieren), und `train rollback --remove-new --yes` verschiebt zusätzlich die vom Zug erstmals geklonten Repositories in den Papierkorb des Updaters im Arbeitsbereich (nie gelöscht; abgelehnt, wenn eines nicht eingecheckte Änderungen hat oder weitergezogen ist). Ein Repository, von dem ein anderes installiertes abhängt (`depends_on`), wird nie entfernt; `train trash --list` zeigt den Papierkorb, `train trash --empty --yes --i-understand` löscht ihn endgültig (unumkehrbar, nur innerhalb dieses Papierkorbs, nie von selbst).
 
+- **Prüfung eines signierten Image-Releases (nur lesend):** `image verify release.json IMAGE --trusted-keys DATEI` prüft die Ed25519-Signatur des Releases eines Betriebssystem-Images (Format `hydra-image-release/1`, eigene Domäne) gegen eine Datei vertrauenswürdiger öffentlicher Schlüssel, die mehrere Schlüssel enthalten und alte widerrufen kann, danach Name, Größe und SHA-256 des Images und mit `--require-tag`, dass das Tag signiert ist (`git verify-tag`) und auf demselben Commit liegt. Ohne vertrauenswürdige Schlüssel, ohne Signatur oder bei einer Abweichung wird es mit Begründung in den acht Sprachen und Exit-Code 1 abgelehnt, und nichts wird angewendet. Mit flüchtigen Schlüsseln getestet; nicht mit einem echten Image oder dem Gerät ausgeführt.
+
 ## 🖼️ Screenshots
 
 Aufgenommen auf einem Prüfstand mit erfundenen Beispieldaten und ohne eine echte Anlage dahinter.
@@ -299,7 +301,7 @@ Benötigt Python 3.10 oder neuer.
 
 ## 🧪 Tests
 
-363 automatische Tests laufen mit `python -m pytest -q tests`. Sie brauchen weder Hardware noch etwas außerhalb dieses Rechners.
+388 automatische Tests laufen mit `python -m pytest -q tests`. Sie brauchen weder Hardware noch etwas außerhalb dieses Rechners.
 
 Die CI führt `HYDRA_UMC_CI=1 python tools/ci_validate.py` aus; das prüft das Manifest, die Dokumente, die acht READMEs und die Bilder.
 
@@ -369,6 +371,7 @@ HYDRA-UMC-UPDATER/
 │   ├── updater_core.py        Die Namen, die sich zwischen den Updatern der Familien unterscheiden (Ökosystem-ID, Manifestdatei, Variablenpräfix, Zustandsordner), in einem Profil
 │   ├── evidence_export.py     Exportiert die Nachweise der Versuche in eine hash-verkettete Ausgangsdatei und auf Wunsch in den Data Lake; standardmäßig aus
 │   ├── deploy_plan.py         Vergleicht die Manifeste des Arbeitsbereichs mit dem, was das Gerät ausführt, und listet die Bereitstellungsschritte in Abhängigkeitsreihenfolge; nur lesend
+│   ├── image_release.py       Prüft release.json, dessen Ed25519-Signatur gegen eine Datei vertrauenswürdiger öffentlicher Schlüssel, das SHA-256 des Images und auf Wunsch das signierte Tag; nur lesend, lehnt bei jedem Zweifel ab
 │   ├── assets/                Die Anwendungssymbole (HYDRA_UMC_ICON.ico und .svg)
 │   ├── i18n_pt.py             Portugiesische Übersetzung der Oberfläche
 │   └── settings.py            Gespeicherte Benutzereinstellungen (der Arbeitsbereich-Stamm und die übrigen Entscheidungen, die die Oberfläche zwischen Starts behält)

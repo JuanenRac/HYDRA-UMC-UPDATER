@@ -4,6 +4,7 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **`image verify` checks a signed release of an operating-system image before anything is done with it:** `image verify release.json IMAGE --trusted-keys FILE [--require-tag --repo DIR]` checks the Ed25519 signature of `release.json` (format `hydra-image-release/1`, with its own domain tag so that a signed profile or train can never pass) against a file of trusted PUBLIC keys that can hold several keys and revoke old ones, then the name, size and SHA-256 of the image and, if asked, that the tag is signed (`git verify-tag`) and on the same commit. It only reads, fails closed with a reason in the eight languages and exit code 1, prints the fingerprint of the key that signed, and has the settings `image_release_trusted_keys`, `image_release_require_tag` and `image_release_repo`. Tested with releases built in the tests with ephemeral keys and negative cases; not run against a real image or the device.
 - **The README shows a screenshot of the window** (the projects with their versions and state, the safe-update actions and the activity log), taken with made-up projects and versions by `tools/capture_screenshots.py` without any window on the screen; the list and the captions in the eight languages are in `docs/screenshots.json`.
 
 ## [0.5.4] - A common update core with an ecosystem profile, a deployment plan read from the manifests and chained evidence that can be sent to the data lake
