@@ -156,6 +156,16 @@ OK  Updated /home/pi/HYDRA-UMC/HYDRA-UMC-SERVER to v0.0.9 (commit 1a2b3c4d5e6f) 
 
 - **版本列车（默认关闭）：** 由一个记录各仓库版本和确切提交的文件描述、经过测试的一组版本，可以用 `train plan|apply|rollback` 一起安装。安装任何内容之前，计划会检查：文件格式正确且摘要一致；每个固定的提交都属于已发布的历史，并带有所列版本和摘要的清单；最低版本和 `depends_on` 已满足；不存在循环或意外降级。有问题的列车不会安装任何东西。不带 `--yes` 时 `apply` 和 `rollback` 只是试运行，并且需要 `version_trains` 开关；第一次更改之前的状态会被保存以便回滚。列车文件可以签名（`train sign` 会在其旁边写入 Ed25519 签名），并且在列车启用期间，默认要求提供由配置中固定的公钥所作的有效签名（开关 `require_signed_trains`）；没有签名、签名错误或缺少 `cryptography` 包时，该列车会被拒绝。签名仅用临时密钥测试过。已用临时 Git 仓库测试，尚未在真实的整个系列上测试。 `train make --out FILE` 会根据 SDK 的发布生成器写出带摘要的列车（之后用 `train sign` 签名）；`train rollback --remove-new --yes` 还会把列车首次克隆的仓库移到工作区内更新器的回收站（绝不删除；若其中有未提交的更改或已前进则拒绝）。 被其他已安装仓库通过 `depends_on` 依赖的仓库绝不会被移除；`train trash --list` 显示回收站，`train trash --empty --yes --i-understand` 将其永久删除（不可撤销，仅限该回收站内部，绝不自动执行）。
 
+## 🖼️ 屏幕截图
+
+在测试台上使用虚构的示例数据截取，背后没有真实的安装。
+
+<p align="center">
+  <img src="images/screenshots/overview.png" alt="窗口" width="100%">
+</p>
+
+<p align="center"><em>窗口：已发现的项目及其成熟度、技术栈、本地版本与 GitHub 版本和状态，所选项目的安全更新操作，以及活动日志。</em></p>
+
 ## 🔒 安全与防护
 
 | 威胁 | 防御 | 位置 |
@@ -267,7 +277,7 @@ HYDRA-UMC-UPDATER/
 │   └── settings.py            持久保存的用户设置 (工作区根目录等界面在两次启动之间记住的选择)
 ├── tests/                     真实测试：github_client、i18n、install、project_manifest、registry
 ├── docs/                      项目文档
-├── images/                    媒体、应用图标与界面截图
+├── images/                    README 横幅和截图
 ├── tools/                     项目工具和 CI 检查
 ├── .github/                   CI 工作流和 Issue 模板
 ├── .env.example               环境变量模板

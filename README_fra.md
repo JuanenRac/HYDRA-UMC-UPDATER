@@ -247,6 +247,16 @@ ligne sélectionnée.
 
 - **Trains de versions (désactivés par défaut) :** un ensemble de versions testé, décrit par un fichier indiquant la version et le commit exact de chaque dépôt, peut être installé en une fois avec `train plan|apply|rollback`. Avant toute installation, le plan vérifie que le fichier est bien formé et que son empreinte correspond, que chaque commit fixé fait partie de l'historique publié avec un manifeste de la version et de l'empreinte indiquées, que les versions minimales et `depends_on` sont satisfaites et qu'il n'y a ni cycle ni rétrogradation inattendue ; un train défectueux n'installe rien. `apply` et `rollback` sont des simulations sans `--yes` et demandent l'interrupteur `version_trains`, et l'état précédant le premier changement est sauvegardé pour le retour arrière. Le fichier du train peut être signé (`train sign` écrit à côté une signature Ed25519) et, tant que les trains sont activés, une signature valide de la clé publique fixée dans la configuration est exigée par défaut (interrupteur `require_signed_trains`) ; sans elle, avec une signature incorrecte ou sans le paquet `cryptography`, le train est refusé. La signature n'a été testée qu'avec des clés éphémères. Testé avec des dépôts Git temporaires, pas encore avec la vraie famille. `train make --out FICHIER` écrit un train avec son empreinte à partir du générateur de versions du SDK (signez-le ensuite avec `train sign`), et `train rollback --remove-new --yes` déplace en plus vers la corbeille de l'updater, dans l'espace de travail, les dépôts que le train a clonés pour la première fois (jamais supprimés ; refusé si l'un a des modifications non validées ou a avancé). Un dépôt dont dépend un autre dépôt installé (`depends_on`) n'est jamais retiré, et `train trash --list` montre la corbeille tandis que `train trash --empty --yes --i-understand` la supprime définitivement (irréversible, uniquement dans cette corbeille, jamais d'elle-même).
 
+## 🖼️ Captures d'écran
+
+Capturées sur un banc d'essai avec des données d'exemple fictives et sans installation réelle derrière.
+
+<p align="center">
+  <img src="images/screenshots/overview.png" alt="La fenêtre" width="100%">
+</p>
+
+<p align="center"><em>La fenêtre : les projets trouvés avec leur maturité, leur pile, leur version locale et celle de GitHub et leur état, les actions de mise à jour sûre du projet choisi et le journal d'activité.</em></p>
+
 ## 🔒 Sécurité et protection
 
 | Menace | Défense | Où |
@@ -360,7 +370,7 @@ HYDRA-UMC-UPDATER/
 │   └── settings.py            Réglages utilisateur conservés (la racine de l'espace de travail et les autres choix que l'interface retient d'un lancement à l'autre)
 ├── tests/                     Tests réels : github_client, i18n, install, project_manifest, registry
 ├── docs/                      documents du projet
-├── images/                    Médias, icônes de l'app et captures de l'interface
+├── images/                    Bannière et captures du README
 ├── tools/                     outils du projet et vérifications de la CI
 ├── .github/                   workflow de CI et modèles de tickets
 ├── .env.example               Modèle de variables d'environnement

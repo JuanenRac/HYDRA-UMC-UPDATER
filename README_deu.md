@@ -251,6 +251,16 @@ für die ausgewählte Zeile.
 
 - **Versionszüge (standardmäßig aus):** Ein getesteter Satz von Versionen, beschrieben durch eine Datei mit Version und genauem Commit jedes Repositorys, lässt sich mit `train plan|apply|rollback` gemeinsam installieren. Bevor etwas installiert wird, prüft der Plan, dass die Datei wohlgeformt ist und ihr Digest stimmt, dass jeder festgelegte Commit zur veröffentlichten Historie gehört und ein Manifest mit der genannten Version und dem Digest hat, dass Mindestversionen und `depends_on` erfüllt sind und weder ein Zyklus noch ein unerwartetes Downgrade vorliegt; ein fehlerhafter Zug installiert nichts. `apply` und `rollback` sind ohne `--yes` Probeläufe und brauchen den Schalter `version_trains`; der Zustand vor der ersten Änderung wird für den Rollback gesichert. Die Zugdatei kann signiert werden (`train sign` schreibt daneben eine Ed25519-Signatur), und solange Züge aktiv sind, ist standardmäßig eine gültige Signatur des in der Konfiguration festgelegten öffentlichen Schlüssels Pflicht (Schalter `require_signed_trains`); ohne sie, bei falscher Signatur oder ohne das Paket `cryptography` wird der Zug abgelehnt. Das Signieren wurde nur mit flüchtigen Schlüsseln getestet. Getestet mit temporären Git-Repositorys, noch nicht mit der echten Familie. `train make --out DATEI` schreibt einen Zug mit seinem Digest aus dem Release-Generator des SDK (danach mit `train sign` signieren), und `train rollback --remove-new --yes` verschiebt zusätzlich die vom Zug erstmals geklonten Repositories in den Papierkorb des Updaters im Arbeitsbereich (nie gelöscht; abgelehnt, wenn eines nicht eingecheckte Änderungen hat oder weitergezogen ist). Ein Repository, von dem ein anderes installiertes abhängt (`depends_on`), wird nie entfernt; `train trash --list` zeigt den Papierkorb, `train trash --empty --yes --i-understand` löscht ihn endgültig (unumkehrbar, nur innerhalb dieses Papierkorbs, nie von selbst).
 
+## 🖼️ Screenshots
+
+Aufgenommen auf einem Prüfstand mit erfundenen Beispieldaten und ohne eine echte Anlage dahinter.
+
+<p align="center">
+  <img src="images/screenshots/overview.png" alt="Das Fenster" width="100%">
+</p>
+
+<p align="center"><em>Das Fenster: die gefundenen Projekte mit Reifegrad, Stack, lokaler und GitHub-Version und Status, die sicheren Update-Aktionen für das gewählte Projekt und das Aktivitätsprotokoll.</em></p>
+
 ## 🔒 Sicherheit und Schutz
 
 | Bedrohung | Abwehr | Wo |
@@ -364,7 +374,7 @@ HYDRA-UMC-UPDATER/
 │   └── settings.py            Gespeicherte Benutzereinstellungen (der Arbeitsbereich-Stamm und die übrigen Entscheidungen, die die Oberfläche zwischen Starts behält)
 ├── tests/                     Echte Tests: github_client, i18n, install, project_manifest, registry
 ├── docs/                      Dokumente des Projekts
-├── images/                    Medien, App-Icons und Interface-Screenshots
+├── images/                    README-Banner und Screenshots
 ├── tools/                     Projektwerkzeuge und CI-Prüfungen
 ├── .github/                   CI-Workflow und Issue-Vorlagen
 ├── .env.example               Umgebungsvariablen-Vorlage

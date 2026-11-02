@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The README shows a screenshot of the window** (the projects with their versions and state, the safe-update actions and the activity log), taken with made-up projects and versions by `tools/capture_screenshots.py` without any window on the screen; the list and the captions in the eight languages are in `docs/screenshots.json`.
+
 ## [0.5.4] - A common update core with an ecosystem profile, a deployment plan read from the manifests and chained evidence that can be sent to the data lake
 
 - **`deploy-plan` shows what the device would need to run what the workspace has:** it crosses the table of installers of HYDRA-UMC-OS, the manifest of every checkout and the manifest each installer leaves next to the installed program, and lists per project whether it must be deployed, is current, is ahead, is not installed (a first installation stays manual), is not for the CM5 or has no checkout, with the steps in `depends_on` order and the command that would run. It only reads; `--apply --yes` deploys the steps through the device deployment, only with the `os_deploy` switch on, after the signature check when signatures are required, stopping at the first step that does not hold and leaving evidence per step. Tested against a simulated workspace and device tree; not run against a real device.

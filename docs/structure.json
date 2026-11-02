@@ -566,24 +566,24 @@
         {
           "name": "images/",
           "desc": {
-            "en": "Media, app icons and interface screenshots",
-            "es": "Medios, iconos de app y capturas de la",
-            "de": "Medien, App-Icons und Interface-Screenshots",
-            "fr": "Médias, icônes de l'app et captures de",
-            "it": "Media, icone dell'app e screenshot",
-            "ja": "メディア、アプリアイコン、インターフェースの",
-            "zh": "媒体、应用图标与界面截图",
-            "pt": "Multimédia, ícones da aplicação e capturas"
+            "en": "README banner and screenshots",
+            "es": "Banner y capturas del README",
+            "de": "README-Banner und Screenshots",
+            "fr": "Bannière et captures du README",
+            "it": "Banner e schermate del README",
+            "ja": "README のバナーとスクリーンショット",
+            "zh": "README 横幅和截图",
+            "pt": "Faixa e capturas de ecrã do README"
           },
           "tree_desc": {
-            "en": "Media, app icons and interface screenshots",
-            "es": "Medios, iconos de app y capturas de la interfaz",
-            "de": "Medien, App-Icons und Interface-Screenshots",
-            "fr": "Médias, icônes de l'app et captures de l'interface",
-            "it": "Media, icone dell'app e screenshot dell'interfaccia",
-            "ja": "メディア、アプリアイコン、インターフェースのスクリーンショット",
-            "zh": "媒体、应用图标与界面截图",
-            "pt": "Multimédia, ícones da aplicação e capturas da interface"
+            "en": "README banner and screenshots",
+            "es": "Banner y capturas del README",
+            "de": "README-Banner und Screenshots",
+            "fr": "Bannière et captures du README",
+            "it": "Banner e schermate del README",
+            "ja": "README のバナーとスクリーンショット",
+            "zh": "README 横幅和截图",
+            "pt": "Faixa e capturas de ecrã do README"
           }
         },
         {

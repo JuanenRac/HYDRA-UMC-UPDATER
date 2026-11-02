@@ -230,6 +230,16 @@ is written to `~/.hydra_umc_updater/logs/`.
 
 - **Version trains (off by default):** a tested set of versions, described by one file with the version and exact commit of each repository, can be installed together with `train plan|apply|rollback`. Before anything is installed the plan checks that the file is well formed and its digest matches, that every pinned commit is part of the published history with a manifest of the listed version and digest, that minimum versions and `depends_on` are met and that nothing is a cycle or an unexpected downgrade; a bad train installs nothing. `apply` and `rollback` are dry runs without `--yes` and need the `version_trains` switch, and the state before the first change is saved for the rollback. The train file can be signed (`train sign` writes an Ed25519 signature next to it) and, while trains are on, a valid signature from the public key pinned in the configuration is required by default (switch `require_signed_trains`); without it, a wrong signature or no `cryptography` package the train is refused. Signing was tested with ephemeral keys only. Tested against temporary Git repositories, not yet against the real family. `train make --out FILE` writes a train with its digest from the release generator of the SDK (sign it afterwards with `train sign`), and `train rollback --remove-new --yes` also moves the repositories the train cloned for the first time to the updater trash inside the workspace (never deleted; refused if one has uncommitted changes or moved on). A repository that another installed repository depends on (`depends_on`) is never removed, and `train trash --list` shows the trash while `train trash --empty --yes --i-understand` deletes it for good (irreversible, only inside that trash, never by itself).
 
+## 🖼️ Screenshots
+
+Captured on a test bench with made-up sample data and no real installation behind them.
+
+<p align="center">
+  <img src="images/screenshots/overview.png" alt="The window" width="100%">
+</p>
+
+<p align="center"><em>The window: the projects found with their maturity, stack, local and GitHub version and state, the safe-update actions for the selected one and the activity log.</em></p>
+
 ## 🔒 Security & Safety
 
 | Threat | Defence | Where |
@@ -343,7 +353,7 @@ HYDRA-UMC-UPDATER/
 │   └── settings.py            Persisted user settings (the workspace root and the other choices the GUI remembers between launches)
 ├── tests/                     Real tests: github_client, i18n, install, project_manifest, registry
 ├── docs/                      documents of the project
-├── images/                    Media, app icons and interface screenshots
+├── images/                    README banner and screenshots
 ├── tools/                     project tools and CI checks
 ├── .github/                   CI workflow and issue templates
 ├── .env.example               Environment variable template

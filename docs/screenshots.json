@@ -1,0 +1,27 @@
+{
+  "screens": [
+    {
+      "file": "overview.png",
+      "alt": {
+        "en": "The window",
+        "es": "La ventana",
+        "fr": "La fenêtre",
+        "it": "La finestra",
+        "de": "Das Fenster",
+        "zh": "窗口",
+        "ja": "ウィンドウ",
+        "pt": "A janela"
+      },
+      "caption": {
+        "en": "The window: the projects found with their maturity, stack, local and GitHub version and state, the safe-update actions for the selected one and the activity log.",
+        "es": "La ventana: los proyectos encontrados con su madurez, pila, versión local y de GitHub y estado, las acciones de actualización segura del seleccionado y el registro de actividad.",
+        "fr": "La fenêtre : les projets trouvés avec leur maturité, leur pile, leur version locale et celle de GitHub et leur état, les actions de mise à jour sûre du projet choisi et le journal d'activité.",
+        "it": "La finestra: i progetti trovati con maturità, stack, versione locale e di GitHub e stato, le azioni di aggiornamento sicuro di quello selezionato e il registro delle attività.",
+        "de": "Das Fenster: die gefundenen Projekte mit Reifegrad, Stack, lokaler und GitHub-Version und Status, die sicheren Update-Aktionen für das gewählte Projekt und das Aktivitätsprotokoll.",
+        "zh": "窗口：已发现的项目及其成熟度、技术栈、本地版本与 GitHub 版本和状态，所选项目的安全更新操作，以及活动日志。",
+        "ja": "ウィンドウ：見つかったプロジェクトの成熟度・スタック・ローカルと GitHub のバージョン・状態、選択したプロジェクトの安全な更新操作、アクティビティログ。",
+        "pt": "A janela: os projetos encontrados com a sua maturidade, pilha, versão local e do GitHub e estado, as ações de atualização segura do selecionado e o registo de atividade."
+      }
+    }
+  ]
+}

@@ -238,6 +238,16 @@ O **HYDRA-UMC-UPDATER** encontra, instala e atualiza os projetos HYDRA-UMC na m�
 
 - **Comboios de versões (desativados por predefinição):** um conjunto testado de versões, descrito por um ficheiro com a versão e o commit exato de cada repositório, pode ser instalado em conjunto com `train plan|apply|rollback`. Antes de instalar o que quer que seja, o plano verifica que o ficheiro está bem formado e que o seu resumo coincide, que cada commit fixado faz parte do histórico publicado com um manifesto da versão e do resumo indicados, que as versões mínimas e o `depends_on` são cumpridos e que não há ciclos nem descidas de versão inesperadas; um comboio defeituoso não instala nada. `apply` e `rollback` são simulações sem `--yes` e precisam do interruptor `version_trains`, e o estado anterior à primeira alteração é guardado para a reversão. O ficheiro do comboio pode ser assinado (`train sign` escreve ao lado uma assinatura Ed25519) e, enquanto os comboios estão ativados, é exigida por predefinição uma assinatura válida da chave pública fixada na configuração (interruptor `require_signed_trains`); sem ela, com uma assinatura errada ou sem o pacote `cryptography`, o comboio é recusado. A assinatura foi testada apenas com chaves efémeras. Testado com repositórios Git temporários, ainda não com a família real. `train make --out FICHEIRO` escreve um comboio com o seu resumo a partir do gerador de versões do SDK (assine-o depois com `train sign`), e `train rollback --remove-new --yes` move ainda para o lixo do atualizador, dentro do espaço de trabalho, os repositórios que o comboio clonou pela primeira vez (nunca são apagados; recusado se algum tiver alterações por confirmar ou tiver avançado). Um repositório de que outro repositório instalado depende (`depends_on`) nunca é retirado, e `train trash --list` mostra o lixo enquanto `train trash --empty --yes --i-understand` o apaga de vez (irreversível, só dentro desse lixo, nunca por si só).
 
+## 🖼️ Capturas de ecrã
+
+Capturadas numa bancada de testes com dados de exemplo inventados e sem qualquer instalação real por trás.
+
+<p align="center">
+  <img src="images/screenshots/overview.png" alt="A janela" width="100%">
+</p>
+
+<p align="center"><em>A janela: os projetos encontrados com a sua maturidade, pilha, versão local e do GitHub e estado, as ações de atualização segura do selecionado e o registo de atividade.</em></p>
+
 ## 🔒 Segurança e proteção
 
 | Ameaça | Defesa | Onde |
@@ -351,7 +361,7 @@ HYDRA-UMC-UPDATER/
 │   └── settings.py            Definições do utilizador guardadas (a raiz da área de trabalho e as outras escolhas que a interface recorda entre arranques)
 ├── tests/                     Testes reais: github_client, i18n, install, project_manifest, registry
 ├── docs/                      documentos do projeto
-├── images/                    Multimédia, ícones da aplicação e capturas da interface
+├── images/                    Faixa e capturas de ecrã do README
 ├── tools/                     ferramentas do projeto e verificações da CI
 ├── .github/                   fluxo de CI e modelos de problemas
 ├── .env.example               Modelo de variáveis de ambiente

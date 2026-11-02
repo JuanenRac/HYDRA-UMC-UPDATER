@@ -250,6 +250,16 @@ selezionata.
 
 - **Treni di versioni (disattivati per impostazione predefinita):** un insieme di versioni collaudato, descritto da un file con la versione e il commit esatto di ogni repository, si può installare in blocco con `train plan|apply|rollback`. Prima di installare qualsiasi cosa, il piano verifica che il file sia ben formato e che il suo digest coincida, che ogni commit fissato faccia parte della cronologia pubblicata con un manifesto della versione e del digest indicati, che le versioni minime e `depends_on` siano soddisfatte e che non ci siano cicli né retrocessioni inattese; un treno difettoso non installa nulla. `apply` e `rollback` sono simulazioni senza `--yes` e richiedono l'interruttore `version_trains`, e lo stato precedente alla prima modifica viene salvato per il ripristino. Il file del treno può essere firmato (`train sign` scrive accanto una firma Ed25519) e, finché i treni sono attivi, per impostazione predefinita è richiesta una firma valida della chiave pubblica fissata nella configurazione (interruttore `require_signed_trains`); senza di essa, con una firma errata o senza il pacchetto `cryptography`, il treno viene rifiutato. La firma è stata provata solo con chiavi effimere. Provato con repository Git temporanei, non ancora con la famiglia reale. `train make --out FILE` scrive un treno con il suo digest dal generatore di versioni dell'SDK (poi firmalo con `train sign`), e `train rollback --remove-new --yes` sposta inoltre nel cestino dell'updater, nell'area di lavoro, i repository che il treno ha clonato per la prima volta (mai eliminati; rifiutato se uno ha modifiche non committate o è andato avanti). Un repository da cui dipende un altro repository installato (`depends_on`) non viene mai rimosso, e `train trash --list` mostra il cestino mentre `train trash --empty --yes --i-understand` lo elimina definitivamente (irreversibile, solo dentro quel cestino, mai da solo).
 
+## 🖼️ Schermate
+
+Catturate su un banco di prova con dati di esempio inventati e senza alcuna installazione reale dietro.
+
+<p align="center">
+  <img src="images/screenshots/overview.png" alt="La finestra" width="100%">
+</p>
+
+<p align="center"><em>La finestra: i progetti trovati con maturità, stack, versione locale e di GitHub e stato, le azioni di aggiornamento sicuro di quello selezionato e il registro delle attività.</em></p>
+
 ## 🔒 Sicurezza e protezione
 
 | Minaccia | Difesa | Dove |
@@ -363,7 +373,7 @@ HYDRA-UMC-UPDATER/
 │   └── settings.py            Impostazioni utente salvate (la radice dell'area di lavoro e le altre scelte che l'interfaccia ricorda tra un avvio e l'altro)
 ├── tests/                     Test reali: github_client, i18n, install, project_manifest, registry
 ├── docs/                      documenti del progetto
-├── images/                    Media, icone dell'app e screenshot dell'interfaccia
+├── images/                    Banner e schermate del README
 ├── tools/                     strumenti del progetto e controlli della CI
 ├── .github/                   workflow di CI e modelli di segnalazione
 ├── .env.example               Modello delle variabili d'ambiente
