@@ -328,6 +328,21 @@ and `remove_new`.
   still fails after the last attempt puts the previous installation back and
   reports the update as failed; the promoted checkout stays next to it as
   `<name>.unhealthy-xxxxxxxx`. The updater itself never restarts a service.
+- On the device, the program that runs is not the checkout: it is the one the
+  installer of HYDRA-UMC-OS put in `/opt/hydra-umc`. With
+  `HYDRA_UMC_UPDATER_OS_DEPLOY=1` (or the saved setting `os_deploy`; off by
+  default, the environment wins) the updater runs `hydra-umc-os deploy
+  <PROJECT> --apply` after a promotion (through `sudo -n` when it is not root;
+  `HYDRA_UMC_UPDATER_OS_DEPLOY_COMMAND` names another command). The installer of
+  the project keeps the program in use, installs the promoted one, restarts the
+  unit if it runs, polls its health route and puts the old program back if it
+  does not come back; the health check above then looks at the restarted
+  service. A project without an installer that follows the deployment contract
+  is a normal update; a deployment that did not hold (status 3), failed or could
+  not start is a failed update, and with
+  `HYDRA_UMC_UPDATER_ROLLBACK_ON_UNHEALTHY=1` the previous checkout is put back
+  too. The command is `sudo`-run: the account of the updater needs a sudoers
+  rule for it, which this project does not write.
 - `HYDRA_UMC_WORKSPACE` names the workspace when `--workspace` is not given.
   When the updater is installed as a package inside a Python environment, the
   current directory is used instead of a folder inside that environment.

@@ -22,6 +22,7 @@
 from __future__ import annotations
 
 import hashlib
+import json
 import os
 import re
 import shutil
@@ -143,6 +144,82 @@ def health_retry_delay() -> float:
 
 def rollback_on_unhealthy_enabled() -> bool:
     return os.environ.get(ROLLBACK_ON_UNHEALTHY_ENV, "").strip().lower() in {"1", "true", "yes", "on"}
+
+
+#: Deploying on the device after a promotion. Off by default: promoting a checkout never restarted anything, and a restart is something the
+#: operator chooses. With `HYDRA_UMC_UPDATER_OS_DEPLOY=1` (or the saved setting `os_deploy`) the updater runs `hydra-umc-os deploy <PROJECT> --apply`
+#: (HYDRA-UMC-OS, docs/DEPLOY_CONTRACT.md) after the promotion: the installer of the project keeps the program in use, installs the new one, restarts
+#: the unit if it runs and polls its health route, and puts the old program back if it does not come back. `HYDRA_UMC_UPDATER_OS_DEPLOY_COMMAND`
+#: names another command (split like a shell line); without it the command is `hydra-umc-os`, run through `sudo -n` when the updater is not root.
+OS_DEPLOY_ENV = "HYDRA_UMC_UPDATER_OS_DEPLOY"
+OS_DEPLOY_COMMAND_ENV = "HYDRA_UMC_UPDATER_OS_DEPLOY_COMMAND"
+OS_DEPLOY_TIMEOUT_S = 1800.0
+
+
+def os_deploy_enabled() -> bool:
+    """The environment wins over the saved setting; off by default."""
+    value = os.environ.get(OS_DEPLOY_ENV, "").strip().lower()
+    if value in {"0", "false", "no", "off"}:
+        return False
+    if value in {"1", "true", "yes", "on"}:
+        return True
+    return settings.get_os_deploy()
+
+
+@dataclass(frozen=True)
+class OsDeployOutcome:
+    #: `deployed` (the program runs from the promoted checkout, the unit restarted if it ran), `rolled-back` (the unit did not hold and the earlier program
+    #: is back), `failed` (the installer failed), `refused` (the project has no installer that follows the contract: nothing to deploy), `unavailable`
+    #: (the command is not there or could not be started)
+    status: str
+    message: str
+
+
+def os_deploy_command(
+    project: str, *, which: Callable[[str], str | None] = shutil.which, geteuid: Callable[[], int] | None = None
+) -> list[str] | None:
+    """The command line that deploys `project`, or None when there is no command to run."""
+    import shlex
+
+    custom = os.environ.get(OS_DEPLOY_COMMAND_ENV, "").strip()
+    if custom:
+        return [*shlex.split(custom), "deploy", project, "--apply"]
+    if not which("hydra-umc-os"):
+        return None
+    euid = (geteuid or getattr(os, "geteuid", lambda: 0))()
+    prefix = ["sudo", "-n"] if euid != 0 and which("sudo") else []
+    return [*prefix, "hydra-umc-os", "deploy", project, "--apply"]
+
+
+def run_os_deploy(
+    project: str, *, runner: Callable[..., subprocess.CompletedProcess] = subprocess.run, which: Callable[[str], str | None] = shutil.which,
+    geteuid: Callable[[], int] | None = None,
+) -> OsDeployOutcome:
+    command = os_deploy_command(project, which=which, geteuid=geteuid)
+    if command is None:
+        return OsDeployOutcome("unavailable", "the command hydra-umc-os is not installed on this device (HYDRA-UMC-OS: install_cm5_base.sh --apply)")
+    try:
+        done = runner(command, capture_output=True, text=True, timeout=OS_DEPLOY_TIMEOUT_S, check=False)
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        return OsDeployOutcome("unavailable", f"{command[0]} could not finish ({type(exc).__name__}: {exc})")
+    report: dict = {}
+    for line in reversed((done.stdout or "").strip().splitlines()):
+        try:
+            candidate = json.loads(line)
+        except ValueError:
+            continue
+        if isinstance(candidate, dict):
+            report = candidate
+            break
+    result = str(report.get("result") or "")
+    if done.returncode == 0:
+        return OsDeployOutcome("deployed", f"deployed on the device ({result or 'done'})")
+    if done.returncode == 2 and result == "refused":
+        return OsDeployOutcome("refused", str(report.get("reason") or "nothing to deploy for this project"))
+    if done.returncode == 3:
+        return OsDeployOutcome("rolled-back", "the unit did not restart or did not pass its health check on the device, and the earlier program was put back")
+    detail = (done.stderr or "").strip().splitlines()[-1:] or [""]
+    return OsDeployOutcome("failed", f"the installer of the device ended with status {done.returncode} {detail[0]}".strip())
 
 
 def _check_health_with_retries(url: str, *, sleep: Callable[[float], None] = time.sleep) -> tuple[bool, str]:
@@ -1098,6 +1175,37 @@ def clone_or_pull(
                 f"{venv_result.message}. The previous installation, with its own .venv, is kept at {backup_path}",
                 venv_result.output or build_result.output,
             )
+    # On the device the promoted checkout is only a source: the programs run from /opt/hydra-umc. With the switch on, hand the project to the
+    # installer of HYDRA-UMC-OS so that what runs is the promoted program (restarted if it runs, checked, put back if it does not hold); the
+    # health check below then looks at the restarted service and not at the old process.
+    deploy_note = ""
+    if os_deploy_enabled():
+        deployed = run_os_deploy(entry.name)
+        if deployed.status in {"rolled-back", "failed", "unavailable"}:
+            if deployed.status == "rolled-back" and rollback_on_unhealthy_enabled():
+                problem = _roll_back_promotion(path, backup_path)
+                if problem is None:
+                    if journal:
+                        journal.complete(promotion_id)  # type: ignore[arg-type]
+                    return InstallResult(
+                        False,
+                        f"Promoted {path} to v{candidate.version} (commit {sha_label}), but {deployed.message}; "
+                        f"the previous installation was put back and the promoted checkout was kept next to it for inspection",
+                        build_result.output,
+                    )
+                return InstallResult(
+                    False,
+                    f"Promoted {path} to v{candidate.version} (commit {sha_label}), but {deployed.message}, "
+                    f"and putting the previous installation back failed: {problem}",
+                    build_result.output,
+                )
+            return InstallResult(
+                False,
+                f"Promoted {path} to v{candidate.version} (commit {sha_label}), but {deployed.message}; "
+                f"the previous installation is kept at {backup_path}",
+                build_result.output,
+            )
+        deploy_note = "" if deployed.status == "refused" else f"; {deployed.message}"
     # a promotion that finishes its 2 renames is not yet a HEALTHY
     # promotion when the project itself declares a real health endpoint -
     # check it for real before ever calling this a success, rather than
@@ -1138,14 +1246,14 @@ def clone_or_pull(
         return InstallResult(
             True,
             f"Updated {path} to v{candidate.version} (commit {sha_label}) after a verified build and a real "
-            f"passing health check ({reason}); previous installation kept at {backup_path}",
+            f"passing health check ({reason}){deploy_note}; previous installation kept at {backup_path}",
             build_result.output,
         )
     if journal:
         journal.complete(promotion_id)  # type: ignore[arg-type]
     return InstallResult(
         True,
-        f"Updated {path} to v{candidate.version} (commit {sha_label}) after a verified build; "
+        f"Updated {path} to v{candidate.version} (commit {sha_label}) after a verified build{deploy_note}; "
         f"previous installation kept at {backup_path}",
         build_result.output,
     )

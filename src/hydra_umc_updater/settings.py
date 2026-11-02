@@ -134,6 +134,18 @@ def save_recreate_venv(enabled: bool) -> None:
     save_settings(recreate_venv=bool(enabled))
 
 
+def get_os_deploy() -> bool:
+    """Whether a promoted project is deployed on the device with `hydra-umc-os deploy` (its installer, a restart of the unit if it runs, a health
+    check and the way back). Off unless the saved settings say so; a damaged file keeps it off."""
+    if settings_file_is_damaged():
+        return False
+    return load_settings().get("os_deploy") is True
+
+
+def save_os_deploy(enabled: bool) -> None:
+    save_settings(os_deploy=bool(enabled))
+
+
 def get_allowed_signers_file() -> str | None:
     """Path of the ssh allowed-signers file used to verify commit signatures,
     only when it is a real file."""

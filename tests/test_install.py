@@ -1121,3 +1121,118 @@ def test_a_venv_that_cannot_be_created_is_reported_and_the_old_one_is_kept(tmp_p
     assert str(backup) in result.message
     assert (backup / ".venv" / "old-marker.txt").is_file()
     assert (local / "built.txt").exists(), "the promoted checkout itself is in place"
+
+
+# --- deploying on the device after a promotion -----------------------------------
+
+def _no_os_deploy_env(monkeypatch) -> None:
+    monkeypatch.delenv(install.OS_DEPLOY_ENV, raising=False)
+    monkeypatch.delenv(install.OS_DEPLOY_COMMAND_ENV, raising=False)
+    monkeypatch.delenv(install.ROLLBACK_ON_UNHEALTHY_ENV, raising=False)
+
+
+def test_the_device_deployment_is_off_by_default_and_the_environment_wins(monkeypatch):
+    _no_os_deploy_env(monkeypatch)
+    assert install.os_deploy_enabled() is False
+    settings.save_os_deploy(True)
+    assert install.os_deploy_enabled() is True
+    monkeypatch.setenv(install.OS_DEPLOY_ENV, "off")
+    assert install.os_deploy_enabled() is False, "the environment wins over the saved setting"
+    settings.save_os_deploy(False)
+    monkeypatch.setenv(install.OS_DEPLOY_ENV, "1")
+    assert install.os_deploy_enabled() is True
+
+
+def test_the_command_is_found_through_sudo_unless_root_or_named_by_the_environment(monkeypatch):
+    _no_os_deploy_env(monkeypatch)
+    have = {"hydra-umc-os": "/usr/local/bin/hydra-umc-os", "sudo": "/usr/bin/sudo"}
+    assert install.os_deploy_command("HYDRA-UMC-TWIN", which=have.get, geteuid=lambda: 1000) == ["sudo", "-n", "hydra-umc-os", "deploy", "HYDRA-UMC-TWIN", "--apply"]
+    assert install.os_deploy_command("HYDRA-UMC-TWIN", which=have.get, geteuid=lambda: 0) == ["hydra-umc-os", "deploy", "HYDRA-UMC-TWIN", "--apply"]
+    assert install.os_deploy_command("HYDRA-UMC-TWIN", which=lambda name: None, geteuid=lambda: 0) is None
+    monkeypatch.setenv(install.OS_DEPLOY_COMMAND_ENV, "/opt/x/hydra-umc-os --provisioning-dir /srv/p")
+    assert install.os_deploy_command("HYDRA-UMC-TWIN", which=lambda name: None) == ["/opt/x/hydra-umc-os", "--provisioning-dir", "/srv/p", "deploy", "HYDRA-UMC-TWIN", "--apply"]
+
+
+def _answer(code: int, stdout: str = "", stderr: str = ""):
+    return lambda command, **kwargs: subprocess.CompletedProcess(command, code, stdout=stdout, stderr=stderr)
+
+
+def test_what_the_device_answered_is_turned_into_a_status(monkeypatch):
+    _no_os_deploy_env(monkeypatch)
+    have = {"hydra-umc-os": "/x"}
+    run = lambda runner: install.run_os_deploy("HYDRA-UMC-TWIN", runner=runner, which=have.get, geteuid=lambda: 0)  # noqa: E731
+    ok = run(_answer(0, 'noise\n{"result": "deployed"}\n'))
+    assert (ok.status, "deployed" in ok.message) == ("deployed", True)
+    assert run(_answer(2, '{"result": "refused", "reason": "install_x.sh does not follow the deployment contract"}')).status == "refused"
+    assert run(_answer(3, '{"result": "rolled-back"}')).status == "rolled-back"
+    failed = run(_answer(1, "", "line one\nsudo: a password is required"))
+    assert failed.status == "failed" and "password is required" in failed.message
+    assert install.run_os_deploy("X", runner=lambda *a, **k: (_ for _ in ()).throw(OSError("no")), which=have.get, geteuid=lambda: 0).status == "unavailable"
+    assert install.run_os_deploy("X", which=lambda name: None, geteuid=lambda: 0).status == "unavailable"
+
+
+def test_a_promotion_does_not_touch_the_device_unless_asked(tmp_path: Path, monkeypatch):
+    _no_os_deploy_env(monkeypatch)
+    calls: list[str] = []
+    monkeypatch.setattr(install, "run_os_deploy", lambda name, **kw: calls.append(name) or install.OsDeployOutcome("deployed", "x"))
+    _promotable_update(tmp_path, venv_marker=False)
+    result = clone_or_pull(entry(), tmp_path)
+    assert result.ok, result.message
+    assert calls == []
+
+
+def test_a_promotion_that_deployed_says_so(tmp_path: Path, monkeypatch):
+    _no_os_deploy_env(monkeypatch)
+    monkeypatch.setenv(install.OS_DEPLOY_ENV, "1")
+    calls: list[str] = []
+    monkeypatch.setattr(install, "run_os_deploy", lambda name, **kw: calls.append(name) or install.OsDeployOutcome("deployed", "deployed on the device (deployed)"))
+    _promotable_update(tmp_path, venv_marker=False)
+    result = clone_or_pull(entry(), tmp_path)
+    assert result.ok, result.message
+    assert calls == [entry().name]
+    assert "deployed on the device" in result.message
+
+
+def test_a_project_the_device_has_no_installer_for_is_still_a_successful_update(tmp_path: Path, monkeypatch):
+    _no_os_deploy_env(monkeypatch)
+    monkeypatch.setenv(install.OS_DEPLOY_ENV, "1")
+    monkeypatch.setattr(install, "run_os_deploy", lambda name, **kw: install.OsDeployOutcome("refused", "not a project of the table"))
+    _promotable_update(tmp_path, venv_marker=False)
+    result = clone_or_pull(entry(), tmp_path)
+    assert result.ok, result.message
+    assert "deployed on the device" not in result.message
+
+
+def test_a_deployment_that_did_not_hold_fails_the_update_and_the_checkout_stays_unless_rollback_is_asked(tmp_path: Path, monkeypatch):
+    _no_os_deploy_env(monkeypatch)
+    monkeypatch.setenv(install.OS_DEPLOY_ENV, "1")
+    monkeypatch.setattr(install, "run_os_deploy", lambda name, **kw: install.OsDeployOutcome("rolled-back", "the unit did not hold"))
+    local = _promotable_update(tmp_path, venv_marker=False)
+    result = clone_or_pull(entry(), tmp_path)
+    assert not result.ok
+    assert "the unit did not hold" in result.message and "kept at" in result.message
+    assert "1.1.0" in (local / "hydra-umc.project.json").read_text(encoding="utf-8"), "the promoted checkout stays"
+
+
+def test_a_deployment_that_did_not_hold_puts_the_checkout_back_when_rollback_is_on(tmp_path: Path, monkeypatch):
+    _no_os_deploy_env(monkeypatch)
+    monkeypatch.setenv(install.OS_DEPLOY_ENV, "1")
+    monkeypatch.setenv(install.ROLLBACK_ON_UNHEALTHY_ENV, "1")
+    monkeypatch.setattr(install, "run_os_deploy", lambda name, **kw: install.OsDeployOutcome("rolled-back", "the unit did not hold"))
+    local = _promotable_update(tmp_path, venv_marker=False)
+    result = clone_or_pull(entry(), tmp_path)
+    assert not result.ok
+    assert "put back" in result.message
+    assert "1.0.0" in (local / "hydra-umc.project.json").read_text(encoding="utf-8")
+
+
+def test_a_failed_or_unavailable_deployment_fails_the_update(tmp_path: Path, monkeypatch):
+    _no_os_deploy_env(monkeypatch)
+    monkeypatch.setenv(install.OS_DEPLOY_ENV, "1")
+    for status in ("failed", "unavailable"):
+        monkeypatch.setattr(install, "run_os_deploy", lambda name, status=status, **kw: install.OsDeployOutcome(status, f"it was {status}"))
+        scratch = tmp_path / status
+        scratch.mkdir()
+        _promotable_update(scratch, venv_marker=False)
+        result = clone_or_pull(entry(), scratch)
+        assert not result.ok and f"it was {status}" in result.message

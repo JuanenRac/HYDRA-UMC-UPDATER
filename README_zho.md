@@ -152,6 +152,7 @@ OK  Updated /home/pi/HYDRA-UMC/HYDRA-UMC-SERVER to v0.0.9 (commit 1a2b3c4d5e6f) 
 - **已知的简化处理**：HYDRA-UMC 和 URTC 是真正的多组件固件仓库（各自分别有 6 个和 4 个独立版本管理的二进制文件——见各自的 `VERSION_CHECKLIST.txt`/`build_firmware.sh`），并不存在单一的"那个"版本号。`registry.py` 每个仓库只跟踪*一个*代表性组件——足以回答"这个仓库大致是否是最新的"，但不能替代 `build_firmware.sh` 自身的 `firmware_manifest.json` 用于真实的刷写场景。
 
 - **批次顺序与撤销升级：** 清单的 `depends_on` 列出仓库的项目，会在同一批次中其所依赖的项目之后安装或更新（SDK 最先，更新器最后；批次之外的依赖被忽略，出现环也不会丢失项目）。升级之后可以重复健康检查（`HYDRA_UMC_UPDATER_HEALTH_RETRIES`）；设置 `HYDRA_UMC_UPDATER_ROLLBACK_ON_UNHEALTHY=1`（默认关闭）后，检查仍失败时会恢复之前的安装并将更新报告为失败。
+- **升级后在设备上部署（默认关闭）：** 设置 `HYDRA_UMC_UPDATER_OS_DEPLOY=1`（或保存的设置 `os_deploy`）后，检出被升级时更新器会运行 HYDRA-UMC-OS 的 `hydra-umc-os deploy <项目> --apply`：项目的安装程序保存正在使用的程序，安装升级后的程序，单元在运行时重启它，轮询其健康路径，没有恢复时换回旧程序，所以随后的健康检查看到的是重启后的服务而不是旧进程。没有遵循部署契约的安装程序的项目属于普通更新；部署撑不住、失败或无法启动会被报告为更新失败（设置 `HYDRA_UMC_UPDATER_ROLLBACK_ON_UNHEALTHY=1` 时也会恢复之前的检出）。更新器本身仍不重启任何东西；尚未针对设备上的真实单元运行过。
 
 - **版本列车（默认关闭）：** 由一个记录各仓库版本和确切提交的文件描述、经过测试的一组版本，可以用 `train plan|apply|rollback` 一起安装。安装任何内容之前，计划会检查：文件格式正确且摘要一致；每个固定的提交都属于已发布的历史，并带有所列版本和摘要的清单；最低版本和 `depends_on` 已满足；不存在循环或意外降级。有问题的列车不会安装任何东西。不带 `--yes` 时 `apply` 和 `rollback` 只是试运行，并且需要 `version_trains` 开关；第一次更改之前的状态会被保存以便回滚。列车文件可以签名（`train sign` 会在其旁边写入 Ed25519 签名），并且在列车启用期间，默认要求提供由配置中固定的公钥所作的有效签名（开关 `require_signed_trains`）；没有签名、签名错误或缺少 `cryptography` 包时，该列车会被拒绝。签名仅用临时密钥测试过。已用临时 Git 仓库测试，尚未在真实的整个系列上测试。 `train make --out FILE` 会根据 SDK 的发布生成器写出带摘要的列车（之后用 `train sign` 签名）；`train rollback --remove-new --yes` 还会把列车首次克隆的仓库移到工作区内更新器的回收站（绝不删除；若其中有未提交的更改或已前进则拒绝）。 被其他已安装仓库通过 `depends_on` 依赖的仓库绝不会被移除；`train trash --list` 显示回收站，`train trash --empty --yes --i-understand` 将其永久删除（不可撤销，仅限该回收站内部，绝不自动执行）。
 
@@ -175,6 +176,7 @@ OK  Updated /home/pi/HYDRA-UMC/HYDRA-UMC-SERVER to v0.0.9 (commit 1a2b3c4d5e6f) 
 | `--workspace` | 本文件夹的上级文件夹 | 每个项目一个子文件夹的父文件夹 |
 | `HYDRA_UMC_UPDATER_HEALTH_RETRIES` | `1` | 升级后健康检查的尝试次数（最多 10 次），每次之间等待时间递增（`HYDRA_UMC_UPDATER_HEALTH_RETRY_DELAY`，2 秒，每次翻倍，最多 30 秒），给服务留出启动时间 |
 | `HYDRA_UMC_UPDATER_ROLLBACK_ON_UNHEALTHY` | 关闭 | `1` 表示健康检查仍然失败时恢复之前的安装并将更新报告为失败，同时在旁边保留已升级的检出 |
+| `HYDRA_UMC_UPDATER_OS_DEPLOY` | 关闭 | `1` 表示升级后运行 `hydra-umc-os deploy <项目> --apply`，使设备上的程序成为升级后的程序（在运行时重启、检查，撑不住时换回）；`HYDRA_UMC_UPDATER_OS_DEPLOY_COMMAND` 指定另一个命令 |
 | `HYDRA_UMC_UPDATER_NO_CACHE` | 关闭 | `1` 关闭保存在主目录中、紧挨设置文件的缓存 |
 
 ## 🚀 快速开始
