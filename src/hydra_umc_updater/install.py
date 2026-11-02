@@ -186,7 +186,8 @@ def os_deploy_command(
         return [*shlex.split(custom), "deploy", project, "--apply"]
     if not which("hydra-umc-os"):
         return None
-    euid = (geteuid or getattr(os, "geteuid", lambda: 0))()
+    current_euid: Callable[[], int] = geteuid if geteuid is not None else getattr(os, "geteuid", lambda: 0)
+    euid = current_euid()
     prefix = ["sudo", "-n"] if euid != 0 and which("sudo") else []
     return [*prefix, "hydra-umc-os", "deploy", project, "--apply"]
 
