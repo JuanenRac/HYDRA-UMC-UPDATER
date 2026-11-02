@@ -877,6 +877,21 @@ for _language, _train_hint in _TRAIN_COPY.items():
     TRANSLATIONS[_language]["trains_hint"] = _train_hint
 
 
+# The hint shown while the evidence-export switch is on.
+_EXPORT_COPY: dict[str, str] = {
+    "en": "Evidence export is on: `evidence export` writes the attempts to a chained outbox file and `evidence export --push` sends them to the data lake; `evidence verify` checks the chain. `deploy-plan` shows what the device would need to run what this workspace has.",
+    "es": "La exportación de evidencias está activada: `evidence export` escribe los intentos en un fichero de salida encadenado y `evidence export --push` los envía al lago de datos; `evidence verify` comprueba la cadena. `deploy-plan` muestra qué necesitaría el dispositivo para ejecutar lo que tiene este espacio de trabajo.",
+    "de": "Der Nachweis-Export ist aktiv: `evidence export` schreibt die Versuche in eine verkettete Ausgangsdatei und `evidence export --push` sendet sie an den Data Lake; `evidence verify` prüft die Kette. `deploy-plan` zeigt, was das Gerät braucht, um den Stand dieses Arbeitsbereichs auszuführen.",
+    "fr": "L'export des preuves est activé : `evidence export` écrit les tentatives dans un fichier de sortie chaîné et `evidence export --push` les envoie au lac de données ; `evidence verify` contrôle la chaîne. `deploy-plan` montre ce dont l'appareil aurait besoin pour exécuter ce que contient cet espace de travail.",
+    "it": "L'esportazione delle evidenze è attiva: `evidence export` scrive i tentativi in un file di uscita concatenato e `evidence export --push` li invia al data lake; `evidence verify` controlla la catena. `deploy-plan` mostra ciò che serve al dispositivo per eseguire quanto contiene questo spazio di lavoro.",
+    "ja": "証跡のエクスポートが有効です。`evidence export` は試行を連鎖した出力ファイルに書き出し、`evidence export --push` はデータレイクへ送信します。`evidence verify` で連鎖を検証できます。`deploy-plan` は、このワークスペースの内容を実行するためにデバイスに必要なものを表示します。",
+    "zh": "证据导出已启用：`evidence export` 会把尝试记录写入带哈希链的输出文件，`evidence export --push` 会将其发送到数据湖；`evidence verify` 用于校验该链。`deploy-plan` 会显示设备要运行此工作区内容所需的步骤。",
+}
+
+for _language, _export_hint in _EXPORT_COPY.items():
+    TRANSLATIONS[_language]["export_hint"] = _export_hint
+
+
 # The eighth language lives in its own module (see i18n_pt.py's header).
 from .i18n_pt import PT as _PORTUGUESE  # noqa: E402
 

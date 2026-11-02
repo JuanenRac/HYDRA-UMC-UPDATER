@@ -259,6 +259,9 @@ HYDRA-UMC-UPDATER/
 │   ├── gui.py                 PySide6 不可用时的 Tkinter 兼容回退
 │   ├── main.py                分发逻辑：默认 GUI，--cli 用于 status/install/update
 │   ├── evidence.py            每次安装或更新尝试留一行证据: 项目、之前、之后、提交与结果
+│   ├── updater_core.py        各家族更新器之间不同的名称 (生态系统 ID、清单文件、变量前缀、状态文件夹) 集中在一个配置中
+│   ├── evidence_export.py     把尝试的证据导出到带哈希链的输出文件，需要时再发送到数据湖；默认关闭
+│   ├── deploy_plan.py         把工作区的清单与设备正在运行的版本对比，并按依赖顺序列出部署步骤；只读
 │   ├── assets/                应用程序图标 (HYDRA_UMC_ICON.ico 和 .svg)
 │   ├── i18n_pt.py             界面的葡萄牙语翻译
 │   └── settings.py            持久保存的用户设置 (工作区根目录等界面在两次启动之间记住的选择)

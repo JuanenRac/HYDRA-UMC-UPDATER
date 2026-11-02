@@ -146,4 +146,5 @@ PT: dict[str, str] = {
     "checkpoint_signature": "Verificação da assinatura",
     "signature_off_warning": "As assinaturas dos commits NÃO são verificadas: o script de compilação de um projeto é executado sem prova de quem o publicou. Defina HYDRA_UMC_UPDATER_REQUIRE_SIGNED=1 para as exigir.",
     "trains_hint": "Os comboios de versões estão ativados: use `train plan|apply|rollback` na linha de comandos para instalar um conjunto testado de versões. É exigido um ficheiro de comboio assinado (`train sign`), a menos que o desative. `train make` escreve o ficheiro do comboio por si e `train rollback --remove-new` retira também o que o comboio instalou pela primeira vez. `train trash` lista o que um rollback pôs de parte.",
+    "export_hint": "A exportação de evidências está ativada: `evidence export` escreve as tentativas num ficheiro de saída encadeado e `evidence export --push` envia-as para o data lake; `evidence verify` verifica a cadeia. `deploy-plan` mostra o que o dispositivo precisaria para executar o que este espaço de trabalho contém.",
 }

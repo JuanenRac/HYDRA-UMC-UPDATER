@@ -11,19 +11,24 @@ run of the installed CLI — not written from memory.
 ```
 $ hydra-umc-updater --cli -h
 usage: hydra-umc-updater --cli [-h] [--version]
-                               {status,install,update,train,prune-backups} ...
+                               {status,install,update,train,deploy-plan,evidence,prune-backups} ...
 
 Detects, installs, and manually updates the HYDRA-UMC ecosystem's own projects
 on this machine.
 
 positional arguments:
-  {status,install,update,train,prune-backups}
+  {status,install,update,train,deploy-plan,evidence,prune-backups}
     status              Show what's installed, its version, and the latest
                         GitHub version of every project.
     install             Clone and build ONE project that isn't installed yet.
     update              Pull and rebuild ONE project that's already installed.
     train               Install a tested set of versions (a train) instead of
                         the head of every project; dry run by default.
+    deploy-plan         Show what the device would need to run what the
+                        workspace has (read-only; --apply --yes deploys,
+                        behind the os_deploy switch).
+    evidence            Export the evidence of the update attempts to an
+                        outbox file (and the data lake), or verify it.
     prune-backups       Remove old '<project>.backup-xxxxxxxx' folders,
                         keeping the newest few of each project.
 
@@ -163,6 +168,44 @@ diverged git history is built, the fast-forward is proven to fail, and
 `HEAD`/file content are proven byte-for-byte unchanged afterward. The separate
 `test_refuses_a_remote_manifest_version_lower_than_the_installed_version`
 proves that an otherwise fast-forwardable downgrade leaves `HEAD` unchanged.)
+
+### `deploy-plan [--workspace PATH] [--install-plan FILE] [--device-root DIR] [--json] [--apply --yes]`
+
+What would have to be deployed on the device so that it runs what the workspace has. It crosses the table of
+installers of HYDRA-UMC-OS (`HYDRA-UMC-OS/provisioning/install_plan.json` of the workspace, or `--install-plan`),
+the manifest of every checkout and the manifest each installer leaves next to the installed program
+(`/opt/hydra-umc/<component>`, or below `--device-root` / `HYDRA_UMC_UPDATER_DEVICE_ROOT` / the `device_root`
+setting when the tree is somewhere else). Each project is reported as `deploy` (the device runs an older
+version: a step), `current`, `ahead` (the device is newer than the checkout), `not-installed` (a first
+installation is done by hand with its installer, never by the plan), `not-cm5`, `manual` (its installer does not
+follow the deployment contract), `no-checkout` or `unknown`; the steps come in `depends_on` order. Without
+`--apply` it only reads files: nothing is installed or run. `--json` prints `schema_version`, `steps` and one
+object per project (`project`, `state`, `checkoutVersion`, `deviceVersion`, `unit`, `target`, `command`, `note`).
+
+`--apply --yes` deploys the steps through `hydra-umc-os deploy <PROJECT> --apply` (the same deployment as the
+`os_deploy` switch, with its health check and its way back). It does nothing without `--yes`, nothing while the
+`os_deploy` switch is off, checks the signature of each checkout first when signatures are required, stops at the
+first step that does not hold and leaves one line of evidence per step. Exit code `0` when the plan was read (or
+every step deployed), `1` when the table cannot be read or a step failed.
+
+### `evidence export|verify` - hand the evidence of the attempts to the fleet
+
+`evidence.jsonl` (in `.hydra-umc-updater` of the workspace) holds one line per install or update attempt.
+`evidence export` turns the new lines into envelopes chained by sha256 (each carries its own hash and the hash
+of the one before) and appends them to `evidence-outbox.jsonl`; `--push` also sends the envelopes the data lake
+has not accepted to `POST /ingest/batch` as samples of kind `updater_attempt` (source `<node>/<project>`,
+fields `ok` and `seq`). `evidence verify [--file FILE]` checks that an outbox, or a copy of it, is an unbroken
+chain: a changed, removed or reordered envelope is found. Exporting is **off** unless
+`HYDRA_UMC_UPDATER_EVIDENCE_EXPORT=1` or `evidence_export: true` is set; verifying only reads.
+
+Settings (all in the settings file; none is a secret): `evidence_export_url` (base address of the data lake),
+`evidence_export_token_file` (a file with the ingest token, or `HYDRA_UMC_UPDATER_DATALAKE_TOKEN_FILE`; the token
+is never printed or stored in the settings), `evidence_export_allow_plain_http` (off: plain HTTP is only accepted
+for this machine), `node_name` (default: the host name, or `HYDRA_UMC_UPDATER_NODE_NAME`). A redirect is never
+followed, so the token only goes to the address that was checked. The outbox is the source of truth: a crash
+never repeats or skips a line, a refused push is retried from the same envelope, and an evidence file shorter
+than the outbox stops the export until someone looks at it. A line written before the evidence file kept a time
+takes the time of the export and is marked `atEstimated`. Taking the outbox into the ops agent is done on its side.
 
 ### `prune-backups [--workspace PATH] [--keep N] [--dry-run]`
 

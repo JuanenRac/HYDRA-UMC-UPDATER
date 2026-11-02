@@ -268,6 +268,9 @@ HYDRA-UMC-UPDATER/
 │   ├── gui.py                 PySide6 がない場合の Tkinter 互換フォールバック
 │   ├── main.py                ディスパッチ：デフォルトは GUI、--cli で status/install/update
 │   ├── evidence.py            インストールや更新の試行ごとの証跡1行: プロジェクト、変更前、変更後、コミット、結果
+│   ├── updater_core.py        ファミリー間で異なる名前 (エコシステムID、マニフェストファイル、変数の接頭辞、状態フォルダ) を1つのプロファイルにまとめたもの
+│   ├── evidence_export.py     試行の証跡をハッシュで連鎖した出力ファイルへ、指定時はデータレイクへも出力します。既定ではオフ
+│   ├── deploy_plan.py         ワークスペースのマニフェストとデバイスで動作中のものを比較し、依存順に展開手順を一覧します。読み取り専用
 │   ├── assets/                アプリケーションのアイコン (HYDRA_UMC_ICON.ico と .svg)
 │   ├── i18n_pt.py             GUI のポルトガル語訳
 │   └── settings.py            保存されるユーザー設定 (ワークスペースのルートなど、GUI が起動間で記憶する選択)

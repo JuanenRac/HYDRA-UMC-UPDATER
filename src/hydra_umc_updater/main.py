@@ -32,7 +32,7 @@ import os
 import sys
 from pathlib import Path
 
-from . import __version__, settings, train, train_signing
+from . import __version__, deploy_plan, evidence_export, settings, train, train_signing
 from .detect import LocalStatus, discover_workspace
 from .github_client import RemoteStatus, default_etag_cache, discover_remote_projects, fetch_all
 from .registry import ProjectEntry
@@ -467,6 +467,68 @@ def cmd_train_keygen(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_deploy_plan(args: argparse.Namespace) -> int:
+    """`deploy-plan`: what the device would need so that it runs what the workspace has, in dependency order. It only reads;
+    `--apply --yes` deploys the steps through the device installer, and only with the os_deploy switch on."""
+    workspace_root = Path(args.workspace).resolve() if args.workspace else default_workspace_root()
+    try:
+        plan = deploy_plan.build_plan(
+            workspace_root,
+            install_plan=Path(args.install_plan) if args.install_plan else None,
+            root=args.device_root,
+        )
+    except deploy_plan.PlanError as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
+        return 1
+    if args.json:
+        print(json.dumps(plan.as_dict(), indent=2, ensure_ascii=False))
+    else:
+        print(deploy_plan.format_plan(plan))
+    if not args.apply:
+        return 0
+    outcome = deploy_plan.apply_plan(plan, workspace_root, confirmed=args.yes)
+    for message in outcome.messages:
+        print(message, file=sys.stderr if args.json else sys.stdout)
+    return 0 if outcome.ok else 1
+
+
+def cmd_evidence(args: argparse.Namespace) -> int:
+    """`evidence verify|export`: check the chain of the outbox, or append the new attempts to it (and push them to the data lake
+    when its address is set). Exporting is off unless the evidence_export switch is on; verifying only reads."""
+    workspace_root = Path(args.workspace).resolve() if args.workspace else default_workspace_root()
+    outbox = evidence_export.outbox_path(workspace_root)
+    if args.evidence_command == "verify":
+        path = Path(args.file) if args.file else outbox
+        ok, count, detail = evidence_export.verify_chain(path)
+        print(f"{'OK' if ok else 'FAIL'}: {count} envelope(s) checked in {path}" + ("" if ok else f" - {detail}"))
+        return 0 if ok else 1
+    if not evidence_export.export_enabled():
+        print(
+            "The evidence export is switched off: nothing was exported. Turn it on with HYDRA_UMC_UPDATER_EVIDENCE_EXPORT=1 "
+            "or `evidence_export: true` in the settings.",
+            file=sys.stderr,
+        )
+        return 1
+    result = evidence_export.export_new(workspace_root)
+    if result.error:
+        print(f"ERROR: {result.error}", file=sys.stderr)
+        return 1
+    print(f"Exported {result.exported} new attempt(s) of {result.total} to {result.outbox}.")
+    if not args.push:
+        return 0
+    url = args.url or settings.get_evidence_export_url()
+    if not url:
+        print("ERROR: --push needs the address of the data lake (--url or the evidence_export_url setting).", file=sys.stderr)
+        return 1
+    token = evidence_export.read_token(args.token_file or evidence_export.HYDRA_PROFILE.env_text("DATALAKE_TOKEN_FILE") or settings.get_evidence_export_token_file())
+    pushed = evidence_export.push_pending(workspace_root, url, token=token, allow_plain_http=settings.get_evidence_export_allow_plain_http())
+    print(f"Pushed {pushed.pushed} sample(s); {pushed.pending} still pending.")
+    if pushed.error:
+        print(f"ERROR: {pushed.error}", file=sys.stderr)
+        return 1
+    return 0
+
+
 def cmd_prune_backups(args: argparse.Namespace) -> int:
     workspace_root = Path(args.workspace).resolve() if args.workspace else default_workspace_root()
     if args.keep < 0:
@@ -600,6 +662,31 @@ def build_parser() -> argparse.ArgumentParser:
     keygen_p.add_argument("--out-dir", help="Folder for the keys (default: ~/.hydra-umc-keys).")
     keygen_p.add_argument("--name", default="hydra_train", help="Base name of the key files (default: hydra_train).")
     keygen_p.set_defaults(func=cmd_train_keygen)
+
+    plan_p = subparsers.add_parser(
+        "deploy-plan",
+        help="Show what the device would need to run what the workspace has (read-only; --apply --yes deploys, behind the os_deploy switch).",
+    )
+    plan_p.add_argument("--workspace", help="Workspace root (default: this tool's own parent directory).")
+    plan_p.add_argument("--install-plan", help="The table of installers (default: HYDRA-UMC-OS/provisioning/install_plan.json in the workspace).")
+    plan_p.add_argument("--device-root", help="Where the installed programs are on this machine (default: /opt/hydra-umc).")
+    plan_p.add_argument("--json", action="store_true", help="Machine-readable plan.")
+    plan_p.add_argument("--apply", action="store_true", help="Deploy the steps through hydra-umc-os (needs --yes and the os_deploy switch).")
+    plan_p.add_argument("--yes", action="store_true", help="Confirm --apply.")
+    plan_p.set_defaults(func=cmd_deploy_plan)
+
+    evidence_p = subparsers.add_parser("evidence", help="Export the evidence of the update attempts to an outbox file (and the data lake), or verify it.")
+    evidence_sub = evidence_p.add_subparsers(dest="evidence_command", required=True)
+    export_p = evidence_sub.add_parser("export", help="Append the new attempts to the outbox (needs the evidence_export switch).")
+    export_p.add_argument("--push", action="store_true", help="Also send the new envelopes to the data lake (POST /ingest/batch).")
+    export_p.add_argument("--url", help="Base address of the data lake (default: the evidence_export_url setting).")
+    export_p.add_argument("--token-file", help="File that holds the ingest token (default: the evidence_export_token_file setting).")
+    export_p.add_argument("--workspace", help="Workspace root (default: this tool's own parent directory).")
+    verify_p = evidence_sub.add_parser("verify", help="Check that the outbox (or a copy of it) is an unbroken chain.")
+    verify_p.add_argument("--file", help="The outbox file to check (default: the one of the workspace).")
+    verify_p.add_argument("--workspace", help="Workspace root (default: this tool's own parent directory).")
+    for evidence_parser in (export_p, verify_p):
+        evidence_parser.set_defaults(func=cmd_evidence)
 
     prune_p = subparsers.add_parser(
         "prune-backups",

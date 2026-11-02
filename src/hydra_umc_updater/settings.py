@@ -157,3 +157,47 @@ def get_allowed_signers_file() -> str | None:
 
 def save_allowed_signers_file(path: Path | str) -> None:
     save_settings(allowed_signers_file=str(path))
+
+
+def get_evidence_export() -> bool:
+    """Whether the evidence of the attempts may be exported to an outbox file and, when an address is set, pushed to the data lake. Off unless the saved
+    settings say so; a damaged file keeps it off."""
+    if settings_file_is_damaged():
+        return False
+    return load_settings().get("evidence_export") is True
+
+
+def save_evidence_export(enabled: bool) -> None:
+    save_settings(evidence_export=bool(enabled))
+
+
+def _text_setting(key: str) -> str | None:
+    raw = load_settings().get(key)
+    return raw.strip() if isinstance(raw, str) and raw.strip() else None
+
+
+def get_evidence_export_url() -> str | None:
+    """Base address of the data lake (`http://host:port`) that receives the evidence, or None to keep it in the outbox file only."""
+    return _text_setting("evidence_export_url")
+
+
+def get_evidence_export_token_file() -> str | None:
+    """File that holds the ingest token of the data lake (the token itself is never kept in the settings)."""
+    return _text_setting("evidence_export_token_file")
+
+
+def get_evidence_export_allow_plain_http() -> bool:
+    """Whether the evidence may travel over plain HTTP to an address that is not this machine. Off by default; a damaged file keeps it off."""
+    if settings_file_is_damaged():
+        return False
+    return load_settings().get("evidence_export_allow_plain_http") is True
+
+
+def get_node_name() -> str | None:
+    """The name this machine gives itself in the exported evidence (default: its host name)."""
+    return _text_setting("node_name")
+
+
+def get_device_root() -> str | None:
+    """Folder that holds the installed programs of the device when it is not `/opt/hydra-umc` (a mounted image, a test tree)."""
+    return _text_setting("device_root")

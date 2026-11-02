@@ -355,6 +355,9 @@ HYDRA-UMC-UPDATER/
 │   ├── gui.py                 Fallback Tkinter se PySide6 non è disponibile
 │   ├── main.py                Dispatch: GUI predefinita, --cli per status/install/update
 │   ├── evidence.py            Una riga di prova per ogni tentativo di installazione o aggiornamento: progetto, prima, dopo, commit ed esito
+│   ├── updater_core.py        I nomi che cambiano tra gli updater delle famiglie (id dell'ecosistema, file del manifesto, prefisso delle variabili, cartella di stato) in un unico profilo
+│   ├── evidence_export.py     Esporta le evidenze dei tentativi in un file di uscita concatenato con hash e, se richiesto, nel data lake; spento per impostazione predefinita
+│   ├── deploy_plan.py         Confronta i manifesti dell'area di lavoro con ciò che esegue il dispositivo ed elenca i passi di distribuzione in ordine di dipendenza; solo lettura
 │   ├── assets/                Le icone dell'applicazione (HYDRA_UMC_ICON.ico e .svg)
 │   ├── i18n_pt.py             Traduzione portoghese dell'interfaccia
 │   └── settings.py            Impostazioni utente salvate (la radice dell'area di lavoro e le altre scelte che l'interfaccia ricorda tra un avvio e l'altro)

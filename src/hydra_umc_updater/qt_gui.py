@@ -31,7 +31,7 @@ from PySide6.QtCore import Property, QCoreApplication, QEvent, QObject, QUrl, Si
 from PySide6.QtGui import QGuiApplication, QIcon
 from PySide6.QtQml import QQmlApplicationEngine
 
-from . import __version__, i18n, settings, train
+from . import __version__, evidence_export, i18n, settings, train
 from .detect import LocalStatus, discover_workspace
 from .github_client import RemoteStatus, default_etag_cache, discover_remote_projects, fetch_all
 from .install import InstallResult, format_batch_list, install_or_update, order_batch, signature_required
@@ -189,6 +189,11 @@ class UpdaterBridge(QObject):
     def trainsEnabled(self) -> bool:
         """Whether the version-train switch is on; the window then shows a one-line hint about the train commands."""
         return train.trains_enabled()
+
+    @Property(bool, constant=True)
+    def evidenceExportEnabled(self) -> bool:
+        """Whether the evidence-export switch is on; the window then shows a one-line hint about the evidence and deploy-plan commands."""
+        return evidence_export.export_enabled()
 
     @Property(str, constant=True)
     def logFilePath(self) -> str:

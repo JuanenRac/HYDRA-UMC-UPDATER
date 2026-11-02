@@ -341,6 +341,75 @@
           }
         },
         {
+          "name": "updater_core.py",
+          "desc": {
+            "en": "Names that differ per family",
+            "es": "Nombres que cambian por familia",
+            "de": "Namen je Familie",
+            "fr": "Noms propres à chaque famille",
+            "it": "Nomi propri di ogni famiglia",
+            "ja": "ファミリーごとの名前",
+            "zh": "各家族不同的名称",
+            "pt": "Nomes próprios de cada família"
+          },
+          "tree_desc": {
+            "en": "The names that differ between the updaters of the families (ecosystem id, manifest file, variable prefix, state folder) in one profile",
+            "es": "Los nombres que cambian entre los actualizadores de las familias (id del ecosistema, fichero de manifiesto, prefijo de variables, carpeta de estado) en un solo perfil",
+            "de": "Die Namen, die sich zwischen den Updatern der Familien unterscheiden (Ökosystem-ID, Manifestdatei, Variablenpräfix, Zustandsordner), in einem Profil",
+            "fr": "Les noms qui diffèrent entre les mises à jour des familles (id d'écosystème, fichier de manifeste, préfixe des variables, dossier d'état) dans un seul profil",
+            "it": "I nomi che cambiano tra gli updater delle famiglie (id dell'ecosistema, file del manifesto, prefisso delle variabili, cartella di stato) in un unico profilo",
+            "ja": "ファミリー間で異なる名前 (エコシステムID、マニフェストファイル、変数の接頭辞、状態フォルダ) を1つのプロファイルにまとめたもの",
+            "zh": "各家族更新器之间不同的名称 (生态系统 ID、清单文件、变量前缀、状态文件夹) 集中在一个配置中",
+            "pt": "Os nomes que mudam entre os atualizadores das famílias (id do ecossistema, ficheiro de manifesto, prefixo das variáveis, pasta de estado) num único perfil"
+          }
+        },
+        {
+          "name": "evidence_export.py",
+          "desc": {
+            "en": "Chained evidence export",
+            "es": "Exportación de evidencias encadenada",
+            "de": "Verketteter Nachweis-Export",
+            "fr": "Export des preuves chaîné",
+            "it": "Esportazione delle evidenze concatenata",
+            "ja": "連鎖した証跡の出力",
+            "zh": "带哈希链的证据导出",
+            "pt": "Exportação de evidências encadeada"
+          },
+          "tree_desc": {
+            "en": "Exports the evidence of the attempts to a hash-chained outbox and, if asked, to the data lake; off by default",
+            "es": "Exporta la evidencia de los intentos a un fichero de salida encadenado por hash y, si se pide, al lago de datos; apagado por defecto",
+            "de": "Exportiert die Nachweise der Versuche in eine hash-verkettete Ausgangsdatei und auf Wunsch in den Data Lake; standardmäßig aus",
+            "fr": "Exporte les preuves des tentatives vers un fichier de sortie chaîné par hash et, sur demande, vers le lac de données ; désactivé par défaut",
+            "it": "Esporta le evidenze dei tentativi in un file di uscita concatenato con hash e, se richiesto, nel data lake; spento per impostazione predefinita",
+            "ja": "試行の証跡をハッシュで連鎖した出力ファイルへ、指定時はデータレイクへも出力します。既定ではオフ",
+            "zh": "把尝试的证据导出到带哈希链的输出文件，需要时再发送到数据湖；默认关闭",
+            "pt": "Exporta a evidência das tentativas para um ficheiro de saída encadeado por hash e, se pedido, para o data lake; desligado por defeito"
+          }
+        },
+        {
+          "name": "deploy_plan.py",
+          "desc": {
+            "en": "Plan to deploy on the device",
+            "es": "Plan de despliegue en el dispositivo",
+            "de": "Bereitstellungsplan fürs Gerät",
+            "fr": "Plan de déploiement sur l'appareil",
+            "it": "Piano di distribuzione sul dispositivo",
+            "ja": "デバイスへの展開計画",
+            "zh": "设备部署计划",
+            "pt": "Plano de implantação no dispositivo"
+          },
+          "tree_desc": {
+            "en": "Compares the manifests of the workspace with what the device runs and lists the deployment steps in dependency order; reads only",
+            "es": "Compara los manifiestos del espacio de trabajo con lo que ejecuta el dispositivo y lista los pasos de despliegue en orden de dependencias; solo lee",
+            "de": "Vergleicht die Manifeste des Arbeitsbereichs mit dem, was das Gerät ausführt, und listet die Bereitstellungsschritte in Abhängigkeitsreihenfolge; nur lesend",
+            "fr": "Compare les manifestes de l'espace de travail à ce que l'appareil exécute et liste les étapes de déploiement dans l'ordre des dépendances ; lecture seule",
+            "it": "Confronta i manifesti dell'area di lavoro con ciò che esegue il dispositivo ed elenca i passi di distribuzione in ordine di dipendenza; solo lettura",
+            "ja": "ワークスペースのマニフェストとデバイスで動作中のものを比較し、依存順に展開手順を一覧します。読み取り専用",
+            "zh": "把工作区的清单与设备正在运行的版本对比，并按依赖顺序列出部署步骤；只读",
+            "pt": "Compara os manifestos da área de trabalho com o que o dispositivo executa e lista os passos de implantação por ordem de dependências; só lê"
+          }
+        },
+        {
           "name": "assets/",
           "desc": {
             "en": "The application icons",

@@ -14,10 +14,13 @@ from __future__ import annotations
 import json
 import logging
 import subprocess
+import time
 from pathlib import Path
 from typing import Any
 
-EVIDENCE_DIRECTORY = ".hydra-umc-updater"
+from .updater_core import HYDRA_PROFILE
+
+EVIDENCE_DIRECTORY = HYDRA_PROFILE.state_directory
 EVIDENCE_FILE = "evidence.jsonl"
 
 
@@ -52,6 +55,7 @@ def record_attempt(
 ) -> Path | None:
     """Append one attempt to the evidence file; returns its path, or None if it could not be written."""
     line = {
+        "at": int(time.time() * 1000),
         "project": project,
         "ok": ok,
         "versionBefore": before.get("version"),
