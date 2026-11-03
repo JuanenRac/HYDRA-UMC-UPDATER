@@ -252,10 +252,22 @@ def _parse_service(raw_service: Any) -> tuple[int | None, str | None, str | None
     if not isinstance(raw_service, dict):
         raise ManifestValidationError("service must be an object when present")
 
-    allowed = {"port", "health_path", "systemd_unit"}
+    allowed = {"port", "health_path", "systemd_unit", "grpc_port", "grpc_service"}
     unknown = sorted(set(raw_service) - allowed)
     if unknown:
         raise ManifestValidationError("unknown field(s) in service: " + ", ".join(unknown))
+
+    # The gRPC health endpoint of a service (declared by the SDK since 0.5.0): checked here so that a manifest that carries it
+    # is not refused, but the updater does not probe it - it only needs the HTTP port, the health path and the unit.
+    if ("grpc_port" in raw_service) != ("grpc_service" in raw_service):
+        raise ManifestValidationError("service.grpc_port and service.grpc_service go together")
+    if "grpc_port" in raw_service:
+        grpc_port = raw_service["grpc_port"]
+        if isinstance(grpc_port, bool) or not isinstance(grpc_port, int) or not (1 <= grpc_port <= 65535):
+            raise ManifestValidationError("service.grpc_port must be an integer between 1 and 65535")
+        grpc_service = raw_service["grpc_service"]
+        if not isinstance(grpc_service, str) or not grpc_service.strip():
+            raise ManifestValidationError("service.grpc_service must be a non-empty string")
 
     port: int | None = None
     if "port" in raw_service:

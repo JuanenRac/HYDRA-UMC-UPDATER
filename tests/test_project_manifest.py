@@ -153,6 +153,30 @@ def test_parses_a_real_service_port_and_health_path():
     assert manifest.service_health_path == "/api/system/metrics"
 
 
+def test_a_service_may_declare_its_grpc_health_endpoint():
+    data = valid_manifest()
+    data["service"] = {"port": 8114, "health_path": "/health", "grpc_port": 50114, "grpc_service": "hydra.common.v1.HealthService"}
+    manifest = parse_manifest(json.dumps(data))
+    assert manifest.service_port == 8114
+    assert manifest.service_health_path == "/health"
+
+
+def test_the_grpc_port_and_the_grpc_service_go_together_and_are_checked():
+    for service in (
+        {"port": 8114, "grpc_port": 50114},
+        {"port": 8114, "grpc_service": "hydra.common.v1.HealthService"},
+        {"port": 8114, "grpc_port": 0, "grpc_service": "x"},
+        {"port": 8114, "grpc_port": 70000, "grpc_service": "x"},
+        {"port": 8114, "grpc_port": True, "grpc_service": "x"},
+        {"port": 8114, "grpc_port": 50114, "grpc_service": "  "},
+        {"port": 8114, "grpc_port": 50114, "grpc_service": 7},
+    ):
+        data = valid_manifest()
+        data["service"] = service
+        with pytest.raises(ManifestValidationError):
+            parse_manifest(json.dumps(data))
+
+
 def test_service_health_path_is_optional_tcp_only_check():
     data = valid_manifest()
     data["service"] = {"port": 1883}
