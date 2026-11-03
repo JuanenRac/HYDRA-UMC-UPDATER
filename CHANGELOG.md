@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+## [0.5.5] - The updater installs the latest stable release and never the head of the branch, packages of a release are installed only when they carry a signature of the pinned release key, and a window of the safe-update check of operating-system images is available
+
 - **`install` and `update` take the latest stable release, never the head of the branch:** the updater asks GitHub for the newest published release that is not a draft or a pre-release, resolves its tag to the commit it points at and installs exactly that commit through the same pin checks as a train (the manifest at that commit must name the version of the tag, anti-rollback still applies). With no network, no release or a tag that does not lead to a commit it fails with the reason and installs nothing.
 - **An optional testing channel, off by default:** `release_channel` in the settings file (`"stable"` unless it says `"pruebas"`, which also accepts pre-releases); any other value or a damaged file keeps `"stable"`.
 - **`package verify` and `package install` handle the signed package of a release:** `<project>-<version>.tgz` with its `.sha256` and an Ed25519 `.sig` by the pinned key of the releases over `hydra-pc-pkg/1|project|version|sha256`; an unsigned or wrongly signed package is refused with the reason in the eight languages, the members are checked (no links, no paths outside, bounded size), the previous folder is kept as a backup and a version that is not newer is refused.
