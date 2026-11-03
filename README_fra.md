@@ -368,6 +368,8 @@ HYDRA-UMC-UPDATER/
 │   ├── evidence_export.py     Exporte les preuves des tentatives vers un fichier de sortie chaîné par hash et, sur demande, vers le lac de données ; désactivé par défaut
 │   ├── deploy_plan.py         Compare les manifestes de l'espace de travail à ce que l'appareil exécute et liste les étapes de déploiement dans l'ordre des dépendances ; lecture seule
 │   ├── image_release.py       Contrôle release.json, sa signature Ed25519 face à un fichier de clés publiques de confiance, le SHA-256 de l'image et, sur demande, le tag signé ; lecture seule, refus au moindre doute
+│   ├── release_channel.py     Trouve la release publiée la plus récente (jamais un brouillon, une pré-release seulement sur le canal de test) et le commit de son tag ; refuse s'il n'y en a pas, donc la tête de la branche n'est jamais installée
+│   ├── package_release.py     Vérifie un .tgz avec son .sha256 et sa signature Ed25519 par la clé épinglée des releases, contrôle ses membres et l'installe à côté de sa place en gardant une sauvegarde ; un paquet non signé ou mal signé est refusé avec un motif
 │   ├── assets/                Les icônes de l'application (HYDRA_UMC_ICON.ico et .svg)
 │   ├── i18n_pt.py             Traduction portugaise de l'interface
 │   └── settings.py            Réglages utilisateur conservés (la racine de l'espace de travail et les autres choix que l'interface retient d'un lancement à l'autre)

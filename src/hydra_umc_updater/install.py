@@ -36,10 +36,11 @@ from shutil import copy2, copytree, ignore_patterns, rmtree
 from typing import Callable, Iterable, Mapping
 from uuid import uuid4
 
-from . import settings
+from . import release_channel, settings
 from .evidence import installed_state, record_attempt
 from .project_manifest import ManifestValidationError, ProjectManifest, parse_manifest
 from .registry import ProjectEntry, github_repo_url
+from .release_channel import ReleaseError
 
 # P01/the durable version of this module's own in-process
 # self-heal for the narrow gap between the 2 promotion renames below (see
@@ -773,6 +774,12 @@ def _check_pin(path: Path, pin: PinSpec, entry: ProjectEntry, upstream: str) -> 
     return manifest, None
 
 
+def resolve_release_pin(entry: ProjectEntry) -> PinSpec:
+    """The commit of the latest release of the channel in the settings ("stable" unless "pruebas" is saved) as a pin. Raises ReleaseError."""
+    info = release_channel.resolve_latest(entry.name, settings.get_release_channel())
+    return PinSpec(commit=info.commit, version=info.version if info.plain else None)
+
+
 def clone_or_pull(
     entry: ProjectEntry,
     workspace_root: Path,
@@ -1490,6 +1497,15 @@ def _install_or_update_locked(
     before = installed_state(path)
     results: list[InstallResult] = []
     try:
+        if pin is None:
+            # Only a published release is ever installed, never the head of the branch: no network, no release or an
+            # unresolvable tag stops here and nothing is installed.
+            _checkpoint(progress, "source", "Looking for the latest published release.")
+            try:
+                pin = resolve_release_pin(entry)
+            except ReleaseError as exc:
+                results.append(InstallResult(False, f"{exc} - nothing was installed (the updater never falls back to the head of the branch)"))
+                return results
         results.append(clone_or_pull(entry, workspace_root, verify_build=build, progress=progress, pin=pin))
         if results[0].ok and build and not was_existing_checkout:
             built = run_build_script(entry, workspace_root, progress=progress)

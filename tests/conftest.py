@@ -27,6 +27,13 @@ def isolated_settings(tmp_path_factory: pytest.TempPathFactory, monkeypatch: pyt
     return path
 
 
+@pytest.fixture(autouse=True)
+def head_installs_without_network(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The install tests run against simulated repositories that have no published releases and no network: they keep the
+    old head-of-branch behaviour through this stand-in. The tests of the release channel put the real resolver back."""
+    monkeypatch.setattr(install, "resolve_release_pin", lambda entry: None)
+
+
 @pytest.fixture
 def world(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     """Simulated local projects (a bare remote each) installed through `file` paths, no network."""

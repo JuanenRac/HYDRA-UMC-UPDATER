@@ -219,3 +219,32 @@ def get_image_release_require_tag() -> bool:
 def get_image_release_repo() -> str | None:
     """Local clone in which the signed tag of a release is checked."""
     return _text_setting("image_release_repo")
+
+
+#: Channels from which the updater takes releases. "stable" is the only one used unless the saved settings name the other.
+RELEASE_CHANNELS = ("stable", "pruebas")
+
+
+def get_release_channel() -> str:
+    """The channel the updater installs from: "stable" (the latest published release that is not a draft or a pre-release) unless the saved settings
+    say "pruebas" (the latest release including pre-releases). Anything else, and a damaged file, keeps "stable"."""
+    if settings_file_is_damaged():
+        return "stable"
+    value = load_settings().get("release_channel")
+    return value if value == "pruebas" else "stable"
+
+
+def save_release_channel(channel: str) -> None:
+    save_settings(release_channel=channel if channel in RELEASE_CHANNELS else "stable")
+
+
+def get_require_signed_packages() -> bool:
+    """Whether a package of a release must carry a valid Ed25519 signature by the key of the releases before it is installed. On unless the saved
+    settings say `false`; a damaged file keeps it on (fail closed)."""
+    if settings_file_is_damaged():
+        return True
+    return load_settings().get("require_signed_packages") is not False
+
+
+def save_require_signed_packages(required: bool) -> None:
+    save_settings(require_signed_packages=bool(required))

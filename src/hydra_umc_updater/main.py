@@ -32,7 +32,7 @@ import os
 import sys
 from pathlib import Path
 
-from . import __version__, deploy_plan, evidence_export, i18n, image_release, settings, train, train_signing
+from . import __version__, deploy_plan, evidence_export, i18n, image_release, package_release, release_channel, settings, train, train_signing
 from .detect import LocalStatus, discover_workspace
 from .github_client import RemoteStatus, default_etag_cache, discover_remote_projects, fetch_all
 from .registry import ProjectEntry
@@ -522,6 +522,69 @@ def cmd_image_verify(args: argparse.Namespace) -> int:
     return 0
 
 
+def _say(lang: str, prefix: str, code: str, english: str, **params: object) -> str:
+    key = prefix + code
+    return i18n.t(lang, key, **params) if key in i18n.TRANSLATIONS["en"] else english
+
+
+def cmd_package(args: argparse.Namespace) -> int:
+    """`package verify FILE` checks a signed package of a release and reads only; `package install TARGET` verifies it and puts it in the workspace
+    (TARGET is a package file, or a project whose latest release of the saved channel is downloaded). Exit 0 when it holds; 1 with the reason."""
+    lang = args.lang or i18n.resolve_initial_lang()
+
+    def pkg(code: str, english: str, **params: object) -> str:
+        return _say(lang, "pkg_", code, english, **params)
+
+    try:
+        if args.package_command == "verify":
+            result = package_release.verify_package(Path(args.file))
+            installed_text = None
+        else:
+            workspace_root = Path(args.workspace).resolve() if args.workspace else default_workspace_root()
+            target = Path(args.target)
+            if target.is_file():
+                package_file = target
+                scratch = None
+            else:
+                import tempfile
+
+                info = release_channel.resolve_latest(args.target, settings.get_release_channel())
+                scratch = tempfile.TemporaryDirectory(prefix="hydra-umc-package-")
+                package_file = package_release.fetch_release_package(info, Path(scratch.name))
+            try:
+                lock = WorkspaceLock(workspace_root)
+                lock.acquire()
+                try:
+                    result = package_release.install_package(package_file, workspace_root)
+                finally:
+                    lock.release()
+            finally:
+                if scratch is not None:
+                    scratch.cleanup()
+            installed_text = pkg("installed", "Installed.", name=result.name, version=result.version)
+    except release_channel.ReleaseError as exc:
+        print("ERROR: " + _say(lang, "rel_", exc.code, str(exc), **exc.params), file=sys.stderr)
+        return 1
+    except package_release.PackageError as exc:
+        print("ERROR: " + pkg(exc.code, str(exc), **exc.params), file=sys.stderr)
+        print(pkg("rejected", "The package was rejected: nothing was installed."), file=sys.stderr)
+        return 1
+    except (WorkspaceBusyError, OSError) as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
+        return 1
+    if args.json:
+        print(json.dumps({"ok": True, "name": result.name, "version": result.version, "sha256": result.sha256,
+                          "signed": result.signed, "key_fingerprint": result.fingerprint}, indent=2))
+        return 0
+    if result.signed:
+        print(pkg("ok_signed", "The package holds.", name=result.name, version=result.version, fingerprint=result.fingerprint))
+    else:
+        print(pkg("ok_unsigned", "The package holds, but it is not signed.", name=result.name, version=result.version), file=sys.stderr)
+    if installed_text:
+        print(installed_text)
+    return 0
+
+
 def cmd_evidence(args: argparse.Namespace) -> int:
     """`evidence verify|export`: check the chain of the outbox, or append the new attempts to it (and push them to the data lake
     when its address is set). Exporting is off unless the evidence_export switch is on; verifying only reads."""
@@ -717,6 +780,18 @@ def build_parser() -> argparse.ArgumentParser:
     verify_p.add_argument("--workspace", help="Workspace root (default: this tool's own parent directory).")
     for evidence_parser in (export_p, verify_p):
         evidence_parser.set_defaults(func=cmd_evidence)
+
+    package_p = subparsers.add_parser("package", help="Verify and install the signed package (.tgz + .sha256 + .sig) of a release.")
+    package_sub = package_p.add_subparsers(dest="package_command", required=True)
+    package_verify_p = package_sub.add_parser("verify", help="Check the hash, the signature (required unless require_signed_packages is off) and the contents of a package. Reads only.")
+    package_verify_p.add_argument("file", help="The <project>-<version>.tgz file (.sha256 and .sig next to it).")
+    package_install_p = package_sub.add_parser("install", help="Verify a package and put it in the workspace; a project name downloads the package of its latest release in the saved channel.")
+    package_install_p.add_argument("target", help="A package file, or the name of a project.")
+    package_install_p.add_argument("--workspace", help="Workspace root (default: this tool's own parent directory).")
+    for package_parser in (package_verify_p, package_install_p):
+        package_parser.add_argument("--lang", choices=sorted(i18n.TRANSLATIONS), help="Language of the messages (default: the one of the window).")
+        package_parser.add_argument("--json", action="store_true", help="Print the result as JSON when the package holds.")
+        package_parser.set_defaults(func=cmd_package)
 
     image_p = subparsers.add_parser("image", help="Check a signed release of an operating-system image (reads only).")
     image_sub = image_p.add_subparsers(dest="image_command", required=True)

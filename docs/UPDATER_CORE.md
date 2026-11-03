@@ -46,3 +46,6 @@ kept in step, one file at a time, so nobody depends on a package that does not e
 `image verify` (`image_release.py`, the check of the signed image releases of the image builder) exists only in this updater
 so far. The updaters of the other families and the general updater still have to take it: the module has no names of this
 family except the environment prefix, which it reads from the profile through the command.
+
+`release_channel.py` and `package_release.py` (the latest stable release instead of the head, and the signed package of a release) also exist only in
+this updater so far; they read the pinned key of the releases and the settings, and have no names of this family except the prefix of the signed text.

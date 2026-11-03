@@ -169,6 +169,45 @@ diverged git history is built, the fast-forward is proven to fail, and
 `test_refuses_a_remote_manifest_version_lower_than_the_installed_version`
 proves that an otherwise fast-forwardable downgrade leaves `HEAD` unchanged.)
 
+### Which release is installed
+
+`install` and `update` take the latest **stable release** of the repository that GitHub publishes (not a draft, not a pre-release),
+look up the commit its tag points at and install exactly that commit: never the head of the branch. The version in the manifest of
+that commit must equal the version of the tag, the commit must be part of the published history, and the anti-rollback rule still
+applies (a release older than the installed version is refused). A train pins its own commits and does not use this lookup.
+
+* No network, no published release in the channel, an answer from GitHub that is not a release list, or a tag that does not lead to a
+  commit: the command fails with the reason and **installs nothing**. It never falls back to the head of the branch.
+* The channel is a setting: `release_channel` in the saved settings file (`~/.hydra_umc_updater_settings.json`), `"stable"` by default.
+  `"pruebas"` (testing) also accepts pre-releases and is meant for someone who tests before a release is declared stable; any other
+  value, and a damaged settings file, mean `"stable"`. A `GITHUB_TOKEN` in the environment raises the API limit.
+* The window has no settings screen yet, so the channel is chosen in the settings file only.
+
+### `package verify FILE` and `package install TARGET [--workspace PATH] [--lang CODE] [--json]` - signed packages of a release
+
+For a PC the release carries a package: `<project>-<version>.tgz`, `<project>-<version>.tgz.sha256` and `<project>-<version>.tgz.sig`, the Ed25519
+signature, by the key of the releases of HYDRA-UMC (its public half is pinned in the updater), of the text
+`hydra-pc-pkg/1|<project>|<version>|<sha256>`. The project and the version are inside the signed text, so a signed package of another project or
+of an older version cannot be presented as this one. `package verify` only reads. `package install` accepts a package file, or a project name,
+in which case it downloads the three files of the latest release of the channel (from GitHub only, bounded size), and then:
+
+1. the name, the `.sha256` and the signature are checked; **an unsigned package, or one with an invalid signature, is refused with the reason**;
+2. the members are checked: only regular files and folders, nothing outside the package, no links, bounded count and size;
+3. it is extracted into a staging folder next to the workspace and its `hydra-umc.project.json` must name the version of the package;
+4. a version that is not newer than the installed one is refused; otherwise the previous folder is renamed to `<project>.backup-<id>` (never deleted)
+   and the staging folder takes its place.
+
+| Setting | Environment | Meaning |
+|---|---|---|
+| `require_signed_packages` | `HYDRA_UMC_UPDATER_REQUIRE_SIGNED_PACKAGES` | On by default (a damaged settings file counts as on). Off lets a package with its `.sha256` but no `.sig` be installed, with a warning; a signature that is present and wrong is refused whatever this says. The environment variable can only turn it on. |
+| `release_channel` | - | `"stable"` (default) or `"pruebas"`, as above. |
+
+The publisher packs and signs with `tools/package_pc_release.py` (`pack REPO --tag TAG`, `sign PACKAGE`, `verify PACKAGE`); the signing key is read
+from `HYDRA_RELEASE_KEY` or the key folder of the owner, is never printed, and nothing is signed unless its public half is the pinned one.
+Needs the optional `cryptography` package. Tested with keys made by the tests and a simulated release API; never run against the real key or the
+real releases. Installing a package replaces the folder with its files and does not run the build script of the project nor create its `.venv`
+(the git flow does); that gap is open.
+
 ### `deploy-plan [--workspace PATH] [--install-plan FILE] [--device-root DIR] [--json] [--apply --yes]`
 
 What would have to be deployed on the device so that it runs what the workspace has. It crosses the table of
@@ -253,8 +292,8 @@ and refuses to start while an install or update is running in the workspace.
 
 ### `train plan|apply|rollback|make|trash` - install a tested set of versions
 
-By default every project is installed or updated to the head of its repository
-or its latest release, one at a time. A **version train** is a tested set of
+By default every project is installed or updated to its latest stable release (see
+"Which release is installed"), one at a time. A **version train** is a tested set of
 versions, described by one file, that is installed together. It is off unless
 the switch is on: `HYDRA_UMC_UPDATER_TRAINS=1` (or `"version_trains": true` in
 the saved settings; a damaged settings file counts as off). With the switch off
