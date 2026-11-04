@@ -52,6 +52,7 @@ from concurrent.futures import (
 from dataclasses import dataclass, replace
 from pathlib import Path
 
+from .updater_core import HYDRA_PROFILE as _PROFILE
 from .project_manifest import (
     ECOSYSTEM_ID,
     MANIFEST_FILE,
@@ -80,7 +81,7 @@ REQUEST_TIMEOUT_S = 10
 # high-concurrency crawler.
 MAX_CONCURRENT_REQUESTS = 8
 
-USER_AGENT = "HYDRA-UMC-UPDATER"
+USER_AGENT = _PROFILE.user_agent
 
 # Real hosts by default; module-level so tests can point them at a local
 # HTTP server instead of mocking urllib itself - real request/response
@@ -257,9 +258,9 @@ class EtagCache:
 
 def default_etag_cache() -> EtagCache:
     """The cache in the user's home directory, next to the settings file. `HYDRA_UMC_UPDATER_NO_CACHE=1` turns it off."""
-    if os.environ.get("HYDRA_UMC_UPDATER_NO_CACHE") == "1":
+    if _PROFILE.env_text("NO_CACHE") == "1":
         return EtagCache(None)
-    return EtagCache(Path.home() / ".hydra_umc_updater_etag_cache.json")
+    return EtagCache(Path.home() / f"{_PROFILE.file_prefix}_etag_cache.json")
 
 
 # ---------------------------------------------------------------------------
@@ -415,7 +416,7 @@ def discover_remote_projects(
         cache.save()
     discovered: list[RemoteStatus] = []
     errors: list[str] = []
-    with ThreadPoolExecutor(max_workers=MAX_CONCURRENT_REQUESTS, thread_name_prefix="hydra-discovery") as pool:
+    with ThreadPoolExecutor(max_workers=MAX_CONCURRENT_REQUESTS, thread_name_prefix=f"{_PROFILE.user_agent.split('-UPDATER')[0].lower()}-discovery") as pool:
         futures = {pool.submit(_fetch_discovered_manifest, owner, name, branch): name for name, branch in candidates}
         for future in as_completed(futures):
             try:
@@ -621,7 +622,7 @@ def fetch_all(
 
     with ThreadPoolExecutor(
         max_workers=MAX_CONCURRENT_REQUESTS,
-        thread_name_prefix="hydra-github",
+        thread_name_prefix=f"{_PROFILE.user_agent.split('-UPDATER')[0].lower()}-github",
     ) as pool:
 
         futures = {

@@ -31,6 +31,17 @@ class EcosystemProfile:
     env_prefix: str
     #: the folder, inside the workspace, that holds the files the updater writes about its own work
     state_directory: str
+    #: the name the updater sends as User-Agent and prefixes its worker threads with (lower-case for threads)
+    user_agent: str
+    #: the prefix every repository of the family carries (`<prefix>` or `<prefix>-<NAME>`)
+    repo_prefix: str
+    #: the prefix of the hidden files the updater keeps in the home directory and the workspace (`<prefix>_settings.json`...)
+    file_prefix: str
+    #: the folder, inside the workspace, of the version trains
+    trains_directory: str
+    #: the projects that go first and last in a batch (the shared library and the updater itself)
+    batch_first: tuple[str, ...]
+    batch_last: tuple[str, ...]
 
     def env_name(self, suffix: str) -> str:
         """The environment variable of this family for `suffix`, for example `OS_DEPLOY`."""
@@ -54,6 +65,12 @@ HYDRA_PROFILE = EcosystemProfile(
     manifest_file=MANIFEST_FILE,
     env_prefix="HYDRA_UMC_UPDATER",
     state_directory=".hydra-umc-updater",
+    user_agent="HYDRA-UMC-UPDATER",
+    repo_prefix="HYDRA-UMC",
+    file_prefix=".hydra_umc_updater",
+    trains_directory=".hydra-umc-trains",
+    batch_first=("HYDRA-UMC-SDK",),
+    batch_last=("HYDRA-UMC-UPDATER",),
 )
 
 #: the profiles this updater knows. The other families register theirs when their updater adopts the core.
@@ -74,8 +91,8 @@ CORE_MODULES: dict[str, bool] = {
     "evidence_export": True,
     "deploy_plan": True,
     "project_manifest": True,
-    "github_client": False,
-    "install": False,
-    "train": False,
-    "settings": False,
+    "github_client": True,
+    "install": True,
+    "train": True,
+    "settings": True,
 }

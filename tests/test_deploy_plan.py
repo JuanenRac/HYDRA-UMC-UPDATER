@@ -218,3 +218,18 @@ def test_the_core_modules_named_exist() -> None:
 
     for name in updater_core.CORE_MODULES:
         importlib.import_module(f"hydra_umc_updater.{name}")
+
+
+def test_the_modules_of_the_core_take_their_names_from_the_profile() -> None:
+    from hydra_umc_updater import github_client, install, train
+
+    profile = updater_core.HYDRA_PROFILE
+    assert all(updater_core.CORE_MODULES.values())
+    assert github_client.USER_AGENT == profile.user_agent
+    assert install.LOCK_FILENAME == f"{profile.file_prefix}.lock"
+    assert install.OS_DEPLOY_ENV == profile.env_name("OS_DEPLOY")
+    assert install.BATCH_FIRST == profile.batch_first
+    assert train.STATE_DIR == profile.trains_directory
+    assert train.TRAINS_ENV == profile.env_name("TRAINS")
+    assert train._NAME.match(f"{profile.repo_prefix}-SDK")
+    assert not train._NAME.match("URTC-SDK")

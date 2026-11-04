@@ -15,6 +15,11 @@ code can serve another family without a copy and a fix written once reaches all 
 | `manifest_file` | The manifest at the root of every repository | `hydra-umc.project.json` |
 | `env_prefix` | The prefix of the environment variables | `HYDRA_UMC_UPDATER` |
 | `state_directory` | The folder, inside the workspace, for the files the updater writes | `.hydra-umc-updater` |
+| `user_agent` | The name sent to GitHub and used for worker threads | `HYDRA-UMC-UPDATER` |
+| `repo_prefix` | The prefix every repository of the family carries | `HYDRA-UMC` |
+| `file_prefix` | The prefix of the hidden files in the home directory and the workspace | `.hydra_umc_updater` |
+| `trains_directory` | The folder, inside the workspace, of the version trains | `.hydra-umc-trains` |
+| `batch_first`, `batch_last` | The projects that go first and last in a batch | `HYDRA-UMC-SDK`, `HYDRA-UMC-UPDATER` |
 
 `profile_for(id)` refuses an unknown family; it never falls back to another one.
 
@@ -26,15 +31,14 @@ code can serve another family without a copy and a fix written once reaches all 
 |---|---|
 | `evidence`, `evidence_export`, `deploy_plan` | yes |
 | `project_manifest` | yes (`parse_manifest(..., ecosystem_id=...)`) |
-| `github_client`, `install`, `train`, `settings` | not yet: they still hold names of this family |
+| `github_client`, `install`, `train`, `settings` | yes (user agent, environment variables, hidden files, manifest file, repository names) |
 
 ## What each other updater has to do (not done here)
 
 The other updaters live in other repositories and are not touched from this one. To adopt the core, each one:
 
 1. registers its profile in `PROFILES`;
-2. moves `github_client`, `install`, `train` and `settings` behind the profile (the file names, the environment
-   prefix and the settings file) and sets the same flags in `CORE_MODULES`;
+2. points its copy of `github_client`, `install`, `train` and `settings` at its own profile (the modules of this updater already read it) and sets the same flags in `CORE_MODULES`;
 3. keeps its own manifest fields in its own parser and shares the verification, the lock, the staging flow and
    the rollback.
 

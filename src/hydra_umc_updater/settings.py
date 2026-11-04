@@ -20,16 +20,18 @@ import json
 from pathlib import Path
 from typing import Any
 
+from .updater_core import HYDRA_PROFILE as _PROFILE
+
 #: One JSON file in the user's own home directory - holds every real,
 #: remembered preference (`lang`, `workspace_root`, ...) as a single flat
 #: object, read-modify-write on every save so setting one key never
 #: clobbers another.
-SETTINGS_PATH = Path.home() / ".hydra_umc_updater_settings.json"
+SETTINGS_PATH = Path.home() / f"{_PROFILE.file_prefix}_settings.json"
 
 #: The old, language-only settings file `i18n.py` used before this
 #: module existed - read once, as a migration source, if `SETTINGS_PATH`
 #: itself has no `lang` key yet. Never written to again.
-_LEGACY_LANG_PATH = Path.home() / ".hydra_umc_updater_lang.json"
+_LEGACY_LANG_PATH = Path.home() / f"{_PROFILE.file_prefix}_lang.json"
 
 
 def load_settings() -> dict[str, Any]:

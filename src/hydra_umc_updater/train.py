@@ -56,18 +56,19 @@ from .install import (
     order_batch,
 )
 from .registry import ProjectEntry
+from .updater_core import HYDRA_PROFILE as _PROFILE
 
 SCHEMA_VERSION = "1.0"
-ECOSYSTEM = "HYDRA-UMC"
-TRAINS_ENV = "HYDRA_UMC_UPDATER_TRAINS"
-STATE_DIR = ".hydra-umc-trains"
+ECOSYSTEM = _PROFILE.ecosystem_id
+TRAINS_ENV = _PROFILE.env_name("TRAINS")
+STATE_DIR = _PROFILE.trains_directory
 PREVIOUS_FILE = "previous.json"
 CURRENT_FILE = "current.json"
 FIRST_INSTALLED_FILE = "first-installed.json"
 TRASH_DIR = "trash"
 PLAN_SCHEMA_VERSION = "1.0"
 
-_NAME = re.compile(r"^HYDRA-UMC(-[A-Z0-9-]+)?$")
+_NAME = re.compile(rf"^{re.escape(_PROFILE.repo_prefix)}(-[A-Z0-9-]+)?$")
 _VERSION = re.compile(r"^\d+(?:\.\d+){2,3}$")
 _COMMIT = re.compile(r"^[0-9a-f]{40}$")
 _SHA256 = re.compile(r"^[0-9a-f]{64}$")
@@ -632,7 +633,7 @@ def _installed_dependents(workspace_root: Path, names: set[str]) -> dict[str, se
         if child.name in names or not _NAME.match(child.name) or not child.is_dir():
             continue
         try:
-            depends = json.loads((child / "hydra-umc.project.json").read_text(encoding="utf-8")).get("depends_on") or []
+            depends = json.loads((child / _PROFILE.manifest_file).read_text(encoding="utf-8")).get("depends_on") or []
         except (OSError, ValueError, AttributeError):
             continue
         if isinstance(depends, list):
@@ -738,14 +739,14 @@ def empty_trash(workspace_root: Path) -> tuple[bool, list[str]]:
 # `train make`: the train file with its digest, from the release generator of the family
 # ---------------------------------------------------------------------------------------------------------------------
 
-GENERATOR = Path("HYDRA-UMC-SDK") / "tools" / "ecosystem_release.py"
+GENERATOR = Path(_PROFILE.batch_first[0]) / "tools" / "ecosystem_release.py"
 MAKE_TIMEOUT_S = 120
 
 
 def _manifest_digest(path: Path, commit: str) -> str:
     """sha256 of `hydra-umc.project.json` as it is at `commit` (the bytes git stores, the same ones `plan` compares)."""
     shown = subprocess.run(
-        ["git", "show", f"{commit}:hydra-umc.project.json"], cwd=path, capture_output=True, timeout=GIT_TIMEOUT_S, check=False
+        ["git", "show", f"{commit}:{_PROFILE.manifest_file}"], cwd=path, capture_output=True, timeout=GIT_TIMEOUT_S, check=False
     )
     if shown.returncode != 0:
         raise TrainError(f"{path.name}: the manifest could not be read at commit {commit[:12]}")

@@ -39,6 +39,7 @@ from uuid import uuid4
 from . import release_channel, settings
 from .evidence import installed_state, record_attempt
 from .project_manifest import ManifestValidationError, ProjectManifest, parse_manifest
+from .updater_core import HYDRA_PROFILE as _PROFILE
 from .registry import ProjectEntry, github_repo_url
 from .release_channel import ReleaseError
 
@@ -74,7 +75,7 @@ except ImportError:
 # file covers however many projects this workspace ever promotes,
 # consistent with PromotionJournal's own "proportionate for a handful of
 # records" design.
-_JOURNAL_FILENAME = ".hydra_umc_updater_promotion_journal.json"
+_JOURNAL_FILENAME = f"{_PROFILE.file_prefix}_promotion_journal.json"
 
 
 # Refuse to run a candidate's build-test script unless the commit that would be
@@ -87,7 +88,7 @@ _JOURNAL_FILENAME = ".hydra_umc_updater_promotion_journal.json"
 # this environment variable or by the saved `require_signed_commits` setting;
 # a settings file that exists but cannot be read counts as "required" so a
 # damaged file never silently turns the gate off.
-REQUIRE_SIGNED_ENV = "HYDRA_UMC_UPDATER_REQUIRE_SIGNED"
+REQUIRE_SIGNED_ENV = _PROFILE.env_name("REQUIRE_SIGNED")
 
 #: How long one git command may run before it is abandoned, and the same for a
 #: project's own build-test script. A command waiting for credentials or a hung
@@ -96,10 +97,10 @@ GIT_TIMEOUT_S = 300
 BUILD_TIMEOUT_S = 1800
 
 #: Per-workspace lock file; held while a project is being installed or updated.
-LOCK_FILENAME = ".hydra_umc_updater.lock"
+LOCK_FILENAME = f"{_PROFILE.file_prefix}.lock"
 
 
-RECREATE_VENV_ENV = "HYDRA_UMC_UPDATER_RECREATE_VENV"
+RECREATE_VENV_ENV = _PROFILE.env_name("RECREATE_VENV")
 
 
 def recreate_venv_enabled() -> bool:
@@ -118,9 +119,9 @@ def recreate_venv_enabled() -> bool:
 #: second attempt, doubled each time up to 30). The roll back is off by default: with
 #: `HYDRA_UMC_UPDATER_ROLLBACK_ON_UNHEALTHY=1` a promotion whose health check still fails after the last attempt puts the
 #: previous installation back and reports the update as failed.
-HEALTH_RETRIES_ENV = "HYDRA_UMC_UPDATER_HEALTH_RETRIES"
-HEALTH_RETRY_DELAY_ENV = "HYDRA_UMC_UPDATER_HEALTH_RETRY_DELAY"
-ROLLBACK_ON_UNHEALTHY_ENV = "HYDRA_UMC_UPDATER_ROLLBACK_ON_UNHEALTHY"
+HEALTH_RETRIES_ENV = _PROFILE.env_name("HEALTH_RETRIES")
+HEALTH_RETRY_DELAY_ENV = _PROFILE.env_name("HEALTH_RETRY_DELAY")
+ROLLBACK_ON_UNHEALTHY_ENV = _PROFILE.env_name("ROLLBACK_ON_UNHEALTHY")
 HEALTH_RETRIES_MAX = 10
 HEALTH_RETRY_DELAY_DEFAULT_S = 2.0
 HEALTH_RETRY_DELAY_CAP_S = 30.0
@@ -152,8 +153,8 @@ def rollback_on_unhealthy_enabled() -> bool:
 #: (HYDRA-UMC-OS, docs/DEPLOY_CONTRACT.md) after the promotion: the installer of the project keeps the program in use, installs the new one, restarts
 #: the unit if it runs and polls its health route, and puts the old program back if it does not come back. `HYDRA_UMC_UPDATER_OS_DEPLOY_COMMAND`
 #: names another command (split like a shell line); without it the command is `hydra-umc-os`, run through `sudo -n` when the updater is not root.
-OS_DEPLOY_ENV = "HYDRA_UMC_UPDATER_OS_DEPLOY"
-OS_DEPLOY_COMMAND_ENV = "HYDRA_UMC_UPDATER_OS_DEPLOY_COMMAND"
+OS_DEPLOY_ENV = _PROFILE.env_name("OS_DEPLOY")
+OS_DEPLOY_COMMAND_ENV = _PROFILE.env_name("OS_DEPLOY_COMMAND")
 OS_DEPLOY_TIMEOUT_S = 1800.0
 
 
@@ -703,13 +704,13 @@ def _version_tuple(manifest: ProjectManifest) -> tuple[int, int, int, int]:
 def _manifest_from_revision(path: Path, revision: str, entry: ProjectEntry) -> ProjectManifest:
     """Read a manifest from Git without modifying the working tree."""
     result = _run(
-        ["git", "show", f"{revision}:hydra-umc.project.json"],
+        ["git", "show", f"{revision}:{_PROFILE.manifest_file}"],
         cwd=path,
         capture_output=True,
         timeout=GIT_TIMEOUT_S,
     )
     if result.returncode != 0:
-        raise ManifestValidationError("candidate revision has no readable hydra-umc.project.json")
+        raise ManifestValidationError(f"candidate revision has no readable {_PROFILE.manifest_file}")
     return _validated_manifest_text(result.stdout, entry)
 
 
@@ -767,7 +768,7 @@ def _check_pin(path: Path, pin: PinSpec, entry: ProjectEntry, upstream: str) -> 
         return None, f"the train lists {entry.name} v{pin.version} but commit {pin.commit[:12]} is v{manifest.version}"
     if pin.manifest_sha256 is not None:
         shown = subprocess.run(
-            ["git", "show", f"{pin.commit}:hydra-umc.project.json"], cwd=path, capture_output=True, timeout=GIT_TIMEOUT_S, check=False
+            ["git", "show", f"{pin.commit}:{_PROFILE.manifest_file}"], cwd=path, capture_output=True, timeout=GIT_TIMEOUT_S, check=False
         )
         if shown.returncode != 0 or hashlib.sha256(shown.stdout).hexdigest() != pin.manifest_sha256:
             return None, f"the manifest digest at commit {pin.commit[:12]} does not match the one in the train"
@@ -1317,8 +1318,8 @@ def _run_build_script_at(path: Path, *, progress: ProgressCallback | None = None
 #: Projects that must go first and last when several are handled in one batch:
 #: the SDK is imported by many others, and the updater replaces the very
 #: program that is running the batch.
-BATCH_FIRST = ("HYDRA-UMC-SDK",)
-BATCH_LAST = ("HYDRA-UMC-UPDATER",)
+BATCH_FIRST = _PROFILE.batch_first
+BATCH_LAST = _PROFILE.batch_last
 
 
 def batch_order_key(name: str) -> tuple[int, str]:
