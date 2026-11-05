@@ -188,4 +188,7 @@ PT: dict[str, str] = {
     "rel_unreachable": "Não é possível ler as versões publicadas de {repo} (sem rede?). Não foi instalado nada.",
     "rel_none": "{repo} não tem nenhuma versão {channel} publicada. Não foi instalado nada.",
     "rel_bad_answer": "O GitHub respondeu algo que não é uma lista de versões nem uma etiqueta. Não foi instalado nada.",
+    "rel_train_unusable": "O comboio de versões não pode ser usado ({reason}). Não foi instalado nada.",
+    "rel_train_missing": "{repo} não consta do comboio de versões. Não foi instalado nada.",
+    "rel_train_nofile": "A instalação a partir do comboio de versões está ativa mas não há ficheiro de comboio definido. Não foi instalado nada.",
 }

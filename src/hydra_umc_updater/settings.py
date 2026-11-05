@@ -240,6 +240,26 @@ def save_release_channel(channel: str) -> None:
     save_settings(release_channel=channel if channel in RELEASE_CHANNELS else "stable")
 
 
+def get_install_from_train() -> bool:
+    """Whether `install` and `update` take each repository from the version train named by `train_file` (the exact commit and version the train lists)
+    instead of the latest release of that repository. Off unless the saved settings say so; a damaged file keeps it off."""
+    if settings_file_is_damaged():
+        return False
+    return load_settings().get("install_from_train") is True
+
+
+def get_train_file() -> str | None:
+    """The version train (the shape of the family's release file) that `install_from_train` installs from."""
+    return _text_setting("train_file")
+
+
+def save_install_from_train(enabled: bool, train_file: str | None = None) -> None:
+    if train_file is not None:
+        save_settings(install_from_train=bool(enabled), train_file=train_file)
+    else:
+        save_settings(install_from_train=bool(enabled))
+
+
 def get_require_signed_packages() -> bool:
     """Whether a package of a release must carry a valid Ed25519 signature by the key of the releases before it is installed. On unless the saved
     settings say `false`; a damaged file keeps it on (fail closed)."""

@@ -201,6 +201,8 @@ in which case it downloads the three files of the latest release of the channel 
 |---|---|---|
 | `require_signed_packages` | `HYDRA_UMC_UPDATER_REQUIRE_SIGNED_PACKAGES` | On by default (a damaged settings file counts as on). Off lets a package with its `.sha256` but no `.sig` be installed, with a warning; a signature that is present and wrong is refused whatever this says. The environment variable can only turn it on. |
 | `release_channel` | - | `"stable"` (default) or `"pruebas"`, as above. |
+| `install_from_train` | - | Off by default (a damaged settings file counts as off). On, `install` and `update` take each repository from the version train named by `train_file` (the exact commit and version it lists, checked against the published history and the manifest) instead of the latest release of that repository; a repository the train does not list is refused, and a train without a valid signature is refused unless `require_signed_trains` is explicitly false. Nothing falls back to a release or to the head. |
+| `train_file` | - | The version train (the shape of the family's `ecosystem-release.json`) that `install_from_train` installs from. |
 
 The publisher packs and signs with `tools/package_pc_release.py` (`pack REPO --tag TAG`, `sign PACKAGE`, `verify PACKAGE`); the signing key is read
 from `HYDRA_RELEASE_KEY` or the key folder of the owner, is never printed, and nothing is signed unless its public half is the pinned one.

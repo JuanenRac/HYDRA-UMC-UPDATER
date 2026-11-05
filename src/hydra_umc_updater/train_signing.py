@@ -84,6 +84,16 @@ def require_signed_trains() -> bool:
     return train.trains_enabled()
 
 
+def signatures_explicitly_off() -> bool:
+    """True only when the environment or the saved settings say, in so many words, that a train need not be signed."""
+    value = os.environ.get(REQUIRE_SIGNED_ENV, "").strip().lower()
+    if value in _FALSE:
+        return True
+    if value in _TRUE or settings.settings_file_is_damaged():
+        return False
+    return settings.load_settings().get(SETTING_REQUIRE) is False
+
+
 def configured_public_key() -> str | None:
     """What the configuration pins as the trusted key (hex or a file path), or None. Never validated here."""
     env = os.environ.get(PUBKEY_ENV, "").strip()

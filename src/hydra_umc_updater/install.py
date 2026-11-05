@@ -775,8 +775,35 @@ def _check_pin(path: Path, pin: PinSpec, entry: ProjectEntry, upstream: str) -> 
     return manifest, None
 
 
+def resolve_train_pin(entry: ProjectEntry) -> PinSpec:
+    """The commit and version that the version train of the settings lists for this repository, as a pin. Raises ReleaseError.
+
+    The train is read on every call and must be well formed (and signed while signatures are required); a repository the
+    train does not list is refused, so a train never installs a mix of its own versions and other heads."""
+    from . import train, train_signing  # the train module imports this one
+
+    train_file = settings.get_train_file()
+    if not train_file:
+        raise ReleaseError("train_nofile", "install_from_train is on but no train_file is set in the settings")
+    try:
+        if not train_signing.signatures_explicitly_off():  # signed unless the operator said otherwise, whatever the trains switch
+            wanted = train.load_signed_train(Path(train_file), train_signing.configured_public_key())
+        else:
+            wanted = train.load_train(Path(train_file))
+    except train.TrainError as exc:
+        raise ReleaseError("train_unusable", f"the version train cannot be used: {exc}", reason=str(exc)) from exc
+    repo = wanted.by_name().get(entry.name)
+    if repo is None:
+        raise ReleaseError("train_missing", f"{entry.name} is not listed in the version train {wanted.name}", repo=entry.name)
+    return PinSpec(commit=repo.commit, version=repo.version, manifest_sha256=repo.manifest_sha256)
+
+
 def resolve_release_pin(entry: ProjectEntry) -> PinSpec:
-    """The commit of the latest release of the channel in the settings ("stable" unless "pruebas" is saved) as a pin. Raises ReleaseError."""
+    """The commit of the latest release of the channel in the settings ("stable" unless "pruebas" is saved) as a pin. Raises ReleaseError.
+
+    With `install_from_train` on, the pin is the one the version train lists for this repository (see `resolve_train_pin`)."""
+    if settings.get_install_from_train():
+        return resolve_train_pin(entry)
     info = release_channel.resolve_latest(entry.name, settings.get_release_channel())
     return PinSpec(commit=info.commit, version=info.version if info.plain else None)
 

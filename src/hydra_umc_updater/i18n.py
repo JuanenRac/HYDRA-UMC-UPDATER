@@ -1078,6 +1078,9 @@ _PACKAGE_COPY: dict[str, dict[str, str]] = {
         "rel_unreachable": "The releases of {repo} cannot be read (no network?). Nothing was installed.",
         "rel_none": "{repo} has no published {channel} release. Nothing was installed.",
         "rel_bad_answer": "GitHub answered something that is not a release list or a tag. Nothing was installed.",
+        "rel_train_unusable": "The version train cannot be used ({reason}). Nothing was installed.",
+        "rel_train_missing": "{repo} is not listed in the version train. Nothing was installed.",
+        "rel_train_nofile": "Installing from the version train is on but no train file is set. Nothing was installed.",
     },
     "es": {
         "pkg_name_bad": "{name} no se llama <proyecto>-<versión>.tgz.",
@@ -1101,6 +1104,9 @@ _PACKAGE_COPY: dict[str, dict[str, str]] = {
         "rel_unreachable": "No se pueden leer las releases de {repo} (¿sin red?). No se instaló nada.",
         "rel_none": "{repo} no tiene ninguna release {channel} publicada. No se instaló nada.",
         "rel_bad_answer": "GitHub respondió algo que no es una lista de releases ni una etiqueta. No se instaló nada.",
+        "rel_train_unusable": "El tren de versiones no se puede usar ({reason}). No se instaló nada.",
+        "rel_train_missing": "{repo} no figura en el tren de versiones. No se instaló nada.",
+        "rel_train_nofile": "La instalación desde el tren de versiones está activada pero no hay fichero de tren. No se instaló nada.",
     },
     "de": {
         "pkg_name_bad": "{name} heißt nicht <Projekt>-<Version>.tgz.",
@@ -1124,6 +1130,9 @@ _PACKAGE_COPY: dict[str, dict[str, str]] = {
         "rel_unreachable": "Die Releases von {repo} können nicht gelesen werden (kein Netz?). Es wurde nichts installiert.",
         "rel_none": "{repo} hat kein veröffentlichtes {channel}-Release. Es wurde nichts installiert.",
         "rel_bad_answer": "GitHub hat etwas geantwortet, das keine Release-Liste und kein Tag ist. Es wurde nichts installiert.",
+        "rel_train_unusable": "Der Versionszug kann nicht verwendet werden ({reason}). Es wurde nichts installiert.",
+        "rel_train_missing": "{repo} steht nicht im Versionszug. Es wurde nichts installiert.",
+        "rel_train_nofile": "Die Installation aus dem Versionszug ist aktiv, aber es ist keine Zugdatei gesetzt. Es wurde nichts installiert.",
     },
     "fr": {
         "pkg_name_bad": "{name} ne s'appelle pas <projet>-<version>.tgz.",
@@ -1147,6 +1156,9 @@ _PACKAGE_COPY: dict[str, dict[str, str]] = {
         "rel_unreachable": "Les releases de {repo} sont illisibles (pas de réseau ?). Rien n'a été installé.",
         "rel_none": "{repo} n'a aucune release {channel} publiée. Rien n'a été installé.",
         "rel_bad_answer": "GitHub a répondu autre chose qu'une liste de releases ou un tag. Rien n'a été installé.",
+        "rel_train_unusable": "Le train de versions est inutilisable ({reason}). Rien n'a été installé.",
+        "rel_train_missing": "{repo} ne figure pas dans le train de versions. Rien n'a été installé.",
+        "rel_train_nofile": "L'installation depuis le train de versions est activée mais aucun fichier de train n'est défini. Rien n'a été installé.",
     },
     "it": {
         "pkg_name_bad": "{name} non si chiama <progetto>-<versione>.tgz.",
@@ -1170,6 +1182,9 @@ _PACKAGE_COPY: dict[str, dict[str, str]] = {
         "rel_unreachable": "Le release di {repo} non si possono leggere (niente rete?). Non è stato installato nulla.",
         "rel_none": "{repo} non ha nessuna release {channel} pubblicata. Non è stato installato nulla.",
         "rel_bad_answer": "GitHub ha risposto qualcosa che non è un elenco di release né un tag. Non è stato installato nulla.",
+        "rel_train_unusable": "Il treno di versioni non è utilizzabile ({reason}). Non è stato installato nulla.",
+        "rel_train_missing": "{repo} non è nel treno di versioni. Non è stato installato nulla.",
+        "rel_train_nofile": "L'installazione dal treno di versioni è attiva ma non è impostato alcun file del treno. Non è stato installato nulla.",
     },
     "ja": {
         "pkg_name_bad": "{name} は <プロジェクト>-<バージョン>.tgz という名前ではありません。",
@@ -1193,6 +1208,9 @@ _PACKAGE_COPY: dict[str, dict[str, str]] = {
         "rel_unreachable": "{repo} のリリースを読み取れません (ネットワークなし?)。何もインストールされていません。",
         "rel_none": "{repo} には公開済みの {channel} リリースがありません。何もインストールされていません。",
         "rel_bad_answer": "GitHub の応答がリリース一覧でもタグでもありません。何もインストールされていません。",
+        "rel_train_unusable": "バージョントレインを使用できません（{reason}）。何もインストールされていません。",
+        "rel_train_missing": "{repo} はバージョントレインに含まれていません。何もインストールされていません。",
+        "rel_train_nofile": "バージョントレインからのインストールが有効ですが、トレインファイルが設定されていません。何もインストールされていません。",
     },
     "zh": {
         "pkg_name_bad": "{name} 的名称不是 <项目>-<版本>.tgz。",
@@ -1216,6 +1234,9 @@ _PACKAGE_COPY: dict[str, dict[str, str]] = {
         "rel_unreachable": "无法读取 {repo} 的发布（没有网络？）。未安装任何内容。",
         "rel_none": "{repo} 没有已发布的 {channel} 发布。未安装任何内容。",
         "rel_bad_answer": "GitHub 返回的既不是发布列表也不是标签。未安装任何内容。",
+        "rel_train_unusable": "无法使用版本列车（{reason}）。未安装任何内容。",
+        "rel_train_missing": "{repo} 不在版本列车中。未安装任何内容。",
+        "rel_train_nofile": "已启用从版本列车安装，但未设置列车文件。未安装任何内容。",
     },
 }
 
