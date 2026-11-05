@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+## [0.5.6] - The build test of the repository compiles only on CI or when allowed: for the stacks that compile (rust, go, android, flutter, firmware-c), tools/buildtest.py prints BUILDTEST=SKIPPED with exit status 2 on a plain PC, never a... (and 5 more changes)
+
 - **The build test of the repository compiles only on CI or when allowed:** for the stacks that compile (`rust`, `go`, `android`, `flutter`, `firmware-c`), `tools/build_test.py` prints `BUILD_TEST=SKIPPED` with exit status 2 on a plain PC, never a pass; `ALLOW_LOCAL_BUILD=1` allows it and a CI runner always may. The `python` and `node` stacks are not locked.
 
 - **`install` and `update` can install a whole version train instead of the latest release of each repository (`install_from_train`, off by default):** with the switch on and `train_file` set (the family's `ecosystem-release.json`, or any train), every install or update takes the exact commit and version the train lists for that repository, checked against the published history and the manifest as the train commands do; a repository the train does not list installs nothing, and the train must carry a valid signature unless `require_signed_trains` is explicitly false (this holds even while `version_trains` is off). It never falls back to the head or to a release. The three new refusals are translated into the eight languages.
