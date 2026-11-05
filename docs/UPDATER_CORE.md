@@ -7,7 +7,7 @@ code can serve another family without a copy and a fix written once reaches all 
 
 ## The profile
 
-`updater_core.EcosystemProfile` holds what differs:
+`EcosystemProfile` (defined in `updater_profile.py`, re-exported by `updater_core`) holds what differs:
 
 | Field | Meaning | HYDRA-UMC |
 |---|---|---|
@@ -33,7 +33,11 @@ code can serve another family without a copy and a fix written once reaches all 
 | `project_manifest` | yes (`parse_manifest(..., ecosystem_id=...)`) |
 | `github_client`, `install`, `train`, `settings` | yes (user agent, environment variables, hidden files, manifest file, repository names) |
 
-## What each other updater has to do (not done here)
+## The file that is the same in every updater
+
+`updater_profile.py` (the class `EcosystemProfile` and the helpers that build names from it) is copied byte for byte into the URTC and A.R.M.O.R. updaters, which have taken the profile for their user agent, environment variables, hidden files, state folder and manifest file. `tests/test_updater_profile_copy.py` pins its digest and compares the copies when the other updaters are next to this repository; to change it, change the three copies and the digest in the three tests. The other modules are not merged: they differ in the behaviour that belongs to each family.
+
+## What each other updater has to do
 
 The other updaters live in other repositories and are not touched from this one. To adopt the core, each one:
 

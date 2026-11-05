@@ -416,7 +416,7 @@ def discover_remote_projects(
         cache.save()
     discovered: list[RemoteStatus] = []
     errors: list[str] = []
-    with ThreadPoolExecutor(max_workers=MAX_CONCURRENT_REQUESTS, thread_name_prefix=f"{_PROFILE.user_agent.split('-UPDATER')[0].lower()}-discovery") as pool:
+    with ThreadPoolExecutor(max_workers=MAX_CONCURRENT_REQUESTS, thread_name_prefix=_PROFILE.thread_prefix("discovery")) as pool:
         futures = {pool.submit(_fetch_discovered_manifest, owner, name, branch): name for name, branch in candidates}
         for future in as_completed(futures):
             try:
@@ -622,7 +622,7 @@ def fetch_all(
 
     with ThreadPoolExecutor(
         max_workers=MAX_CONCURRENT_REQUESTS,
-        thread_name_prefix=f"{_PROFILE.user_agent.split('-UPDATER')[0].lower()}-github",
+        thread_name_prefix=_PROFILE.thread_prefix("github"),
     ) as pool:
 
         futures = {

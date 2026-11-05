@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The profile class is one file shared by the updaters of the families:** `EcosystemProfile` lives in `updater_profile.py`, which is the same file in the HYDRA-UMC, URTC and A.R.M.O.R. updaters; `tests/test_updater_profile_copy.py` pins its digest and compares the copies next to this repository, so a copy edited in one place only fails the tests.
+
 - **Family names live in the profile:** the GitHub client, the installer, the version trains and the settings take the user agent, the environment variables, the hidden file names, the manifest file and the repository prefix from `EcosystemProfile`, so another family adopts the core by registering its profile. Behaviour and file names of this updater are unchanged.
 
 - **A manifest may declare the gRPC health endpoint of its service:** the `service` block accepts `grpc_port` and `grpc_service` (they go together; the port is an integer from 1 to 65535 and the service a non-empty text), as the shared manifest of the SDK has done since 0.5.0. The updater only checks them: it still probes the HTTP port, the health path and the unit. Before, a repository that declared them (the orchestrator and the job dispatcher) was refused as having an unknown field.
