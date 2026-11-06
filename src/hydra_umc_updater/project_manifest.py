@@ -67,6 +67,15 @@ class ProjectManifest:
     # Optional: the repositories that must be installed or updated before this
     # one (the order of a batch follows it).
     depends_on: tuple[str, ...] = ()
+    # Optional: the oldest version of the shared contracts repository this project works with. Phase 1: the field is accepted and read when it is a
+    # version; anything else is ignored (None), never an error, because a manifest that says it must not stop an updater that does not understand it.
+    # Nothing is decided by it yet.
+    min_common: str | None = None
+
+
+def _read_min_common(value: object) -> str | None:
+    """The version in ``min_common`` when it is one; None when the field is absent or is not a version (ignored, not refused)."""
+    return value if isinstance(value, str) and VERSION_RE.fullmatch(value) else None
 
 
 def _require_string(data: dict[str, Any], field: str) -> str:
@@ -122,7 +131,7 @@ def parse_manifest(text: str, *, expected_name: str | None = None, ecosystem_id:
     # deployment_target values need no such note.
     # "evidence" (the EH3D projects): what a project has been tried on - a short text such as "host-test", "simulator" or "hardware".
     # "hardware_bound": false for a project that has no hardware at all (it caps no light of the status table).
-    optional_fields = {"service", "deployment_target_note", "evidence", "hardware_bound", "depends_on"}
+    optional_fields = {"service", "deployment_target_note", "evidence", "hardware_bound", "depends_on", "min_common"}
     unknown = sorted(set(data) - expected_fields - optional_fields)
     missing = sorted(expected_fields - set(data))
     if missing:
@@ -230,6 +239,7 @@ def parse_manifest(text: str, *, expected_name: str | None = None, ecosystem_id:
         service_health_path=service_health_path,
         service_systemd_unit=service_systemd_unit,
         depends_on=depends_on,
+        min_common=_read_min_common(data.get("min_common")),
     )
 
 

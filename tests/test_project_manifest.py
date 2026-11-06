@@ -255,3 +255,26 @@ def test_rejects_a_service_health_path_without_a_port():
     data["service"] = {"health_path": "/healthz", "systemd_unit": "hydra-umc-example.service"}
     with pytest.raises(ManifestValidationError, match="service.health_path requires service.port"):
         parse_manifest(json.dumps(data))
+
+
+def test_min_common_is_optional_and_read_when_it_is_a_version():
+    data = valid_manifest()
+    assert parse_manifest(json.dumps(data)).min_common is None
+    data["min_common"] = "0.8.0.7"
+    assert parse_manifest(json.dumps(data)).min_common == "0.8.0.7"
+    data["min_common"] = "0.8.0"
+    assert parse_manifest(json.dumps(data)).min_common == "0.8.0"
+
+
+@pytest.mark.parametrize("odd", ["v0.8.0.7", "0.8", "", "latest", 8, None, ["0.8.0.7"], {"a": 1}])
+def test_min_common_that_is_not_a_version_is_ignored_not_refused(odd):
+    data = valid_manifest()
+    data["min_common"] = odd
+    assert parse_manifest(json.dumps(data)).min_common is None
+
+
+def test_a_typo_in_the_name_of_the_field_is_still_refused():
+    data = valid_manifest()
+    data["min_comon"] = "0.8.0.7"
+    with pytest.raises(ManifestValidationError, match="unknown field"):
+        parse_manifest(json.dumps(data))

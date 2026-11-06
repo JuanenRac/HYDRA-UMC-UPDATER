@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The manifest may carry the optional `min_common`:** the oldest version of the shared contracts a project works with is accepted and read (`ProjectManifest.min_common`); a value that is not a version is ignored and never refuses the manifest, and nothing is decided by it yet. A misspelled name of the field is still refused. The publication of the field by the projects is described in `docs/UPDATER_CORE.md` as the second phase.
+
 ## [0.5.6] - The build test of the repository compiles only on CI or when allowed: for the stacks that compile (rust, go, android, flutter, firmware-c), tools/buildtest.py prints BUILDTEST=SKIPPED with exit status 2 on a plain PC, never a... (and 5 more changes)
 
 - **The build test of the repository compiles only on CI or when allowed:** for the stacks that compile (`rust`, `go`, `android`, `flutter`, `firmware-c`), `tools/build_test.py` prints `BUILD_TEST=SKIPPED` with exit status 2 on a plain PC, never a pass; `ALLOW_LOCAL_BUILD=1` allows it and a CI runner always may. The `python` and `node` stacks are not locked.

@@ -57,3 +57,9 @@ family except the environment prefix, which it reads from the profile through th
 
 `release_channel.py` and `package_release.py` (the latest stable release instead of the head, and the signed package of a release) also exist only in
 this updater so far; they read the pinned key of the releases and the settings, and have no names of this family except the prefix of the signed text.
+
+## `min_common` in the manifest (phase 1)
+
+A manifest may carry the optional field `min_common`: the oldest version of the shared contracts repository the project works with (three or four numbers). The updater accepts it and reads it into `ProjectManifest.min_common`; a value that is not a version is ignored (`None`) and never refuses the manifest, so a project that says it cannot stop an updater that does not understand it. Nothing is decided by it yet: no update is held back and nothing is checked against the installed contracts. A misspelled name of the field is still refused as an unknown field.
+
+The second phase is the publication of the field by the projects, in their manifests and in the shared manifest schema, once every updater of the families reads it. It is described here and not done: until then no manifest carries it.
