@@ -18,7 +18,7 @@ import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
 PACKAGE = next(path.name for path in (ROOT / "src").iterdir() if (path / "common_gate.py").is_file())
-SHARED_DIGEST = "413fcc7df8e8af8e0901619d0b45f3cbc37ddbdd57e7a017a5d058f9723ea1b1"
+SHARED_DIGEST = "e351d2d48c75113456082f21750381afe1498eb96390c9c1365890274ba308c7"
 SIBLINGS = (
     ("HYDRA-UMC-UPDATER", "hydra_umc_updater"),
     ("URTC-UPDATER", "urtc_updater"),

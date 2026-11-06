@@ -64,7 +64,9 @@ def notices_for(rows: Iterable[tuple[str, str | None]], installed: str | None, m
     have = version_key(installed) if installed else None
     found: list[CommonNotice] = []
     for project, required in rows:
-        need = version_key(required) if required else None
+        if not required:
+            continue
+        need = version_key(required)
         if need is None:
             continue
         if have is None:
