@@ -22,6 +22,8 @@ from typing import Any
 
 from .updater_core import HYDRA_PROFILE as _PROFILE
 
+from .common_gate import parse_mode as _parse_mode
+
 #: One JSON file in the user's own home directory - holds every real,
 #: remembered preference (`lang`, `workspace_root`, ...) as a single flat
 #: object, read-modify-write on every save so setting one key never
@@ -270,3 +272,9 @@ def get_require_signed_packages() -> bool:
 
 def save_require_signed_packages(required: bool) -> None:
     save_settings(require_signed_packages=bool(required))
+
+
+def min_common_mode() -> str:
+    """What to do when a project asks for a newer shared contracts repository than the installed one: `warn` (the default) or `off`.
+    The environment variable wins over the saved setting `min_common_check`; anything else is the default. It never holds an update back."""
+    return _parse_mode(_PROFILE.env_text("MIN_COMMON") or load_settings().get("min_common_check"))

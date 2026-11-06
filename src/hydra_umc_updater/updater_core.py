@@ -18,7 +18,7 @@ from __future__ import annotations
 from .project_manifest import ECOSYSTEM_ID, MANIFEST_FILE
 from .updater_profile import EcosystemProfile, profile_in
 
-__all__ = ["EcosystemProfile", "HYDRA_PROFILE", "PROFILES", "profile_for", "CORE_MODULES"]
+__all__ = ["COMMON_REPO", "EcosystemProfile", "HYDRA_PROFILE", "PROFILES", "profile_for", "CORE_MODULES"]
 
 
 HYDRA_PROFILE = EcosystemProfile(
@@ -33,6 +33,9 @@ HYDRA_PROFILE = EcosystemProfile(
     batch_first=("HYDRA-UMC-SDK",),
     batch_last=("HYDRA-UMC-UPDATER",),
 )
+
+#: The shared contracts repository of the family: the one a manifest's `min_common` is compared with.
+COMMON_REPO = "HYDRA-UMC-SDK"
 
 #: the profiles this updater knows. The other families register theirs when their updater adopts the core.
 PROFILES: dict[str, EcosystemProfile] = {HYDRA_PROFILE.ecosystem_id: HYDRA_PROFILE}

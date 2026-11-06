@@ -58,8 +58,34 @@ family except the environment prefix, which it reads from the profile through th
 `release_channel.py` and `package_release.py` (the latest stable release instead of the head, and the signed package of a release) also exist only in
 this updater so far; they read the pinned key of the releases and the settings, and have no names of this family except the prefix of the signed text.
 
-## `min_common` in the manifest (phase 1)
+## The manifest contract
 
-A manifest may carry the optional field `min_common`: the oldest version of the shared contracts repository the project works with (three or four numbers). The updater accepts it and reads it into `ProjectManifest.min_common`; a value that is not a version is ignored (`None`) and never refuses the manifest, so a project that says it cannot stop an updater that does not understand it. Nothing is decided by it yet: no update is held back and nothing is checked against the installed contracts. A misspelled name of the field is still refused as an unknown field.
+Every updater of the families reads the same set of manifest fields, whatever the family. This is the least they share, and `tests/test_manifest_contract.py` (the same test in each updater) pins it:
 
-The second phase is the publication of the field by the projects, in their manifests and in the shared manifest schema, once every updater of the families reads it. It is described here and not done: until then no manifest carries it.
+| Part | Fields |
+|---|---|
+| Required in every manifest | `schema_version`, `ecosystem`, `name`, `version`, `role`, `stack`, `technologies`, `deployment_target`, `maturity`, `family`, `parent`, `native_version`, `build`, `notes` |
+| Optional, accepted by every updater | `service`, `deployment_target_note`, `evidence`, `hardware_bound`, `min_common` |
+| Attributes of the reader's result | the required fields (the native version as one value or as a file and a pattern, depending on the family), `service_port`, `service_health_path`, `service_systemd_unit` and `min_common` |
+
+What is not part of the contract is allowed to differ and is kept apart: the value rules of a family (for example the free-text role of one family against the closed list of another) and the fields that belong to one family only (`depends_on`, `requires`, `components`, `binary`...). A misspelled field is refused as unknown in every updater. When the updaters sit next to one another, the test compares their readers; the reader of the updater of Electro Hobby 3D is read from its main branch with git, read only.
+
+Two files are the same in every updater and are pinned by a digest in the tests: `updater_profile.py` (the names of the family) and `common_gate.py` (the reading of `min_common`, below).
+
+## `min_common` in the manifest
+
+A manifest may carry the optional field `min_common`: the oldest version of the shared contracts repository (HYDRA-UMC-SDK) the project works with (three or four numbers). The updater accepts it and reads it into `ProjectManifest.min_common` and `ProjectEntry.min_common`; a value that is not a version is ignored (`None`) and never refuses the manifest, so a project that says it cannot stop an updater that does not understand it. A misspelled name of the field is still refused as an unknown field.
+
+### What the updater does with it
+
+`status` compares the `min_common` of every project with the version of HYDRA-UMC-SDK installed in the workspace and, when a project asks for a newer one, prints a warning on the error stream (and lists it under `common_notices` in the `--json` output). It only warns: no update is held back and nothing is refused. When HYDRA-UMC-SDK is not installed or its version cannot be read, a project that asks for a minimum gets a notice that says the installed version is not known.
+
+| Setting | Environment variable | Values |
+|---|---|---|
+| `min_common_check` in `~/.hydra_umc_updater_settings.json` | `HYDRA_UMC_UPDATER_MIN_COMMON` | `warn` (the default) or `off`. Anything else counts as the default, so a typo never silences the notice. The environment variable wins over the saved setting. |
+
+The comparison counts the fourth number (a missing one is 0). There is no value that holds an update back: whether the installed contracts may stop an update is a decision for later, and this reading is what it would be built on.
+
+### Publication
+
+No manifest of the projects carries `min_common` yet. It is published in the manifests and in the shared manifest schema once every updater of the families reads it.

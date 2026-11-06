@@ -47,6 +47,8 @@ class ProjectEntry:
     # The repository's default branch, as GitHub reports it for a discovered
     # project; manifests and version files are read from this branch.
     branch: str = GITHUB_BRANCH
+    #: The oldest version of the shared contracts the project says it works with (`min_common` of the manifest); None when it says nothing.
+    min_common: str | None = None
 
 
 def entry_from_manifest(manifest: ProjectManifest) -> ProjectEntry:
@@ -68,6 +70,7 @@ def entry_from_manifest(manifest: ProjectManifest) -> ProjectEntry:
         service_health_path=manifest.service_health_path,
         service_systemd_unit=manifest.service_systemd_unit,
         depends_on=manifest.depends_on,
+        min_common=manifest.min_common,
     )
 
 
