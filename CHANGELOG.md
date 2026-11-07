@@ -4,6 +4,7 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **Tests of the safety defaults of the settings:** `tests/test_settings_safety_defaults.py` (84 tests, with a fixed-seed random mix) checks that every risky feature is off unless the file holds a real `true`, every safety check is on unless it holds a real `false`, a damaged or wrongly typed file always takes the safe side, text settings are stripped and empty ones read as unset, and the release channel never leaves `stable` for anything but `pruebas`.
 - **The documentation points at the sudoers rule of the device:** the deployment command that the updater runs through `sudo -n` has its rule in HYDRA-UMC-OS (one line per project, the exact words `deploy PROJECT --apply`, no wildcard, installed only on request); the rule was run for real with `sudo -n` as the account and as a stranger in a manual workflow of that project.
 - **The signing chain is checked from end to end with throw-away keys:** `tools/signing_chain_check.py` (run by the manual workflow `signing-chain.yml`) makes keys for the run, has the image builder sign a release and a golden image, verifies and installs them and a signed model package with the updater, and refuses a changed image, a changed manifest, another or a revoked key, an unsigned or foreign-project package, an older version and a manifest for a newer bootloader or another controller. The bootloader in the last check is a model; the comparison on a real board is pending.
 
