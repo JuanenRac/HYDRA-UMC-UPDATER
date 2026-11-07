@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The signing chain is checked from end to end with throw-away keys:** `tools/signing_chain_check.py` (run by the manual workflow `signing-chain.yml`) makes keys for the run, has the image builder sign a release and a golden image, verifies and installs them and a signed model package with the updater, and refuses a changed image, a changed manifest, another or a revoked key, an unsigned or foreign-project package, an older version and a manifest for a newer bootloader or another controller. The bootloader in the last check is a model; the comparison on a real board is pending.
+
 ## [0.5.7] - status warns when a project asks for newer shared contracts than the installed ones: the mincommon of a project is compared with the installed version of HYDRA-UMC-SDK and a warning is printed on the error stream (and listed... (and 2 more changes)
 
 - **`status` warns when a project asks for newer shared contracts than the installed ones:** the `min_common` of a project is compared with the installed version of `HYDRA-UMC-SDK` and a warning is printed on the error stream (and listed under `common_notices` in the `--json` output). It only warns: no update is held back. The switch is `min_common_check` in `~/.hydra_umc_updater_settings.json` or `HYDRA_UMC_UPDATER_MIN_COMMON` (`warn`, the default, or `off`). The reading lives in `common_gate.py`, the same file in every updater, pinned by a digest in the tests.
