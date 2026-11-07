@@ -464,7 +464,9 @@ and `remove_new`.
   not start is a failed update, and with
   `HYDRA_UMC_UPDATER_ROLLBACK_ON_UNHEALTHY=1` the previous checkout is put back
   too. The command is `sudo`-run: the account of the updater needs a sudoers
-  rule for it, which this project does not write.
+  rule for it. The one that fits is written by HYDRA-UMC-OS, one line per project
+  with the exact words `deploy PROJECT --apply` and no wildcard, and installed
+  only on request (`HYDRA_UMC_INSTALL_UPDATER_SUDOERS=1` in its base installer).
 - `HYDRA_UMC_WORKSPACE` names the workspace when `--workspace` is not given.
   When the updater is installed as a package inside a Python environment, the
   current directory is used instead of a folder inside that environment.
