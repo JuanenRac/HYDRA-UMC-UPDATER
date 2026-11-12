@@ -232,6 +232,9 @@ def generate_train_keypair(directory: Path, name: str = "hydra_train") -> tuple[
             handle.write(seed + "\n")
         public_path.write_text(public + "\n", encoding="utf-8")
     except OSError as error:
-        private_path.unlink(missing_ok=True)
+        try:
+            private_path.unlink(missing_ok=True)
+        except OSError:  # nothing was written, or it cannot be looked at: there is nothing to take back
+            pass
         raise TrainSigningError(f"the keys cannot be written in {directory}") from error
     return private_path, public_path
