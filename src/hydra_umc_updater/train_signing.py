@@ -212,7 +212,11 @@ def generate_train_keypair(directory: Path, name: str = "hydra_train") -> tuple[
         raise TrainSigningError("the name of the key may only hold letters, digits, dot, dash and underscore")
     ed25519, _ = _ed25519()
     private_path, public_path = directory / f"{name}.key", directory / f"{name}.pub"
-    if private_path.exists() or public_path.exists():
+    try:
+        already_there = private_path.exists() or public_path.exists()
+    except OSError as error:  # a parent that is a file, a name the system refuses
+        raise TrainSigningError(f"the keys cannot be written in {directory}") from error
+    if already_there:
         raise TrainSigningError(f"{private_path.name} or {public_path.name} already exists in {directory}: nothing was overwritten")
     from cryptography.hazmat.primitives import serialization
 
