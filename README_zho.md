@@ -109,7 +109,7 @@ OK  Updated /home/pi/HYDRA-UMC/HYDRA-UMC-SERVER to v0.0.9 (commit 1a2b3c4d5e6f) 
 
 ## 🧩 在 HYDRA-UMC 中的角色
 
-**HYDRA-UMC-UPDATER** 在所运行的机器上查找、安装并更新 HYDRA-UMC 项目，手动且一次一个项目。新版本先在暂存文件夹中克隆并构建，然后才移入位置，旧版本保留为备份，每次尝试都会留下一行证据。它有命令行和桌面窗口，二者调用同一个核心。
+**HYDRA-UMC-UPDATER** 在所运行的机器上查找、安装并更新 HYDRA-UMC 项目，手动且一次一个项目。新版本先在暂存文件夹中克隆并构建，然后才移入位置，旧版本保留为备份，每次尝试都会留下一行证据。它有命令行和桌面窗口，二者调用同一个核心。它是为 CM5 试验台编写并在其上运行的；等目标平台 NVIDIA Jetson Orin NX 16 GB（JetPack 或 Debian）的电路板出现后，同一更新流程计划也为其服务，但目前没有任何部分在那里运行过。
 
 ## 🏛️ 架构
 

@@ -115,7 +115,7 @@ für die ausgewählte Zeile.
 
 ## 🧩 Rolle in HYDRA-UMC
 
-**HYDRA-UMC-UPDATER** findet, installiert und aktualisiert die HYDRA-UMC-Projekte auf dem Rechner, auf dem er läuft, von Hand und einzeln. Eine neue Version wird zuerst in einem Staging-Ordner geklont und gebaut und erst dann an ihren Platz verschoben, die vorherige bleibt als Sicherung, und jeder Versuch hinterlässt eine Nachweiszeile. Er hat eine Kommandozeile und ein Desktop-Fenster, die denselben Kern aufrufen.
+**HYDRA-UMC-UPDATER** findet, installiert und aktualisiert die HYDRA-UMC-Projekte auf dem Rechner, auf dem er läuft, von Hand und einzeln. Eine neue Version wird zuerst in einem Staging-Ordner geklont und gebaut und erst dann an ihren Platz verschoben, die vorherige bleibt als Sicherung, und jeder Versuch hinterlässt eine Nachweiszeile. Er hat eine Kommandozeile und ein Desktop-Fenster, die denselben Kern aufrufen. Er ist für den CM5-Pilotprüfstand geschrieben und wird dort geübt; derselbe Aktualisierungsablauf soll später die Zielplattform NVIDIA Jetson Orin NX 16 GB (JetPack oder Debian) bedienen, sobald es diese Platine gibt, und nichts davon ist dort gelaufen.
 
 ## 🏛️ Architektur
 

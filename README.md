@@ -119,7 +119,7 @@ is written to `~/.hydra_umc_updater/logs/`.
 
 ## 🧩 Role in HYDRA-UMC
 
-**HYDRA-UMC-UPDATER** finds, installs and updates the HYDRA-UMC projects on the machine it runs on, by hand and one project at a time. A new version is cloned and built in a staging folder first and only then moved into place, the previous one stays as a backup, and every attempt leaves one line of evidence. It has a command line and a desktop window that call the same core.
+**HYDRA-UMC-UPDATER** finds, installs and updates the HYDRA-UMC projects on the machine it runs on, by hand and one project at a time. A new version is cloned and built in a staging folder first and only then moved into place, the previous one stays as a backup, and every attempt leaves one line of evidence. It has a command line and a desktop window that call the same core. It is written for and exercised on the CM5 pilot bench; the same update flow is meant to serve the NVIDIA Jetson Orin NX 16 GB target platform (JetPack or Debian) once that board exists, and nothing of it has run there.
 
 ## 🏛️ Architecture
 

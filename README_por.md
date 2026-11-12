@@ -120,7 +120,7 @@ escrita no terminal de arranque.
 
 ## 🧩 Papel no HYDRA-UMC
 
-O **HYDRA-UMC-UPDATER** encontra, instala e atualiza os projetos HYDRA-UMC na máquina onde corre, à mão e um projeto de cada vez. Uma versão nova é clonada e compilada primeiro numa pasta de preparação e só depois colocada no lugar, a anterior fica como cópia de segurança e cada tentativa deixa uma linha de evidência. Tem linha de comandos e uma janela de ambiente de trabalho que chamam o mesmo núcleo.
+O **HYDRA-UMC-UPDATER** encontra, instala e atualiza os projetos HYDRA-UMC na máquina onde corre, à mão e um projeto de cada vez. Uma versão nova é clonada e compilada primeiro numa pasta de preparação e só depois colocada no lugar, a anterior fica como cópia de segurança e cada tentativa deixa uma linha de evidência. Tem linha de comandos e uma janela de ambiente de trabalho que chamam o mesmo núcleo. Está escrito para o banco piloto com a CM5 e é exercido nele; o mesmo fluxo de atualização destina-se a servir a plataforma objetivo NVIDIA Jetson Orin NX de 16 GB (JetPack ou Debian) quando essa placa existir, e nada disto funcionou lá.
 
 ## 🏛️ Arquitetura
 

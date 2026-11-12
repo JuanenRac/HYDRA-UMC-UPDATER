@@ -117,7 +117,7 @@ seleccionada.
 
 ## 🧩 Papel en HYDRA-UMC
 
-**HYDRA-UMC-UPDATER** encuentra, instala y actualiza los proyectos de HYDRA-UMC en la máquina donde se ejecuta, a mano y de uno en uno. Una versión nueva se clona y se compila antes en una carpeta de preparación y solo después se coloca en su sitio, la anterior queda como copia de seguridad y cada intento deja una línea de evidencia. Tiene línea de comandos y una ventana de escritorio que llaman al mismo núcleo.
+**HYDRA-UMC-UPDATER** encuentra, instala y actualiza los proyectos de HYDRA-UMC en la máquina donde se ejecuta, a mano y de uno en uno. Una versión nueva se clona y se compila antes en una carpeta de preparación y solo después se coloca en su sitio, la anterior queda como copia de seguridad y cada intento deja una línea de evidencia. Tiene línea de comandos y una ventana de escritorio que llaman al mismo núcleo. Está escrito para el banco piloto con la CM5 y se ejerce en él; el mismo flujo de actualización está pensado para servir a la plataforma objetivo NVIDIA Jetson Orin NX de 16 GB (JetPack o Debian) cuando exista esa placa, y nada de ello ha funcionado allí.
 
 ## 🏛️ Arquitectura
 

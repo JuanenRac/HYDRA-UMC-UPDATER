@@ -115,7 +115,7 @@ ligne sélectionnée.
 
 ## 🧩 Rôle dans HYDRA-UMC
 
-**HYDRA-UMC-UPDATER** trouve, installe et met à jour les projets HYDRA-UMC sur la machine où il tourne, à la main et un projet à la fois. Une nouvelle version est d'abord clonée et compilée dans un dossier de préparation puis seulement déplacée en place, la précédente reste en sauvegarde, et chaque tentative laisse une ligne de preuve. Il a une ligne de commande et une fenêtre de bureau qui appellent le même cœur.
+**HYDRA-UMC-UPDATER** trouve, installe et met à jour les projets HYDRA-UMC sur la machine où il tourne, à la main et un projet à la fois. Une nouvelle version est d'abord clonée et compilée dans un dossier de préparation puis seulement déplacée en place, la précédente reste en sauvegarde, et chaque tentative laisse une ligne de preuve. Il a une ligne de commande et une fenêtre de bureau qui appellent le même cœur. Il est écrit pour le banc pilote CM5 et exercé sur lui ; le même flux de mise à jour doit servir la plateforme visée NVIDIA Jetson Orin NX 16 Go (JetPack ou Debian) quand cette carte existera, et rien de cela n'y a tourné.
 
 ## 🏛️ Architecture
 
