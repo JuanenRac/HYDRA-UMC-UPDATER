@@ -206,6 +206,28 @@ in which case it downloads the three files of the latest release of the channel 
 | `install_from_train` | - | Off by default (a damaged settings file counts as off). On, `install` and `update` take each repository from the version train named by `train_file` (the exact commit and version it lists, checked against the published history and the manifest) instead of the latest release of that repository; a repository the train does not list is refused, and a train without a valid signature is refused unless `require_signed_trains` is explicitly false. Nothing falls back to a release or to the head. |
 | `train_file` | - | The version train (the shape of the family's `ecosystem-release.json`) that `install_from_train` installs from. |
 
+#### A signed bundle of compiled models: `package verify BUNDLE.zip --public-key FILE` and `package install BUNDLE.zip --public-key FILE --models-registry registry.json --models-dir DIR [--allow-downgrade]`
+
+When the file is a `.zip` the command works on the signed bundle that `make_bundle` of HYDRA-UMC-DETECTION-HEF writes: `bundle.json` (format 1, the
+SHA-256 of every other member), `registry.json`, its detached Ed25519 signature `registry.json.sig` (128 hexadecimal digits over the exact bytes of the
+registry) and the `.hef` files under `models/`. The public key is the one of the owner of the registry (a file with 32 bytes, raw or as 64 hexadecimal
+digits); there is no pinned key for models, and without `--public-key` nothing is accepted. `verify` only reads and needs no switch. `install` is **off
+unless the `model_bundles` switch is on** (`model_bundles: true` in the settings, or `HYDRA_UMC_UPDATER_MODEL_BUNDLES=1`; a damaged settings file counts as
+off). The whole bundle is checked before the first file is written:
+
+1. the member names (no absolute path, no `..`, no backslash, only `bundle.json`, the registry, its signature and `models/...`), their number (at most 1000)
+   and their unpacked size (at most 512 MiB), and that nothing is in the zip that `bundle.json` does not list;
+2. every member against its SHA-256 in `bundle.json`;
+3. the signature of the registry with the public key; a signature by another key, or over a changed registry, is refused;
+4. every `.hef` against the SHA-256 of the registry entry that points at it, and that no file is in the bundle that no entry points at;
+5. against the registry already installed (read under its `<registry>.lock`): a model that would go to an older version, or leave the registry, is refused
+   unless `--allow-downgrade` is given (each channel counts on its own).
+
+Then each model goes in under a temporary name and is renamed, the previous registry and signature are copied to `.prev`, and the new pair is renamed over
+the old one. A refusal prints the reason in the language of the window (or `--lang`), then "nothing was installed", with exit code 1; `--json` prints the
+models and files on success. Tested with keys made by the tests, and, when the checkout of the detection service is next to this one, with bundles written
+by its own `make_bundle` and the same downgrade refused by its own `apply_bundle`; never run on a node with a Hailo accelerator.
+
 The publisher packs and signs with `tools/package_pc_release.py` (`pack REPO --tag TAG`, `sign PACKAGE`, `verify PACKAGE`); the signing key is read
 from `HYDRA_RELEASE_KEY` or the key folder of the owner, is never printed, and nothing is signed unless its public half is the pinned one.
 Needs the optional `cryptography` package. Tested with keys made by the tests and a simulated release API; never run against the real key or the

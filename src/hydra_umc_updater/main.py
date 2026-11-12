@@ -32,7 +32,7 @@ import os
 import sys
 from pathlib import Path
 
-from . import __version__, common_gate, deploy_plan, evidence_export, i18n, image_release, package_release, release_channel, settings, train, train_signing
+from . import __version__, common_gate, deploy_plan, evidence_export, i18n, image_release, model_bundle, package_release, release_channel, settings, train, train_signing
 from .detect import LocalStatus, discover_workspace
 from .updater_core import COMMON_REPO
 from .github_client import RemoteStatus, default_etag_cache, discover_remote_projects, fetch_all
@@ -547,6 +547,9 @@ def cmd_package(args: argparse.Namespace) -> int:
     def pkg(code: str, english: str, **params: object) -> str:
         return _say(lang, "pkg_", code, english, **params)
 
+    models_file = Path(args.file if args.package_command == "verify" else args.target)
+    if models_file.suffix.lower() == ".zip":
+        return _cmd_model_bundle(args, models_file, pkg)
     try:
         if args.package_command == "verify":
             result = package_release.verify_package(Path(args.file))
@@ -594,6 +597,35 @@ def cmd_package(args: argparse.Namespace) -> int:
         print(pkg("ok_unsigned", "The package holds, but it is not signed.", name=result.name, version=result.version), file=sys.stderr)
     if installed_text:
         print(installed_text)
+    return 0
+
+
+def _cmd_model_bundle(args: argparse.Namespace, bundle: Path, pkg) -> int:
+    """`package verify|install BUNDLE.zip`: the signed bundle of compiled models of the detection service. Verifying only reads; installing is off unless the
+    `model_bundles` switch is on, needs the public key of the owner of the registry and puts nothing in place unless the whole bundle checks out."""
+    try:
+        key = Path(args.public_key) if args.public_key else None
+        if args.package_command == "verify":
+            result = model_bundle.verify_bundle(bundle, key)
+            text = pkg("models_ok", "The model bundle holds.", count=len(result.models), fingerprint=result.fingerprint)
+        else:
+            if not model_bundle.enabled():
+                raise package_release.PackageError("models_off", "Installing model bundles is off.")
+            if not args.models_registry or not args.models_dir:
+                raise package_release.PackageError("models_needs_paths", "Installing a model bundle needs --models-registry and --models-dir.")
+            result = model_bundle.install_bundle(bundle, Path(args.models_registry), Path(args.models_dir), key, allow_downgrade=args.allow_downgrade)
+            text = pkg("models_installed", "Installed.", count=len(result.models), models=", ".join(result.models))
+    except package_release.PackageError as exc:
+        print("ERROR: " + pkg(exc.code, str(exc), **exc.params), file=sys.stderr)
+        print(pkg("rejected", "The package was rejected: nothing was installed."), file=sys.stderr)
+        return 1
+    except OSError as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
+        return 1
+    if args.json:
+        print(json.dumps({"ok": True, "kind": "models", "models": list(result.models), "files": list(result.files), "key_fingerprint": result.fingerprint}, indent=2))
+    else:
+        print(text)
     return 0
 
 
@@ -793,14 +825,18 @@ def build_parser() -> argparse.ArgumentParser:
     for evidence_parser in (export_p, verify_p):
         evidence_parser.set_defaults(func=cmd_evidence)
 
-    package_p = subparsers.add_parser("package", help="Verify and install the signed package (.tgz + .sha256 + .sig) of a release.")
+    package_p = subparsers.add_parser("package", help="Verify and install the signed package (.tgz + .sha256 + .sig) of a release, or a signed bundle of compiled models (.zip; off by default).")
     package_sub = package_p.add_subparsers(dest="package_command", required=True)
     package_verify_p = package_sub.add_parser("verify", help="Check the hash, the signature (required unless require_signed_packages is off) and the contents of a package. Reads only.")
     package_verify_p.add_argument("file", help="The <project>-<version>.tgz file (.sha256 and .sig next to it).")
     package_install_p = package_sub.add_parser("install", help="Verify a package and put it in the workspace; a project name downloads the package of its latest release in the saved channel.")
     package_install_p.add_argument("target", help="A package file, or the name of a project.")
     package_install_p.add_argument("--workspace", help="Workspace root (default: this tool's own parent directory).")
+    package_install_p.add_argument("--models-registry", help="For a model bundle (.zip): the registry.json of the detection service to update.")
+    package_install_p.add_argument("--models-dir", help="For a model bundle (.zip): the models folder of the detection service.")
+    package_install_p.add_argument("--allow-downgrade", action="store_true", help="For a model bundle: accept a model that goes to an older version or leaves the registry.")
     for package_parser in (package_verify_p, package_install_p):
+        package_parser.add_argument("--public-key", help="For a model bundle (.zip): file with the public key of the owner of the registry (32 bytes, raw or as 64 hexadecimal digits).")
         package_parser.add_argument("--lang", choices=sorted(i18n.TRANSLATIONS), help="Language of the messages (default: the one of the window).")
         package_parser.add_argument("--json", action="store_true", help="Print the result as JSON when the package holds.")
         package_parser.set_defaults(func=cmd_package)

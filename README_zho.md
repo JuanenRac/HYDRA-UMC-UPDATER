@@ -157,6 +157,7 @@ OK  Updated /home/pi/HYDRA-UMC/HYDRA-UMC-SERVER to v0.0.9 (commit 1a2b3c4d5e6f) 
 - **版本列车（默认关闭）：** 由一个记录各仓库版本和确切提交的文件描述、经过测试的一组版本，可以用 `train plan|apply|rollback` 一起安装。安装任何内容之前，计划会检查：文件格式正确且摘要一致；每个固定的提交都属于已发布的历史，并带有所列版本和摘要的清单；最低版本和 `depends_on` 已满足；不存在循环或意外降级。有问题的列车不会安装任何东西。不带 `--yes` 时 `apply` 和 `rollback` 只是试运行，并且需要 `version_trains` 开关；第一次更改之前的状态会被保存以便回滚。列车文件可以签名（`train sign` 会在其旁边写入 Ed25519 签名），并且在列车启用期间，默认要求提供由配置中固定的公钥所作的有效签名（开关 `require_signed_trains`）；没有签名、签名错误或缺少 `cryptography` 包时，该列车会被拒绝。签名仅用临时密钥测试过。已用临时 Git 仓库测试，尚未在真实的整个系列上测试。 `train make --out FILE` 会根据 SDK 的发布生成器写出带摘要的列车（之后用 `train sign` 签名）；`train rollback --remove-new --yes` 还会把列车首次克隆的仓库移到工作区内更新器的回收站（绝不删除；若其中有未提交的更改或已前进则拒绝）。 被其他已安装仓库通过 `depends_on` 依赖的仓库绝不会被移除；`train trash --list` 显示回收站，`train trash --empty --yes --i-understand` 将其永久删除（不可撤销，仅限该回收站内部，绝不自动执行）。
 
 - **校验已签名的镜像发布（只读）：** `image verify release.json IMAGE --trusted-keys FILE` 会用一个受信任公钥文件（可含多个密钥，并可吊销旧密钥）校验操作系统镜像发布（格式 `hydra-image-release/1`，使用专属域标签）的 Ed25519 签名，然后检查镜像的名称、大小和 SHA-256；加上 `--require-tag` 时还会检查标签已签名（`git verify-tag`）且位于同一提交上。没有受信任密钥、没有签名或不一致时，会以八种语言给出原因并以退出码 1 拒绝，不会应用任何内容。已用临时密钥测试，未在真实镜像或设备上运行。
+- **安装已签名的编译模型包（默认关闭）：** `package verify PACKAGE.zip --public-key FILE` 会读取并检查由 HYDRA-UMC-DETECTION-HEF 制作的包（含每个成员 SHA-256 的 `bundle.json`、`registry.json`、其 Ed25519 签名和 `.hef` 文件），`package install PACKAGE.zip --public-key FILE --models-registry registry.json --models-dir DIR` 会将其放到位，但仅在 `model_bundles` 开关开启时才可用（`HYDRA_UMC_UPDATER_MODEL_BUNDLES=1` 或已保存的设置）。在写入第一个文件之前会检查一切：成员名称、数量和大小、每个哈希、用所有者公钥验证的注册表签名，以及每个模型相对其注册表条目的哈希；会降到旧版本或从注册表中消失的模型会被拒绝，除非给出 `--allow-downgrade`。旧的注册表和签名会保留为 `.prev`。拒绝原因以八种语言说明，退出码为 1。已用临时密钥测试，检测服务在旁边时也用该服务自己制作的包测试；尚未在带 Hailo 加速器的节点上运行。
 
 ## 🖼️ 屏幕截图
 
@@ -275,6 +276,7 @@ HYDRA-UMC-UPDATER/
 │   ├── evidence_export.py     把尝试的证据导出到带哈希链的输出文件，需要时再发送到数据湖；默认关闭
 │   ├── deploy_plan.py         把工作区的清单与设备正在运行的版本对比，并按依赖顺序列出部署步骤；只读
 │   ├── image_release.py       校验 release.json、其相对于受信任公钥文件的 Ed25519 签名、镜像的 SHA-256，需要时还校验已签名标签；只读，有任何疑问即拒绝
+│   ├── model_bundle.py        在写入任何内容之前，完整检查检测服务的已签名模型 zip（名称和大小、每个哈希、所有者公钥对注册表的签名、每个模型与其条目的对照），然后放到位并把旧注册表保留为 .prev；除非明确要求，否则拒绝降级；默认关闭
 │   ├── release_channel.py     查找最新已发布的发布版（从不选草稿，预发布仅限测试通道）及其标签指向的提交；没有则拒绝，因此绝不会安装分支头部
 │   ├── package_release.py     用固定的发布密钥校验 .tgz 的 .sha256 和 Ed25519 签名，检查其成员，并在保留备份的情况下安装；未签名或签名错误的软件包会附带原因被拒绝
 │   ├── assets/                应用程序图标 (HYDRA_UMC_ICON.ico 和 .svg)

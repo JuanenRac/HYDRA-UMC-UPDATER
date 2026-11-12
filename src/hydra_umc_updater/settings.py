@@ -278,3 +278,15 @@ def min_common_mode() -> str:
     """What to do when a project asks for a newer shared contracts repository than the installed one: `warn` (the default) or `off`.
     The environment variable wins over the saved setting `min_common_check`; anything else is the default. It never holds an update back."""
     return _parse_mode(_PROFILE.env_text("MIN_COMMON") or load_settings().get("min_common_check"))
+
+
+def get_model_bundles() -> bool:
+    """Whether `package install` may put a signed bundle of compiled models (a .zip made by HYDRA-UMC-DETECTION-HEF) in place. Off unless the saved
+    settings say `true`; a damaged file keeps it off."""
+    if settings_file_is_damaged():
+        return False
+    return load_settings().get("model_bundles") is True
+
+
+def save_model_bundles(enabled: bool) -> None:
+    save_settings(model_bundles=bool(enabled))

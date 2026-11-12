@@ -433,6 +433,29 @@
           }
         },
         {
+          "name": "model_bundle.py",
+          "desc": {
+            "en": "Signed bundles of compiled models",
+            "es": "Paquetes firmados de modelos compilados",
+            "de": "Signierte Pakete kompilierter Modelle",
+            "fr": "Paquets signés de modèles compilés",
+            "it": "Pacchetti firmati di modelli compilati",
+            "ja": "コンパイル済みモデルの署名付きパッケージ",
+            "zh": "已签名的编译模型包",
+            "pt": "Pacotes assinados de modelos compilados"
+          },
+          "tree_desc": {
+            "en": "Checks a signed zip of models from the detection service in full (member names and sizes, every hash, the signature of its registry by the owner's public key, each model against its entry) before writing anything, then puts it in place keeping the previous registry as .prev; a downgrade is refused unless asked for; off by default",
+            "es": "Comprueba por completo un zip firmado de modelos del servicio de detección (nombres y tamaños, cada hash, la firma de su registro con la clave pública del dueño, cada modelo contra su entrada) antes de escribir nada y luego lo coloca guardando el registro anterior como .prev; una versión anterior se rechaza salvo que se pida; desactivado por defecto",
+            "de": "Prüft ein signiertes Zip mit Modellen des Erkennungsdienstes vollständig (Namen und Größen, jeden Hash, die Signatur seiner Registry mit dem öffentlichen Schlüssel des Besitzers, jedes Modell gegen seinen Eintrag), bevor etwas geschrieben wird, und legt es dann an seinen Platz, wobei die alte Registry als .prev bleibt; ein Downgrade wird abgelehnt, außer es wird verlangt; standardmäßig aus",
+            "fr": "Contrôle entièrement un zip signé de modèles du service de détection (noms et tailles, chaque empreinte, la signature de son registre par la clé publique du propriétaire, chaque modèle contre son entrée) avant d'écrire quoi que ce soit, puis le met en place en gardant l'ancien registre en .prev ; un retour en arrière est refusé sauf demande ; désactivé par défaut",
+            "it": "Controlla per intero uno zip firmato di modelli del servizio di rilevamento (nomi e dimensioni, ogni hash, la firma del suo registro con la chiave pubblica del proprietario, ogni modello rispetto alla sua voce) prima di scrivere qualcosa, poi lo mette a posto conservando il registro precedente come .prev; un downgrade è rifiutato salvo richiesta; disattivato per impostazione predefinita",
+            "ja": "検出サービスの署名付きモデル zip を、何かを書く前に全面検査します (名前とサイズ、各ハッシュ、所有者の公開鍵によるレジストリ署名、各モデルとエントリの照合)。その後、以前のレジストリを .prev として残して設置します。ダウングレードは要求がない限り拒否され、既定では無効です",
+            "zh": "在写入任何内容之前，完整检查检测服务的已签名模型 zip（名称和大小、每个哈希、所有者公钥对注册表的签名、每个模型与其条目的对照），然后放到位并把旧注册表保留为 .prev；除非明确要求，否则拒绝降级；默认关闭",
+            "pt": "Verifica por completo um zip assinado de modelos do serviço de deteção (nomes e tamanhos, cada hash, a assinatura do seu registo com a chave pública do dono, cada modelo contra a sua entrada) antes de escrever o que quer que seja, e depois coloca-o no seu lugar mantendo o registo anterior como .prev; um retrocesso é recusado a menos que se peça; desativado por defeito"
+          }
+        },
+        {
           "name": "release_channel.py",
           "desc": {
             "en": "Latest stable release of a repository",
