@@ -1,8 +1,10 @@
 # Changelog
 
+## [Unreleased]
+
 All notable changes to this project are documented here.
 
-## [Unreleased]
+## [0.5.8] - More tests for the GitHub lookups, the signed trains, the signed model bundles and the Qt bridge: every way a single lookup can fail (a refused connection, a timeout, a reset, an unexpected error, each error status, a 404 that falls back to the native version
 
 - **More tests for the GitHub lookups, the signed trains, the signed model bundles and the Qt bridge:** every way a single lookup can fail (a refused connection, a timeout, a reset, an unexpected error, each error status, a 404 that falls back to the native version file and a manifest that is not valid) becomes a message and never an exception, and one broken project does not stop the scan of the others; the key files, the signature file, the switch and the pinned key of the signed trains are checked edge by edge (a folder or a binary file where a key should be, a signature of another key, one character changed, a train over the size limit, a name that could leave the folder); the signed bundle of models is refused for a damaged member, a size that is not the announced one, a link that leads out of the models folder and a disk that fails while writing, and the Qt bridge is read without a screen (the state of a row for every pairing of versions, the counters, the filter by target, the selection, the eight languages, the operation panel and the refusal to start a second action). The line coverage of the package goes from 78 % to 81 % (GitHub lookups from 78 % to 95 %, signed trains from 83 % to 97 %, model bundles from 97 % to 99 %, Qt bridge from 45 % to 67 %); the window in Tk (`gui.py`) is still not run by any test. A key pair is no longer created when the folder of the keys cannot even be looked at (a parent that is a file): it says so instead of raising, and the clean-up after a failed write no longer fails on its own.
 

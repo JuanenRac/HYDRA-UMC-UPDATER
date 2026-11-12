@@ -34,7 +34,7 @@ GPL-3.0-or-later - see LICENSE
 
 | | |
 |---|---|
-| Version | `0.5.7` |
+| Version | `0.5.8` |
 | Reifegrad | Etabliert |
 | Tests | 742 (`python -m pytest -q tests`) |
 | Technik | Python 3.10+ / PySide6 / Qt Quick (QML) / Tkinter (legacy fallback) / Git / GitHub raw content |

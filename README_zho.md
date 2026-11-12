@@ -34,7 +34,7 @@ GPL-3.0-or-later - see LICENSE
 
 | | |
 |---|---|
-| 版本 | `0.5.7` |
+| 版本 | `0.5.8` |
 | 成熟度 | 成熟 |
 | 测试 | 742 (`python -m pytest -q tests`) |
 | 技术栈 | Python 3.10+ / PySide6 / Qt Quick (QML) / Tkinter (legacy fallback) / Git / GitHub raw content |
