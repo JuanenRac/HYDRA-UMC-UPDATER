@@ -180,16 +180,21 @@ def _parse_registry(registry: bytes) -> list[_Entry]:
         raise PackageError("models_registry_bad", f"The registry in the bundle cannot be read: {exc}", detail=str(exc)) from exc
     if not isinstance(raw, list):
         raise PackageError("models_registry_bad", "The registry in the bundle must be a JSON array of entries.", detail="not an array")
-    entries = []
+    entries: list[_Entry] = []
     for index, item in enumerate(raw):
-        fields = {key: item.get(key) for key in ("name", "version", "hef_path", "sha256")} if isinstance(item, dict) else {}
-        channel = item.get("channel", "stable") if isinstance(item, dict) else None
-        version = _VERSION.match(fields.get("version") or "") if isinstance(fields.get("version"), str) else None
-        if (not all(isinstance(value, str) and value for value in fields.values()) or version is None or channel not in CHANNELS
-                or not _SHA256.match(fields["sha256"])):
-            raise PackageError("models_registry_bad", f"Entry {index} of the registry in the bundle is not a model entry.", detail=f"entry {index}")
-        entries.append(_Entry(fields["name"], tuple(int(part) for part in version.groups()), fields["version"], channel,
-                             fields["hef_path"].replace("\\", "/"), fields["sha256"].lower()))
+        bad = PackageError("models_registry_bad", f"Entry {index} of the registry in the bundle is not a model entry.", detail=f"entry {index}")
+        if not isinstance(item, dict):
+            raise bad
+        name, version_text, hef_path, sha256 = item.get("name"), item.get("version"), item.get("hef_path"), item.get("sha256")
+        channel = item.get("channel", "stable")
+        if not (isinstance(name, str) and name and isinstance(hef_path, str) and hef_path and isinstance(version_text, str)
+                and isinstance(sha256, str) and isinstance(channel, str) and channel in CHANNELS):
+            raise bad
+        version = _VERSION.match(version_text)
+        if version is None or not _SHA256.match(sha256):
+            raise bad
+        major, minor, patch = (int(part) for part in version.groups())
+        entries.append(_Entry(name, (major, minor, patch), version_text, channel, hef_path.replace("\\", "/"), sha256.lower()))
     return entries
 
 
