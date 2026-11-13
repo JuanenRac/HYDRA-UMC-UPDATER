@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- **The shared tools and the CI jobs have time limits:** the project tool, the validators and the build test pass a timeout to every child process (`HYDRA_UMC_GIT_TIMEOUT_S`, 120 s by default, and `HYDRA_UMC_COMMAND_TIMEOUT_S`, 3600 s by default; a value that is not a positive number means the default), and the baseline and notify jobs of the workflows carry `timeout-minutes`, so a stuck step ends with a message instead of holding a runner.
 - **More tests and a simulation bench:** 38 new tests cover the refusals of the project manifest reader, the choice of release (drafts, pre-releases, unordered or broken tags, annotated tags, failing API), the rollback of a promotion, the fresh virtual environment and every exit status of the deployment on the device. A seeded bench runs the real release resolver and the real plan applier against a simulated GitHub API and a simulated device with injected faults, checking that a draft or pre-release is never chosen on the stable channel and that a plan stops at the first failed step. A new workflow runs the bench and measures the coverage of the test suite with a floor that must not go down.
 All notable changes to this project are documented here.
 
