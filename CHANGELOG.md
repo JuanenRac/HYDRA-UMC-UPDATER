@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- **More tests and a simulation bench:** 38 new tests cover the refusals of the project manifest reader, the choice of release (drafts, pre-releases, unordered or broken tags, annotated tags, failing API), the rollback of a promotion, the fresh virtual environment and every exit status of the deployment on the device. A seeded bench runs the real release resolver and the real plan applier against a simulated GitHub API and a simulated device with injected faults, checking that a draft or pre-release is never chosen on the stable channel and that a plan stops at the first failed step. A new workflow runs the bench and measures the coverage of the test suite with a floor that must not go down.
 All notable changes to this project are documented here.
 
 ## [0.5.8] - **README: the platform statement:** the description says what this project serves today (the CM5 pilot bench) and that the target platform of HYDRA-UMC, an NVIDIA Jetson Orin NX 16 GB, is a design that has not been built or tested.
