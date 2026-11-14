@@ -10,7 +10,7 @@
 #
 # Bare invocation (no arguments, or double-clicked) launches the QML desktop
 # GUI (qt_gui.py, PySide6/Qt Quick) on a workstation or CM5 desktop/VNC
-# session.  The old Tkinter shell stays as a compatibility fallback only when
+# session.  The Tkinter shell is a compatibility fallback only when
 # the optional GUI package was not installed. `--cli` switches to the
 # headless argparse CLI below, with three subcommands:
 #   status              - what's installed, what version, what's on GitHub
@@ -191,7 +191,7 @@ def cmd_status(args: argparse.Namespace) -> int:
     name_w = max((len(p.name) for p in entries.values()), default=7) + 2
     # Dynamic like name_w above - a fixed width silently ran stack values
     # like "python-qtquick" (14 chars) straight into the LOCAL column with
-    # no separating space the moment a stack name grew past the old fixed 12.
+    # no separating space the moment a stack name grew past a fixed 12.
     stack_w = max((len(p.stack) for p in entries.values()), default=5) + 2
     header = f"{'PROJECT':<{name_w}}{'MATURITY':<13}{'ROLE':<10}{'STACK':<{stack_w}}{'LOCAL':<10}{'GITHUB':<10}{'STATE'}"
     print(header)

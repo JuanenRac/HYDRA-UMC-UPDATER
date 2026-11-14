@@ -1132,16 +1132,15 @@ def clone_or_pull(
     # the finding's own acceptance criteria describes - that needs
     # designing once, shared with HYDRA-UMC-OPS-AGENT's own
     # canary_deploy.py, as real, separate future work): two real gaps
-    # existed here. First, `backup_path` reused the SAME fixed name
-    # every promotion (`rmtree(backup_path, ...)` right before renaming
-    # into it) - a second install after a first one already failed
-    # partway would silently delete the ONLY recoverable copy of the
-    # previous installation before even attempting the new promotion.
-    # Now unique per attempt (`.backup-<uuid>`, matching OPS-AGENT's own
-    # fix), never overwriting an earlier backup. Second, a crash or
-    # exception in the narrow gap between the two renames used to leave
-    # NO active checkout at `path` at all, with no attempt to recover -
-    # now a best-effort self-heal: if the second rename fails, this
+    # are closed here. First, `backup_path` is unique per attempt
+    # (`.backup-<uuid>`, as in OPS-AGENT), never overwriting an earlier
+    # backup: reusing one fixed name would make a second install after a
+    # first one failed partway silently delete the ONLY recoverable copy
+    # of the previous installation before even attempting the new
+    # promotion. Second, a crash or
+    # exception in the narrow gap between the two renames would leave
+    # NO active checkout at `path` at all, so there is a best-effort
+    # self-heal: if the second rename fails, this
     # immediately tries to rename the backup back to `path` so a real
     # installation still exists, rather than silently leaving neither a
     # live checkout nor a clear indication of which path holds the real

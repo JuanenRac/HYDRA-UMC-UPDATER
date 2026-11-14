@@ -127,8 +127,8 @@ def test_discover_remote_projects_raises_clearly_on_malformed_repo_list_json(mon
 def test_discover_remote_projects_names_the_real_rate_limit_reset_time(monkeypatch):
     # Found while diagnosing a real report of repeated GitHub refreshes
     # silently listing fewer and fewer projects (42 -> 9 -> 0): this
-    # repo-listing call's own error used to embed a bare str(HTTPError)
-    # ("HTTP Error 403: rate limit exceeded"), never telling the caller
+    # repo-listing call's own error must not embed a bare str(HTTPError)
+    # ("HTTP Error 403: rate limit exceeded"), which never tells the caller
     # it was the hourly PRIMARY limit, when it resets, or that
     # GITHUB_TOKEN raises it.
     with fixture_server(
@@ -306,9 +306,8 @@ def test_retry_after_seconds_is_none_without_the_header_or_wrong_code():
 
 
 def test_describe_http_error_surfaces_the_real_rate_limit_reset_time():
-    # Found while auditing the code: every
-    # HTTPError used to become the same opaque "HTTP {code}", including
-    # GitHub's own primary rate limit.
+    # Not every HTTPError may become the same opaque "HTTP {code}":
+    # GitHub's own primary rate limit gets its own message.
     exc = _http_error(403, {"X-RateLimit-Remaining": "0", "X-RateLimit-Reset": "1700000000"})
     message = describe_http_error(exc)
     assert "rate limited by GitHub" in message

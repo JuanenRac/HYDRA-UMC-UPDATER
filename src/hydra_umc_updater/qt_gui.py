@@ -367,7 +367,7 @@ class UpdaterBridge(QObject):
         if not path:
             return
         self._workspace_root = Path(path)
-        # Real user request: remember this choice - previously reset to
+        # Remember this choice, so it is not reset to
         # main.py's own default_workspace_root() on every single launch.
         settings.save_workspace_root(self._workspace_root)
         self._append_activity(self.text("log_workspace_changed").format(path=self._workspace_root))
