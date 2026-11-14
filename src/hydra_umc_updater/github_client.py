@@ -392,8 +392,8 @@ def discover_remote_projects(
         except urllib.error.HTTPError as exc:
             # Found while diagnosing a real report of repeated GitHub
             # refreshes silently listing fewer and fewer projects (42 ->
-            # 9 -> 0): the raw `str(exc)` this used to embed here (a bare
-            # "HTTP Error 403: rate limit exceeded") never told the
+            # 9 -> 0): the raw `str(exc)` (a bare
+            # "HTTP Error 403: rate limit exceeded") never tells the
             # caller it was the hourly PRIMARY rate limit, when it
             # resets, or that GITHUB_TOKEN raises the limit - all of
             # which describe_http_error() already knows how to say.

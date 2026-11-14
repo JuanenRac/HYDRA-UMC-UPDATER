@@ -208,7 +208,7 @@ def test_plan_refuses_an_unsigned_train_when_required_and_accepts_it_when_signed
     code, _, err = cli(capsys, *plan)
     assert code == 1 and "does not match" in err
 
-    monkeypatch.setenv(train_signing.REQUIRE_SIGNED_ENV, "0")  # the explicit opt-out restores the old behaviour
+    monkeypatch.setenv(train_signing.REQUIRE_SIGNED_ENV, "0")  # the explicit opt-out skips the signature requirement
     code, out, _ = cli(capsys, *plan)
     assert code == 0 and "INSTALL" in out
 

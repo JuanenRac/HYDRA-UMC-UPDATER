@@ -303,7 +303,7 @@ def test_two_successive_updates_never_overwrite_the_earlier_backup(tmp_path: Pat
 
 def test_promotion_self_heals_when_the_second_rename_fails(tmp_path: Path, monkeypatch):
     # a crash or exception in the narrow gap between the two
-    # promotion renames used to leave NO active checkout at all. Inject
+    # promotion renames must not leave NO active checkout at all. Inject
     # a real failure into exactly that second rename (staging -> path)
     # and confirm the previous installation is restored rather than
     # silently lost.
@@ -354,7 +354,7 @@ def test_promotion_self_heals_when_the_second_rename_fails(tmp_path: Path, monke
 def test_update_restores_the_real_upstream_remote_on_the_promoted_checkout(tmp_path: Path, monkeypatch):
     # the
     # staging clone `git clone --local ...` creates is a clone OF the
-    # local installation path, so its own `origin` remote used to end up
+    # local installation path, so its own `origin` remote would end up
     # pointing at that local path - never this project's real upstream -
     # once promoted, permanently stopping this checkout from ever
     # discovering a real future update again.
@@ -395,8 +395,8 @@ def test_update_carries_over_real_local_data_never_tracked_by_git(tmp_path: Path
     # `git
     # clone --local` only ever copies the committed object database - a
     # project's own real local data (config, accounts, generated
-    # certificates, ...) living untracked inside its checkout used to be
-    # left behind entirely once the old installation was renamed aside.
+    # certificates, ...) living untracked inside its checkout would be
+    # left behind entirely once the previous installation was renamed aside.
     remote = tmp_path / "remote.git"
     git("init", "--bare", str(remote), cwd=tmp_path)
     seed = tmp_path / "seed"
@@ -497,9 +497,9 @@ def test_update_refuses_when_a_real_tracked_file_has_an_uncommitted_edit(tmp_pat
 def test_tracked_dirty_paths_raises_when_git_status_itself_fails(tmp_path: Path):
     # (P0, shared with HYDRA-UMC-OPS-AGENT's own sibling helper): a
     # `git status` that fails to even run (here: not a git repository at
-    # all, exit 128) used to be treated exactly like "ran fine, found
+    # all, exit 128) must not be treated like "ran fine, found
     # nothing dirty" - the one real uncommitted edit this function exists
-    # to catch became invisible the moment the check itself broke.
+    # to catch would become invisible the moment the check itself broke.
     from hydra_umc_updater.install import DirtyCheckError, _tracked_dirty_paths
 
     not_a_repo = tmp_path / "not-a-repo"
