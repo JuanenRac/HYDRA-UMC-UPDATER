@@ -225,6 +225,14 @@ def get_image_release_repo() -> str | None:
     return _text_setting("image_release_repo")
 
 
+def get_image_delta() -> bool:
+    """Whether `image delta-apply` may rebuild the image of the other slot from the running image and a signed delta. Off by default; a damaged file keeps it off
+    (the signature of the release and of the delta are always required, whatever this says)."""
+    if settings_file_is_damaged():
+        return False
+    return load_settings().get("image_delta") is True
+
+
 #: Channels from which the updater takes releases. "stable" is the only one used unless the saved settings name the other.
 RELEASE_CHANNELS = ("stable", "pruebas")
 

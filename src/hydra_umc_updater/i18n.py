@@ -1368,6 +1368,12 @@ from .i18n_pt import PT as _PORTUGUESE  # noqa: E402
 
 TRANSLATIONS["pt"] = _PORTUGUESE
 
+# The messages of `image delta-apply` are kept in their own module, for the eight languages.
+from .i18n_delta import COPY as _DELTA_COPY  # noqa: E402
+
+for _language, _delta_copy in _DELTA_COPY.items():
+    TRANSLATIONS[_language].update(_delta_copy)
+
 
 def t(lang: str, key: str, **kwargs: object) -> str:
     """Real translation lookup with real `{placeholder}` substitution
