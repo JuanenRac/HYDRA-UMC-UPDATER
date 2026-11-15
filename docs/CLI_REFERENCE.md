@@ -289,6 +289,27 @@ Needs the optional `cryptography` package (`pip install "hydra-umc-updater[signi
 Tested with releases built in the tests with ephemeral keys in the format of the image builder; never run against a real
 image, a real release or the device.
 
+### `image delta-apply RELEASE_JSON DELTA_DIR --base IMAGE --out-dir DIR [--trusted-keys FILE] [--lang CODE] [--json]` - rebuild the image of the other slot from a signed delta
+
+For the A/B flow: instead of moving the whole image, the updater rebuilds the image of a signed release in the folder of the OTHER slot from the image of the running slot (the base) and a signed delta made by the image builder (`delta-create`). The delta folder holds `delta.json` (format `hydra-image-delta/1`: size and SHA-256 of the base and of the target, the block size, the blocks), `delta.bin` (the bytes of the new blocks) and `delta.json.sig`, an Ed25519 signature over the domain tag `hydra-umc-os-rebuilder-delta/1` plus the SHA-256 of the exact bytes of `delta.json` (a release or profile signature does not verify as a delta signature). The command reads the base, writes only the new image, never switches the slot and never receives a private key.
+
+It is OFF unless the setting `image_delta` (or `HYDRA_UMC_UPDATER_IMAGE_DELTA=1`) is on; a variable that says off wins over the setting and a damaged settings file keeps it off. Checks, in this order, and any failure refuses with a reason in the eight languages, exit code `1` and the line "the image of the other slot was not touched":
+
+1. the switch is on and the file of trusted keys loads (the same file as `image verify`);
+2. `release.json` verifies exactly as in `image verify` (its own signature and fields);
+3. `delta.json` verifies against the same keys under its own domain, is well formed, and its TARGET is the image of the release (size and SHA-256);
+4. the base is the image the delta was made from (size and SHA-256) and `delta.bin` matches its record;
+5. the image is rebuilt in a staging folder inside `--out-dir`, every block checked against the sizes of the base and of the data, and the rebuilt image verifies against the release (name, size, SHA-256);
+6. only then it replaces the image of the other slot, in one rename. `--out-dir` may not be the folder of the base.
+
+| Setting | Environment | Meaning |
+|---|---|---|
+| `image_delta` | `HYDRA_UMC_UPDATER_IMAGE_DELTA` | `true`/`false`; off by default. |
+| `image_release_trusted_keys` | `HYDRA_UMC_UPDATER_IMAGE_TRUSTED_KEYS` | The file of trusted public keys (shared with `image verify`). |
+
+Needs the optional `cryptography` package. Tested with synthetic images, deltas built in the tests in the format of the image builder and ephemeral keys; never run against a real image or the device.
+
+
 ### `evidence export|verify` - hand the evidence of the attempts to the fleet
 
 `evidence.jsonl` (in `.hydra-umc-updater` of the workspace) holds one line per install or update attempt.

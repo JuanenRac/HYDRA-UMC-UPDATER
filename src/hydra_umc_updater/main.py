@@ -32,7 +32,7 @@ import os
 import sys
 from pathlib import Path
 
-from . import __version__, common_gate, deploy_plan, evidence_export, i18n, image_release, model_bundle, package_release, release_channel, settings, train, train_signing
+from . import __version__, common_gate, deploy_plan, evidence_export, i18n, image_delta, image_release, model_bundle, package_release, release_channel, settings, train, train_signing
 from .detect import LocalStatus, discover_workspace
 from .updater_core import COMMON_REPO
 from .github_client import RemoteStatus, default_etag_cache, discover_remote_projects, fetch_all
@@ -534,6 +534,41 @@ def cmd_image_verify(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_image_delta_apply(args: argparse.Namespace) -> int:
+    """`image delta-apply RELEASE_JSON DELTA_DIR --base IMAGE --out-dir DIR`: rebuild the image of a signed release in the folder of the OTHER slot from the running image and a
+    signed delta. Off unless the setting `image_delta` (or HYDRA_UMC_UPDATER_IMAGE_DELTA=1) says so. It writes only the new image, after every check; it never switches the slot.
+    Exit 0 when the image was rebuilt; 1 with the reason when it was not."""
+    lang = args.lang or i18n.resolve_initial_lang()
+
+    def say(error: image_release.ImageReleaseError) -> str:
+        for prefix in ("imgdelta_", "imgrel_"):
+            if prefix + error.code in i18n.TRANSLATIONS["en"] and (prefix == "imgdelta_") == isinstance(error, image_delta.ImageDeltaError):
+                return i18n.t(lang, prefix + error.code, **error.params)
+        return str(error)
+
+    profile = evidence_export.HYDRA_PROFILE
+    flag = profile.env_flag("IMAGE_DELTA")
+    enabled = flag if flag is not None else settings.get_image_delta()
+    keys_source = args.trusted_keys or profile.env_text("IMAGE_TRUSTED_KEYS") or settings.get_image_release_trusted_keys()
+    try:
+        keys = image_release.load_trusted_keys(keys_source)
+        result = image_delta.apply_delta(Path(args.release), Path(args.delta), Path(args.base), Path(args.out_dir), keys, enabled=enabled)
+    except image_release.ImageReleaseError as exc:
+        print("ERROR: " + say(exc), file=sys.stderr)
+        print(i18n.t(lang, "imgdelta_rejected"), file=sys.stderr)
+        return 1
+    except OSError as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
+        print(i18n.t(lang, "imgdelta_rejected"), file=sys.stderr)
+        return 1
+    if args.json:
+        print(json.dumps({"ok": True, "version": result.version, "image": result.image, "sha256": result.sha256, "size": result.size,
+                          "copied_bytes": result.copied_bytes, "new_bytes": result.new_bytes, "checked": result.checked}, indent=2))
+    else:
+        print(i18n.t(lang, "imgdelta_ok", version=result.version, image=result.image, new_bytes=result.new_bytes, copied_bytes=result.copied_bytes, checks=", ".join(result.checked)))
+    return 0
+
+
 def _say(lang: str, prefix: str, code: str, english: str, **params: object) -> str:
     key = prefix + code
     return i18n.t(lang, key, **params) if key in i18n.TRANSLATIONS["en"] else english
@@ -852,6 +887,15 @@ def build_parser() -> argparse.ArgumentParser:
     image_verify_p.add_argument("--lang", choices=sorted(i18n.TRANSLATIONS), help="Language of the messages (default: the saved one).")
     image_verify_p.add_argument("--json", action="store_true", help="Print the result as JSON when the release holds.")
     image_verify_p.set_defaults(func=cmd_image_verify)
+    image_delta_p = image_sub.add_parser("delta-apply", help="Rebuild the image of a signed release in the other slot from the running image and a signed delta (off unless the image_delta setting is on).")
+    image_delta_p.add_argument("release", help="The release.json file of the new image (release.json.sig must be next to it).")
+    image_delta_p.add_argument("delta", help="The folder of the delta (delta.json, delta.bin and delta.json.sig).")
+    image_delta_p.add_argument("--base", required=True, help="The image of the running slot the delta was made from (it is only read).")
+    image_delta_p.add_argument("--out-dir", required=True, help="The folder of the other slot: the new image is written here, only after every check holds.")
+    image_delta_p.add_argument("--trusted-keys", help="File of trusted public keys (default: the image_release_trusted_keys setting).")
+    image_delta_p.add_argument("--lang", choices=sorted(i18n.TRANSLATIONS), help="Language of the messages (default: the saved one).")
+    image_delta_p.add_argument("--json", action="store_true", help="Print the result as JSON when the image was rebuilt.")
+    image_delta_p.set_defaults(func=cmd_image_delta_apply)
 
     prune_p = subparsers.add_parser(
         "prune-backups",
