@@ -1236,3 +1236,33 @@ def test_a_failed_or_unavailable_deployment_fails_the_update(tmp_path: Path, mon
         _promotable_update(scratch, venv_marker=False)
         result = clone_or_pull(entry(), scratch)
         assert not result.ok and f"it was {status}" in result.message
+
+
+def test_an_unsigned_candidate_is_refused_without_a_build_too(tmp_path: Path, monkeypatch):
+    local, old_head = _two_commit_checkout(tmp_path)
+    monkeypatch.setenv(install.REQUIRE_SIGNED_ENV, "1")  # the commits made above carry no signature
+
+    result = clone_or_pull(entry(), tmp_path, verify_build=False)
+
+    assert not result.ok
+    assert "no valid signature" in result.message
+    assert "nothing was changed" in result.message
+    assert subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=local, text=True).strip() == old_head
+
+
+def test_a_verified_candidate_is_applied_without_a_build(tmp_path: Path, monkeypatch):
+    local, old_head = _two_commit_checkout(tmp_path)
+    monkeypatch.setenv(install.REQUIRE_SIGNED_ENV, "1")
+    asked = []
+
+    def accept(path: Path, ref: str = "HEAD"):
+        asked.append((path, ref))
+        return True, "Good signature"
+
+    monkeypatch.setattr(install, "verify_candidate_signature", accept)
+
+    result = clone_or_pull(entry(), tmp_path, verify_build=False)
+
+    assert result.ok, result.message
+    assert len(asked) == 1 and asked[0][0] == local
+    assert subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=local, text=True).strip() != old_head
