@@ -306,8 +306,8 @@ def signature_required() -> bool:
     return settings.get_require_signed_commits()
 
 
-def verify_candidate_signature(staging_path: Path) -> tuple[bool, str]:
-    """Asks git whether HEAD of the staging clone (the accepted candidate) has a
+def verify_candidate_signature(staging_path: Path, ref: str = "HEAD") -> tuple[bool, str]:
+    """Asks git whether `ref` (HEAD by default) of the staging clone (the accepted candidate) has a
     valid signature. Returns (ok, detail); a missing gpg/ssh tool, an unsigned
     commit and a signature by an unknown key all come back as not ok. When an
     allowed-signers file is saved in the settings, ssh signatures are checked
@@ -316,7 +316,7 @@ def verify_candidate_signature(staging_path: Path) -> tuple[bool, str]:
     signers = settings.get_allowed_signers_file()
     if signers:
         cmd += ["-c", f"gpg.ssh.allowedSignersFile={signers}"]
-    cmd += ["verify-commit", "HEAD"]
+    cmd += ["verify-commit", ref]
     result = _run(cmd, cwd=staging_path, capture_output=True, timeout=GIT_TIMEOUT_S)
     detail = _command_output(result).strip()
     if result.returncode != 0:
@@ -987,6 +987,16 @@ def clone_or_pull(
         )
 
     if not verify_build:
+        if signature_required():
+            # The same gate as the first install and the staged update: an unsigned commit is not moved onto the installed checkout.
+            _checkpoint(progress, "signature", "Verifying the signature of the accepted candidate before it replaces the installed checkout.")
+            signed, signature_detail = verify_candidate_signature(path, pin.commit if pin is not None else "FETCH_HEAD")
+            if not signed:
+                return InstallResult(
+                    False,
+                    f"the accepted commit has no valid signature ({REQUIRE_SIGNED_ENV} or the saved setting requires one) - nothing was changed",
+                    signature_detail,
+                )
         _checkpoint(progress, "validation", "Applying the accepted candidate with a fast-forward-only merge.")
         result = _run(
             ["git", "reset", "--hard", "--quiet", pin.commit] if pin is not None else ["git", "merge", "--ff-only", "FETCH_HEAD"],
