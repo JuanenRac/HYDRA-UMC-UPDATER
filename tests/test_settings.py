@@ -107,3 +107,17 @@ def test_workspace_root_and_lang_persist_independently_side_by_side(isolated_set
     settings.save_workspace_root(real_dir)
     assert settings.get_saved_lang() == "de"
     assert settings.get_saved_workspace_root() == real_dir
+
+
+def test_saving_a_preference_never_writes_over_a_damaged_file(isolated_settings):
+    settings.SETTINGS_PATH.write_text("{ not json", encoding="utf-8")
+    settings.save_settings(lang="es")
+    assert settings.SETTINGS_PATH.read_text(encoding="utf-8") == "{ not json"
+    assert settings.settings_file_is_damaged() is True
+    assert settings.get_require_signed_commits() is True
+
+
+def test_a_saved_file_is_written_whole_and_leaves_no_temporary_file(isolated_settings):
+    settings.save_settings(lang="es", require_signed_commits=True)
+    assert settings.load_settings() == {"lang": "es", "require_signed_commits": True}
+    assert not list(settings.SETTINGS_PATH.parent.glob("*.tmp"))

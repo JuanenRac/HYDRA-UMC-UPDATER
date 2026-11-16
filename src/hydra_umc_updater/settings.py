@@ -17,6 +17,7 @@ already-configured language is never silently lost.
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 from typing import Any
 
@@ -55,12 +56,21 @@ def save_settings(**updates: Any) -> None:
     non-fatal-on-failure convention (a read-only home directory or a
     permissions issue must never crash the GUI over a saved preference).
     """
+    # A file that cannot be read is never written over: starting from "nothing saved" would drop the signing settings it may hold and
+    # turn it into a valid file, which would end the fail-closed reading of a damaged one.
+    if settings_file_is_damaged():
+        return
     current = load_settings()
     current.update(updates)
+    temporary = SETTINGS_PATH.with_name(SETTINGS_PATH.name + ".tmp")
     try:
-        SETTINGS_PATH.write_text(json.dumps(current, indent=2), encoding="utf-8")
+        temporary.write_text(json.dumps(current, indent=2), encoding="utf-8")
+        os.replace(temporary, SETTINGS_PATH)  # whole file or the old one, never half of one
     except OSError:
-        pass
+        try:
+            temporary.unlink()
+        except OSError:
+            pass
 
 
 def get_saved_workspace_root() -> Path | None:
