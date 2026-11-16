@@ -117,6 +117,19 @@ def test_a_good_delta_rebuilds_the_image_of_the_release_in_the_other_slot(tmp_pa
     assert [p.name for p in w.out.iterdir()] == ["hydra.img"]  # no staging left behind
 
 
+def test_a_release_older_than_the_minimum_version_is_refused_and_nothing_is_written(tmp_path: Path) -> None:
+    w = World(tmp_path)  # the release is 0.5.0
+    for minimum in ("0.5.1", "0.6", "1"):
+        with pytest.raises(image_delta.ImageDeltaError) as excinfo:
+            w.apply(minimum_version=minimum)
+        assert code_of(excinfo) == "too_old"
+        assert w.untouched()
+    with pytest.raises(image_delta.ImageDeltaError) as excinfo:
+        w.apply(minimum_version="latest")
+    assert code_of(excinfo) == "minimum_version"
+    assert w.apply(minimum_version="0.5").version == "0.5.0"
+
+
 def test_the_use_of_deltas_is_off_unless_it_is_switched_on(tmp_path: Path) -> None:
     w = World(tmp_path)
     with pytest.raises(image_delta.ImageDeltaError) as error:
