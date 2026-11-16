@@ -174,9 +174,9 @@ def apply_delta(
     image_release._check_fields(data_release)
     if minimum_version:
         if not image_release._VERSION.match(minimum_version):
-            raise _bad("minimum_version", f"the minimum version {minimum_version!r} is not a version number")
+            raise _bad("minimum_version", f"the minimum version {minimum_version!r} is not a version number", name=minimum_version)
         if _version_key(data_release["version"]) < _version_key(minimum_version):
-            raise _bad("too_old", f"the release {data_release['version']} is older than the minimum version {minimum_version}")
+            raise _bad("too_old", f"the release {data_release['version']} is older than the minimum version {minimum_version}", version=data_release["version"], name=minimum_version)
     record = _load_record(store, keys)
     if record["target"]["size"] != data_release["size"] or record["target"]["sha256"] != data_release["sha256"]:
         raise _bad("not_release", "the delta does not build the image of this release (size or SHA-256 of the target)")

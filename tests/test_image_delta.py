@@ -385,7 +385,7 @@ def test_a_damaged_settings_file_keeps_the_switch_off(tmp_path: Path, monkeypatc
 
 
 def test_every_message_exists_in_the_eight_languages_with_the_same_blanks() -> None:
-    codes = {"disabled", "missing", "signature", "bad_record", "block", "result", "not_release", "base", "data", "same_slot", "rejected", "ok"}
+    codes = {"disabled", "missing", "signature", "bad_record", "block", "result", "not_release", "base", "data", "same_slot", "too_old", "minimum_version", "rejected", "ok"}
     assert len(i18n.TRANSLATIONS) == 8
     for lang, table in i18n.TRANSLATIONS.items():
         assert {key[len("imgdelta_"):] for key in table if key.startswith("imgdelta_")} == codes, lang

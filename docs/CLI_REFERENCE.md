@@ -289,7 +289,7 @@ Needs the optional `cryptography` package (`pip install "hydra-umc-updater[signi
 Tested with releases built in the tests with ephemeral keys in the format of the image builder; never run against a real
 image, a real release or the device.
 
-### `image delta-apply RELEASE_JSON DELTA_DIR --base IMAGE --out-dir DIR [--trusted-keys FILE] [--lang CODE] [--json]` - rebuild the image of the other slot from a signed delta
+### `image delta-apply RELEASE_JSON DELTA_DIR --base IMAGE --out-dir DIR [--trusted-keys FILE] [--minimum-version VERSION] [--lang CODE] [--json]` - rebuild the image of the other slot from a signed delta
 
 For the A/B flow: instead of moving the whole image, the updater rebuilds the image of a signed release in the folder of the OTHER slot from the image of the running slot (the base) and a signed delta made by the image builder (`delta-create`). The delta folder holds `delta.json` (format `hydra-image-delta/1`: size and SHA-256 of the base and of the target, the block size, the blocks), `delta.bin` (the bytes of the new blocks) and `delta.json.sig`, an Ed25519 signature over the domain tag `hydra-umc-os-rebuilder-delta/1` plus the SHA-256 of the exact bytes of `delta.json` (a release or profile signature does not verify as a delta signature). The command reads the base, writes only the new image, never switches the slot and never receives a private key.
 
