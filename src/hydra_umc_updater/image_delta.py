@@ -57,6 +57,13 @@ class ImageDeltaResult:
     checked: list[str] = field(default_factory=list)
 
 
+def _version_key(version: str) -> tuple[int, ...]:
+    parts = [int(p) for p in version.split(".")]
+    while len(parts) > 1 and parts[-1] == 0:
+        parts.pop()
+    return tuple(parts)
+
+
 def _bad(code: str, english: str, **params: object) -> ImageDeltaError:
     return ImageDeltaError(code, english, **params)
 
@@ -156,13 +163,20 @@ def apply_delta(
     keys: TrustedKeys,
     *,
     enabled: bool,
+    minimum_version: str | None = None,
 ) -> ImageDeltaResult:
-    """Rebuild the image of `release` from `base` and the delta in `store` into `out_dir` (the inactive slot). Writes nothing unless every check holds."""
+    """Rebuild the image of `release` from `base` and the delta in `store` into `out_dir` (the inactive slot). Writes nothing unless every check holds.
+    With `minimum_version` a signed release older than it is refused (an old signed release and its delta stay valid for ever otherwise)."""
     if not enabled:
         raise _bad("disabled", "the use of image deltas is switched off")
     content, data_release = image_release._read_manifest(release)
     image_release.verify_signature(release, content, keys)
     image_release._check_fields(data_release)
+    if minimum_version:
+        if not image_release._VERSION.match(minimum_version):
+            raise _bad("minimum_version", f"the minimum version {minimum_version!r} is not a version number", name=minimum_version)
+        if _version_key(data_release["version"]) < _version_key(minimum_version):
+            raise _bad("too_old", f"the release {data_release['version']} is older than the minimum version {minimum_version}", version=data_release["version"], name=minimum_version)
     record = _load_record(store, keys)
     if record["target"]["size"] != data_release["size"] or record["target"]["sha256"] != data_release["sha256"]:
         raise _bad("not_release", "the delta does not build the image of this release (size or SHA-256 of the target)")

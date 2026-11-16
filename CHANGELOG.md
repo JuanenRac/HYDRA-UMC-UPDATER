@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **`image delta-apply` can refuse a release older than a minimum version (`--minimum-version`):** a signed release and its signed delta of an old version stay valid for ever, so the command can be told the oldest version it may rebuild (the version of the running image, for example); an older one is refused before the delta is read and nothing is written.
+
 - **An update without a build goes through the signed-commit gate too:** with signatures required, `update --no-build` and `train apply --no-build` merged an unsigned commit onto the installed checkout, while the first install and the staged update refused it. The accepted commit is now verified in the installed checkout before anything moves. `tests/test_install.py` covers both the refusal and the accepted case.
 - **Saving a preference no longer wipes the safety settings of a damaged settings file:** a file that cannot be read counted as "signing required", but saving the language or the work folder started from nothing, wrote a valid file and dropped the signing settings. A damaged file is now left as it is, and the file is written whole (temporary file and replace). `tests/test_settings.py` covers both.
 

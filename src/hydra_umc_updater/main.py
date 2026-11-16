@@ -552,7 +552,7 @@ def cmd_image_delta_apply(args: argparse.Namespace) -> int:
     keys_source = args.trusted_keys or profile.env_text("IMAGE_TRUSTED_KEYS") or settings.get_image_release_trusted_keys()
     try:
         keys = image_release.load_trusted_keys(keys_source)
-        result = image_delta.apply_delta(Path(args.release), Path(args.delta), Path(args.base), Path(args.out_dir), keys, enabled=enabled)
+        result = image_delta.apply_delta(Path(args.release), Path(args.delta), Path(args.base), Path(args.out_dir), keys, enabled=enabled, minimum_version=args.minimum_version)
     except image_release.ImageReleaseError as exc:
         print("ERROR: " + say(exc), file=sys.stderr)
         print(i18n.t(lang, "imgdelta_rejected"), file=sys.stderr)
@@ -893,6 +893,7 @@ def build_parser() -> argparse.ArgumentParser:
     image_delta_p.add_argument("--base", required=True, help="The image of the running slot the delta was made from (it is only read).")
     image_delta_p.add_argument("--out-dir", required=True, help="The folder of the other slot: the new image is written here, only after every check holds.")
     image_delta_p.add_argument("--trusted-keys", help="File of trusted public keys (default: the image_release_trusted_keys setting).")
+    image_delta_p.add_argument("--minimum-version", help="Refuse a release older than this version (for example the version of the running image).")
     image_delta_p.add_argument("--lang", choices=sorted(i18n.TRANSLATIONS), help="Language of the messages (default: the saved one).")
     image_delta_p.add_argument("--json", action="store_true", help="Print the result as JSON when the image was rebuilt.")
     image_delta_p.set_defaults(func=cmd_image_delta_apply)
