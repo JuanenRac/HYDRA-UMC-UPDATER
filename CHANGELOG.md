@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.5.9]
+
 - **`image delta-apply` can refuse a release older than a minimum version (`--minimum-version`):** a signed release and its signed delta of an old version stay valid for ever, so the command can be told the oldest version it may rebuild (the version of the running image, for example); an older one is refused before the delta is read and nothing is written.
 
 - **An update without a build goes through the signed-commit gate too:** with signatures required, `update --no-build` and `train apply --no-build` merged an unsigned commit onto the installed checkout, while the first install and the staged update refused it. The accepted commit is now verified in the installed checkout before anything moves. `tests/test_install.py` covers both the refusal and the accepted case.
@@ -13,6 +15,8 @@
 - **The shared tools and the CI jobs have time limits:** the project tool, the validators and the build test pass a timeout to every child process (`HYDRA_UMC_GIT_TIMEOUT_S`, 120 s by default, and `HYDRA_UMC_COMMAND_TIMEOUT_S`, 3600 s by default; a value that is not a positive number means the default), and the baseline and notify jobs of the workflows carry `timeout-minutes`, so a stuck step ends with a message instead of holding a runner.
 - **More tests and a simulation bench:** 38 new tests cover the refusals of the project manifest reader, the choice of release (drafts, pre-releases, unordered or broken tags, annotated tags, failing API), the rollback of a promotion, the fresh virtual environment and every exit status of the deployment on the device. A seeded bench runs the real release resolver and the real plan applier against a simulated GitHub API and a simulated device with injected faults, checking that a draft or pre-release is never chosen on the stable channel and that a plan stops at the first failed step. A new workflow runs the bench and measures the coverage of the test suite with a floor that must not go down.
 All notable changes to this project are documented here.
+
+- Build version synchronized with `hydra-umc.project.json` and the repository-native version source.
 
 ## [0.5.8] - **README: the platform statement:** the description says what this project serves today (the CM5 pilot bench) and that the target platform of HYDRA-UMC, an NVIDIA Jetson Orin NX 16 GB, is a design that has not been built or tested.
 - More tests for the GitHub lookups, the signed trains, the signed model bundles and the Qt bridge: every way a single lookup can fail (a refused connection, a timeout, a reset, an unexpected error, each error status, a 404 that falls back to the native version
