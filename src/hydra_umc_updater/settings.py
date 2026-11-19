@@ -230,6 +230,23 @@ def get_image_release_require_tag() -> bool:
     return load_settings().get("image_release_require_tag") is True
 
 
+def get_manifest_trusted_keys() -> str | None:
+    """File with the PUBLIC keys that may sign an update manifest, with their states and validity windows (never a private key)."""
+    return _text_setting("manifest_trusted_keys")
+
+
+def get_require_asymmetric_signature() -> bool:
+    """Whether an update manifest must carry a valid Ed25519 signature. Off by default while the ecosystem moves over from manifests
+    without one (they are then accepted as legacy); a damaged settings file counts as ON (fail closed)."""
+    if settings_file_is_damaged():
+        return True
+    return load_settings().get("require_asymmetric_signature") is True
+
+
+def save_require_asymmetric_signature(required: bool) -> None:
+    save_settings(require_asymmetric_signature=bool(required))
+
+
 def get_image_release_repo() -> str | None:
     """Local clone in which the signed tag of a release is checked."""
     return _text_setting("image_release_repo")

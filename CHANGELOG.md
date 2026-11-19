@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **`manifest verify` checks the Ed25519 signature of an update manifest against a list of trusted keys with rotation, and a switch can require it:** a signed manifest is always checked (bad signature, unknown, revoked, not yet valid or expired key are refused); a manifest without a signature passes as legacy while `require_asymmetric_signature` is off (the default) and is refused as a downgrade when it is on, and a damaged settings file counts as on. The keys have the states `current`, `next`, `retired` and `revoked` with a validity window, the rule is that of the SDK and the tests run its conformance vectors; the messages are in the eight languages.
+
 ## [0.5.9]
 
 - **`image delta-apply` can refuse a release older than a minimum version (`--minimum-version`):** a signed release and its signed delta of an old version stay valid for ever, so the command can be told the oldest version it may rebuild (the version of the running image, for example); an older one is refused before the delta is read and nothing is written.
