@@ -30,9 +30,10 @@ import argparse
 import json
 import os
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
-from . import __version__, common_gate, deploy_plan, evidence_export, i18n, image_delta, image_release, model_bundle, package_release, release_channel, settings, train, train_signing
+from . import __version__, common_gate, deploy_plan, evidence_export, i18n, image_delta, image_release, model_bundle, package_release, release_channel, settings, train, train_signing, update_manifest
 from .detect import LocalStatus, discover_workspace
 from .updater_core import COMMON_REPO
 from .github_client import RemoteStatus, default_etag_cache, discover_remote_projects, fetch_all
@@ -534,6 +535,50 @@ def cmd_image_verify(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_manifest_verify(args: argparse.Namespace) -> int:
+    """`manifest verify MANIFEST_JSON`: decide whether an update manifest passes. A manifest with an Ed25519 signature is always checked against the file of
+    trusted keys; one without it passes as legacy only while the switch `require_asymmetric_signature` is off. It only reads. Exit 0 when it passes, 1 with the reason."""
+    lang = args.lang or i18n.resolve_initial_lang()
+    profile = evidence_export.HYDRA_PROFILE
+    keys_source = args.trusted_keys or profile.env_text("MANIFEST_TRUSTED_KEYS") or settings.get_manifest_trusted_keys()
+    flag = profile.env_flag("REQUIRE_ASYMMETRIC_SIGNATURE")
+    required = bool(args.require_asymmetric_signature) or (flag if flag is not None else settings.get_require_asymmetric_signature())
+
+    def refuse(code: str) -> int:
+        print("ERROR: " + i18n.t(lang, "mfsig_" + code), file=sys.stderr)
+        print(i18n.t(lang, "mfsig_rejected"), file=sys.stderr)
+        return 1
+
+    try:
+        manifest = json.loads(Path(args.manifest).read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return refuse("manifest_unreadable")
+    keys: tuple[update_manifest.TrustedKey, ...] = ()
+    if keys_source:
+        try:
+            keys = update_manifest.keys_from_json(Path(keys_source).read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            return refuse("keys_invalid")
+    elif isinstance(manifest, dict) and ("signature" in manifest or required):
+        return refuse("no_keys_file")
+    now = datetime.now(timezone.utc)
+    if args.now:
+        try:
+            now = datetime.strptime(args.now, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
+        except ValueError:
+            return refuse("bad_now")
+    verdict = update_manifest.verify_manifest(manifest, keys, now, require_asymmetric_signature=required)
+    if not verdict.accepted:
+        return refuse(verdict.code)
+    if args.json:
+        print(json.dumps({"ok": True, "code": verdict.code, "key_id": verdict.key_id, "require_asymmetric_signature": required}, indent=2))
+    elif verdict.legacy:
+        print(i18n.t(lang, "mfsig_legacy"))
+    else:
+        print(i18n.t(lang, "mfsig_ok", key_id=verdict.key_id))
+    return 0
+
+
 def cmd_image_delta_apply(args: argparse.Namespace) -> int:
     """`image delta-apply RELEASE_JSON DELTA_DIR --base IMAGE --out-dir DIR`: rebuild the image of a signed release in the folder of the OTHER slot from the running image and a
     signed delta. Off unless the setting `image_delta` (or HYDRA_UMC_UPDATER_IMAGE_DELTA=1) says so. It writes only the new image, after every check; it never switches the slot.
@@ -875,6 +920,17 @@ def build_parser() -> argparse.ArgumentParser:
         package_parser.add_argument("--lang", choices=sorted(i18n.TRANSLATIONS), help="Language of the messages (default: the one of the window).")
         package_parser.add_argument("--json", action="store_true", help="Print the result as JSON when the package holds.")
         package_parser.set_defaults(func=cmd_package)
+
+    manifest_p = subparsers.add_parser("manifest", help="Check the signature of an update manifest (reads only).")
+    manifest_sub = manifest_p.add_subparsers(dest="manifest_command", required=True)
+    manifest_verify_p = manifest_sub.add_parser("verify", help="Decide whether an update manifest passes: its Ed25519 signature against the trusted keys, or legacy while the switch is off.")
+    manifest_verify_p.add_argument("manifest", help="The update manifest (JSON).")
+    manifest_verify_p.add_argument("--trusted-keys", help="File of trusted public keys (default: the manifest_trusted_keys setting).")
+    manifest_verify_p.add_argument("--require-asymmetric-signature", action="store_true", help="Refuse a manifest without an Ed25519 signature (default: the require_asymmetric_signature setting, off).")
+    manifest_verify_p.add_argument("--now", help="The moment to check the validity window of the key at, as 2030-01-01T00:00:00Z (default: now).")
+    manifest_verify_p.add_argument("--lang", choices=sorted(i18n.TRANSLATIONS), help="Language of the messages (default: the saved one).")
+    manifest_verify_p.add_argument("--json", action="store_true", help="Print the result as JSON when the manifest passes.")
+    manifest_verify_p.set_defaults(func=cmd_manifest_verify)
 
     image_p = subparsers.add_parser("image", help="Check a signed release of an operating-system image (reads only).")
     image_sub = image_p.add_subparsers(dest="image_command", required=True)

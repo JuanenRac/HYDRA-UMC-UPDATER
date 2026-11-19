@@ -253,6 +253,21 @@ object per project (`project`, `state`, `checkoutVersion`, `deviceVersion`, `uni
 first step that does not hold and leaves one line of evidence per step. Exit code `0` when the plan was read (or
 every step deployed), `1` when the table cannot be read or a step failed.
 
+### `manifest verify MANIFEST_JSON [--trusted-keys FILE] [--require-asymmetric-signature] [--now TIME] [--lang CODE] [--json]` - check an update manifest
+
+Decides whether an `UpdateManifest` passes. It only reads. A manifest WITH an Ed25519 signature is always checked, whatever the switch says, against the file of
+trusted public keys (`{"schema": 1, "keys": [{"key_id", "public", "state", "not_before", "not_after"}]}`; `state` is `current`, `next`, `retired` or
+`revoked`, and a key counts only inside its window, which is how a key is rotated: add the new one as `next`, retire the old one with a `not_after`). A bad
+signature, an unknown, revoked, not yet valid or expired key, or damaged signature fields are refused. A manifest WITHOUT a signature (legacy) passes, labelled
+as legacy, only while `require_asymmetric_signature` is off, which is the default; with it on the manifest is refused as a downgrade. Exit code `0` when it passes;
+`1` with the reason on stderr and the line "nothing was applied" when it does not. The rule is the one of `hydra_umc_sdk.manifest_signing` (the SDK page
+`docs/MANIFEST_SIGNING.md` has the signed bytes and the rotation steps) and the tests run the same conformance vectors.
+
+| Setting | Environment | Meaning |
+|---|---|---|
+| `require_asymmetric_signature` | `HYDRA_UMC_UPDATER_REQUIRE_ASYMMETRIC_SIGNATURE` | `true`/`false`; off by default. A damaged settings file counts as on. |
+| `manifest_trusted_keys` | `HYDRA_UMC_UPDATER_MANIFEST_TRUSTED_KEYS` | The file of trusted public keys of manifests (public keys only, never a private key). |
+
 ### `image verify RELEASE_JSON IMAGE [--trusted-keys FILE] [--require-tag] [--repo DIR] [--lang CODE] [--json]` - check a signed image release
 
 The updater does not download or install operating-system images; this command is the contract for whoever hands it one.
