@@ -138,6 +138,21 @@ def test_rejects_unknown_fields_to_prevent_silent_dashboard_drift():
         parse_manifest(json.dumps(data))
 
 
+def test_accepts_the_evidence_record_of_a_bench_or_field_project():
+    data = valid_manifest()
+    data["evidence"] = "field"
+    data["evidence_record"] = "Tried by the maintainer on his bench with real hardware."
+    manifest = parse_manifest(json.dumps(data))
+    assert manifest.name == data["name"]
+
+
+def test_rejects_an_empty_evidence_record():
+    data = valid_manifest()
+    data["evidence_record"] = "   "
+    with pytest.raises(ManifestValidationError, match="evidence_record"):
+        parse_manifest(json.dumps(data))
+
+
 def test_service_is_absent_by_default():
     manifest = parse_manifest(json.dumps(valid_manifest()))
     assert manifest.service_port is None

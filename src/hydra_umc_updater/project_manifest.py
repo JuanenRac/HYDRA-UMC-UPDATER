@@ -131,7 +131,8 @@ def parse_manifest(text: str, *, expected_name: str | None = None, ecosystem_id:
     # deployment_target values need no such note.
     # "evidence" (the EH3D projects): what a project has been tried on - a short text such as "host-test", "simulator" or "hardware".
     # "hardware_bound": false for a project that has no hardware at all (it caps no light of the status table).
-    optional_fields = {"service", "deployment_target_note", "evidence", "hardware_bound", "depends_on", "min_common"}
+    # "evidence_record": the free text in which the maintainer records what was tried on real hardware when "evidence" is bench or field.
+    optional_fields = {"service", "deployment_target_note", "evidence", "evidence_record", "hardware_bound", "depends_on", "min_common"}
     unknown = sorted(set(data) - expected_fields - optional_fields)
     missing = sorted(expected_fields - set(data))
     if missing:
@@ -141,6 +142,8 @@ def parse_manifest(text: str, *, expected_name: str | None = None, ecosystem_id:
 
     if "evidence" in data and (not isinstance(data["evidence"], str) or not data["evidence"].strip()):
         raise ManifestValidationError("evidence must be a non-empty string")
+    if "evidence_record" in data and (not isinstance(data["evidence_record"], str) or not data["evidence_record"].strip()):
+        raise ManifestValidationError("evidence_record must be a non-empty string")
     depends_on = _parse_depends_on(data.get("depends_on"), data.get("name"))
     schema_version = _require_string(data, "schema_version")
     if schema_version != SCHEMA_VERSION:
