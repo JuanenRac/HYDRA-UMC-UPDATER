@@ -196,7 +196,7 @@ def verify_signature(manifest: Path, content: bytes, keys: TrustedKeys) -> str:
 
 
 def _run_git(command: list[str], cwd: Path) -> "subprocess.CompletedProcess[str]":
-    return subprocess.run(command, cwd=cwd, capture_output=True, text=True, timeout=60, check=False)
+    return subprocess.run(command, cwd=cwd, capture_output=True, encoding="utf-8", errors="replace", timeout=60, check=False)
 
 
 def verify_tag(repo: Path | None, tag: str, commit: str, run: Runner = _run_git) -> None:

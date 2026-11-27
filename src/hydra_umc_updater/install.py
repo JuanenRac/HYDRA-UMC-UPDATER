@@ -408,7 +408,14 @@ def _run(
     if timeout is not None:
         kwargs["timeout"] = timeout
     if capture_output:
-        kwargs.update({"capture_output": True, "text": True})
+        # A tool may write names the code page of the console cannot hold: a character that cannot be decoded must not turn a finished
+        # step into an error. git writes UTF-8 whatever that code page is, and in a list of file names (-z) a byte that is not UTF-8
+        # has to come back as it was, so the file is still found.
+        kwargs.update({"capture_output": True, "text": True, "errors": "replace"})
+        if cmd[0] == "git":
+            kwargs["encoding"] = "utf-8"
+            if "-z" in cmd:
+                kwargs["errors"] = "surrogateescape"
     # The GUI is started with pythonw on Windows. Do not let git or a child
     # build script create a surprise console while its output is captured for
     # the in-window checkpoint log.
