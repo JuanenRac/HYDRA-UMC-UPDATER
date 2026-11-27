@@ -43,9 +43,9 @@ def load_settings() -> dict[str, Any]:
     "a saved preference is a nice-to-have, not a hard dependency" spirit
     as `i18n.py`'s own original try/except."""
     try:
-        raw = SETTINGS_PATH.read_text(encoding="utf-8")
+        raw = SETTINGS_PATH.read_text(encoding="utf-8-sig")   # an editor on Windows may add a byte-order mark
         data = json.loads(raw)
-    except (OSError, json.JSONDecodeError):
+    except (OSError, ValueError):   # ValueError: not JSON, or not UTF-8 (another encoding, or cut inside a character)
         return {}
     return data if isinstance(data, dict) else {}
 
@@ -100,10 +100,10 @@ def get_saved_lang() -> str | None:
     if isinstance(lang, str) and lang:
         return lang
     try:
-        raw = _LEGACY_LANG_PATH.read_text(encoding="utf-8")
+        raw = _LEGACY_LANG_PATH.read_text(encoding="utf-8-sig")
         data = json.loads(raw)
         legacy_lang = data.get("lang") if isinstance(data, dict) else None
-    except (OSError, json.JSONDecodeError, AttributeError):
+    except (OSError, ValueError, AttributeError):
         return None
     return legacy_lang if isinstance(legacy_lang, str) and legacy_lang else None
 
@@ -119,7 +119,7 @@ def settings_file_is_damaged() -> bool:
     if not SETTINGS_PATH.exists():
         return False
     try:
-        return not isinstance(json.loads(SETTINGS_PATH.read_text(encoding="utf-8")), dict)
+        return not isinstance(json.loads(SETTINGS_PATH.read_text(encoding="utf-8-sig")), dict)
     except (OSError, ValueError):
         return True
 

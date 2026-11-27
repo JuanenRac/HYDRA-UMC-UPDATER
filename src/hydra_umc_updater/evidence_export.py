@@ -23,6 +23,7 @@ an address that is not this machine is refused unless the settings allow it."""
 from __future__ import annotations
 
 import hashlib
+import http.client
 import ipaddress
 import json
 import os
@@ -237,8 +238,8 @@ def read_token(token_file: str | None) -> str | None:
     if not token_file:
         return None
     try:
-        return Path(token_file).read_text(encoding="utf-8").strip() or None
-    except OSError:
+        return Path(token_file).read_text(encoding="utf-8-sig").strip() or None
+    except (OSError, UnicodeDecodeError):
         return None
 
 
@@ -285,7 +286,7 @@ def push_pending(
                 status = getattr(response, "status", 0)
         except urllib.error.HTTPError as exc:
             return PushResult(sent, len(pending) - sent, f"the data lake answered {exc.code}")
-        except (urllib.error.URLError, OSError, ValueError) as exc:
+        except (urllib.error.URLError, OSError, ValueError, http.client.HTTPException) as exc:
             return PushResult(sent, len(pending) - sent, f"the data lake could not be reached ({type(exc).__name__})")
         if status != 202:
             return PushResult(sent, len(pending) - sent, f"the data lake answered {status}")

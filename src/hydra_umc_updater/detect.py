@@ -58,8 +58,8 @@ def discover_workspace(workspace_root: Path) -> LocalDiscovery:
         if not manifest_path.is_file():
             continue
         try:
-            manifest = parse_manifest(manifest_path.read_text(encoding="utf-8"), expected_name=project_path.name)
-        except (OSError, ManifestValidationError) as exc:
+            manifest = parse_manifest(manifest_path.read_text(encoding="utf-8-sig"), expected_name=project_path.name)
+        except (OSError, UnicodeDecodeError, ManifestValidationError) as exc:
             errors.append(f"{project_path.name}: invalid manifest: {exc}")
             continue
         if manifest.ecosystem != ECOSYSTEM_ID:

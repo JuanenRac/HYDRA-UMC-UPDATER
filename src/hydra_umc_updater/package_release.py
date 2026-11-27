@@ -23,6 +23,7 @@ never deleted) and the staging folder takes its place. A version that is not new
 from __future__ import annotations
 
 import hashlib
+import http.client
 import json
 import os
 import re
@@ -279,6 +280,6 @@ def fetch_release_package(info: ReleaseInfo, into: Path, *, download: Downloader
             raise PackageError("download_failed", f"{asset} is not served from GitHub", name=asset)
         try:
             download(url, into / asset, limit)
-        except (OSError, ValueError) as error:
+        except (OSError, ValueError, http.client.HTTPException) as error:
             raise PackageError("download_failed", f"{asset} could not be downloaded: {error}", name=asset) from error
     return into / wanted
