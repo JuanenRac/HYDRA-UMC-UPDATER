@@ -816,8 +816,8 @@ def make_train(
             )
         try:
             done = subprocess.run(
-                [sys.executable, "-I", str(generator), "--print", "--workspace", str(workspace_root)],
-                capture_output=True, text=True, timeout=MAKE_TIMEOUT_S, check=False,
+                [sys.executable, "-I", "-X", "utf8", str(generator), "--print", "--workspace", str(workspace_root)],
+                capture_output=True, encoding="utf-8", errors="replace", timeout=MAKE_TIMEOUT_S, check=False,
             )
         except (OSError, subprocess.SubprocessError) as exc:
             raise TrainError(f"the release generator could not run: {exc}") from exc
