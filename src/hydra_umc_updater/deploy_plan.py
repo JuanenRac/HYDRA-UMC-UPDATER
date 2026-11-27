@@ -121,8 +121,8 @@ def _remap(target: str, root: str) -> str:
 
 def _read_manifest(path: Path, name: str, profile: EcosystemProfile):
     try:
-        return parse_manifest(path.read_text(encoding="utf-8"), expected_name=name, ecosystem_id=profile.ecosystem_id)
-    except (OSError, ManifestValidationError):
+        return parse_manifest(path.read_text(encoding="utf-8-sig"), expected_name=name, ecosystem_id=profile.ecosystem_id)
+    except (OSError, UnicodeDecodeError, ManifestValidationError):
         return None
 
 

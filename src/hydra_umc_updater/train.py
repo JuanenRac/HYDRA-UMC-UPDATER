@@ -202,7 +202,7 @@ def parse_train(text: str, *, default_name: str = "train") -> Train:
 def load_train(path: Path) -> Train:
     try:
         text = path.read_text(encoding="utf-8")
-    except OSError as exc:
+    except (OSError, UnicodeDecodeError) as exc:
         raise TrainError(f"cannot read the train {path}: {exc}") from exc
     return parse_train(text, default_name=path.stem)
 
@@ -805,8 +805,8 @@ def make_train(
     again with `parse_train` before it is returned, so what is written is what the updater reads."""
     if release_file is not None:
         try:
-            raw = release_file.read_text(encoding="utf-8")
-        except OSError as exc:
+            raw = release_file.read_text(encoding="utf-8-sig")
+        except (OSError, UnicodeDecodeError) as exc:
             raise TrainError(f"cannot read the release file {release_file}: {exc}") from exc
     else:
         generator = workspace_root / GENERATOR

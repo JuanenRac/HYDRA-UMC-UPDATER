@@ -16,6 +16,7 @@ The only network access is `fetch_json(url)`, which tests replace with a functio
 """
 from __future__ import annotations
 
+import http.client
 import json
 import os
 import re
@@ -125,7 +126,7 @@ def resolve_latest(repo: str, channel: str = "stable", *, fetch: Fetcher | None 
     base = f"{github_client.GITHUB_API_BASE}/repos/{owner}/{repo}"
     try:
         releases = fetch(f"{base}/releases?per_page={RELEASES_PER_PAGE}")
-    except (urllib.error.URLError, TimeoutError, OSError, ValueError) as error:
+    except (urllib.error.URLError, TimeoutError, OSError, ValueError, http.client.HTTPException) as error:
         raise ReleaseError("unreachable", f"the releases of {repo} cannot be read: {error}", repo=repo) from error
     candidates = _candidates(releases, channel)
     if not candidates:
@@ -134,7 +135,7 @@ def resolve_latest(repo: str, channel: str = "stable", *, fetch: Fetcher | None 
     tag = item["tag_name"]
     try:
         commit = _commit_of_tag(base, tag, fetch)
-    except (urllib.error.URLError, TimeoutError, OSError, ValueError) as error:
+    except (urllib.error.URLError, TimeoutError, OSError, ValueError, http.client.HTTPException) as error:
         raise ReleaseError("unreachable", f"the tag {tag} of {repo} cannot be resolved: {error}", repo=repo) from error
     assets: dict[str, str] = {}
     for asset in item.get("assets") or []:

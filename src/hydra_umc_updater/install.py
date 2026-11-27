@@ -202,7 +202,7 @@ def run_os_deploy(
     if command is None:
         return OsDeployOutcome("unavailable", "the command hydra-umc-os is not installed on this device (HYDRA-UMC-OS: install_cm5_base.sh --apply)")
     try:
-        done = runner(command, capture_output=True, text=True, timeout=OS_DEPLOY_TIMEOUT_S, check=False)
+        done = runner(command, capture_output=True, encoding="utf-8", errors="replace", timeout=OS_DEPLOY_TIMEOUT_S, check=False)
     except (OSError, subprocess.TimeoutExpired) as exc:
         return OsDeployOutcome("unavailable", f"{command[0]} could not finish ({type(exc).__name__}: {exc})")
     report: dict = {}

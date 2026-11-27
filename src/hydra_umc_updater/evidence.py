@@ -29,7 +29,8 @@ def installed_state(project_path: Path) -> dict[str, str | None]:
     version = commit = None
     manifest = project_path / "hydra-umc.project.json"
     try:
-        version = json.loads(manifest.read_text(encoding="utf-8")).get("version")
+        data = json.loads(manifest.read_text(encoding="utf-8-sig"))
+        version = data.get("version") if isinstance(data, dict) else None
     except (OSError, ValueError):
         pass
     try:
