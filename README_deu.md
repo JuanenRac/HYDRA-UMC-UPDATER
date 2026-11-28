@@ -214,7 +214,7 @@ für die ausgewählte Zeile.
   GitHub-Anfrage (`_urlopen_with_retries` in `github_client.py`)
   wiederholt bis zu 3-mal mit Backoff, aber nur, wenn die Verbindung
   überhaupt keine Antwort erhalten hat (DNS/Timeout/Reset). Ein echter
-  HTTP-Status, den GitHub tatsächlich zurückgegeben hat - 404, 403, 500 -
+  HTTP-Status, den GitHub tatsächlich zurückgegeben hat - 404, 500 oder ein 403 ohne `Retry-After` -
   wird nie wiederholt: GitHub hat bereits geantwortet, und ein erneuter
   Versuch würde nur mehr Rate-Limit für dasselbe Ergebnis verbrauchen.
 - **Ein fehlerhafter entfernter Katalog schlägt laut fehl; ein

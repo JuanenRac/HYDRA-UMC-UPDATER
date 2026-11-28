@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **The README says that a short wait asked by GitHub is retried:** a 403 or 429 with `Retry-After` is tried again; other HTTP answers are not.
+
 - **A cut download and a file in another encoding are reported instead of ending the program:** a download cut in the middle is asked again and then reported (it used to end the scan of the family, the release lookup, a package download or an evidence push with an error nobody handled). A settings file, a manifest, a train or a token file saved in another encoding or damaged counts as unreadable (the security options stay on) and is left as it is; a byte-order mark added by an editor is accepted.
 
 - **Local files with names outside ASCII are no longer left behind by an update on Windows:** the names git reports were read with the code page of the console, so a file such as `configuración.json` or one with a Japanese name was not found and the updated installation was missing it (the kept previous installation still had it). Everything git writes is now read as UTF-8, which also lets a manifest or an author name with such characters through.

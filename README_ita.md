@@ -214,7 +214,7 @@ selezionata.
   (`_urlopen_with_retries` di `github_client.py`) riprova fino a 3 volte
   con backoff, ma solo quando la connessione non ha mai ottenuto alcuna
   risposta (DNS/timeout/reset). Uno stato HTTP reale che GitHub ha
-  effettivamente restituito - 404, 403, 500 - non viene mai riprovato:
+  effettivamente restituito - 404, 500 o un 403 senza `Retry-After` - non viene mai riprovato:
   GitHub ha già risposto, e insistere consumerebbe solo altro rate limit
   per lo stesso risultato.
 - **Un catalogo remoto malformato fallisce rumorosamente; un singolo
